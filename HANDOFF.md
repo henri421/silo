@@ -762,3 +762,95 @@ Branche `lot-8-exports`, 2026-11-10. Aucun test d'acceptation ni fichier de `doc
 ## État final du lot 8
 
 Les trois commandes du lot passent. Trois commits de code ont été faits (`db20288` pour T8.1, `d0011be` pour T8.2, `351e5e8` pour T8.3), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 9 n'a pas été commencé.
+
+# Compte rendu du lot 9, séance `claude-ds`
+
+Branche `lot-9-anglais`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs/validation/` n'a été modifié ; `src/` (noyau et types), `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md`, `package.json` et `package-lock.json` sont intacts (vérifié par `git diff 5a13307 --stat -- tests docs/validation src SPEC.md CLAUDE.md CONVENTIONS.md package.json package-lock.json`, sortie vide). Aucune dépendance ajoutée, rien n'a été poussé.
+
+## T9.1 Finitions de l'affichage en français
+
+**Fichiers modifiés** : `app/src/vue.ts`, `app/src/main.ts`, `app/src/dessins.ts`, `app/src/note.ts`, `app/src/textes.ts`.
+
+**Décisions**
+- `rendreBlocs` et `rendreTableau` passent de `main.ts` à `vue.ts`, qui les exporte ; les deux appliquent `notationHtml` aux symboles, aux libellés, aux valeurs, aux notes et aux en-têtes. `main.ts` les importe.
+- Les textes SVG passent par `notationSvg` ; les symboles `h_o`, `p_n` et `p_t` gardent leur notation brute dans un attribut `data-symbole`, ce qui laisse vrais les tests du lot 7.
+- Les identifiants de cas (`VID_EXC`, `FOND_REMP`, `FOND_VID`) sont eux aussi notés en indice, donc sans souligné visible.
+- `phrase` met en forme les phrases du noyau en français : accents des mots fautifs, apostrophes des élisions, zéros décimaux inutiles. Aucune valeur, formule, signature ni type de `src/` n'a changé ; aucun fichier de `src/` n'a été modifié.
+- `messageDErreur` passe par `phrase` ; l'identité exigée par le test du lot 7 pour `hc/dc = 0,35` est conservée.
+- Les messages de refus de `form.ts` viennent de `textes()`, ce qui prépare l'anglais.
+- Une phrase du noyau non couverte par les règles françaises pourrait encore afficher un accent manquant. Les dix-huit entrées du jeu d'affichage passent.
+
+**Statut des tests**
+- `npx vitest run tests/app/finitions.test.ts` : 3 tests passent.
+- `npm run typecheck` : passe.
+
+## T9.2 Textes anglais
+
+**Fichiers modifiés** : `app/src/textes.ts`, `app/src/form.ts`, `app/src/export.ts`, `app/src/note.ts`, `app/src/vue.ts`.
+
+**Décisions**
+- `textes.ts` porte `FR` et `EN` de même type : une clé oubliée en anglais ne compile pas.
+- Les phrases produites en français par le noyau (cas, motifs, combinaisons, erreurs, profil normatif) sont traduites à l'affichage par `traducteur(EXACTES, REGLES)`.
+- `ENTETES` devient un objet d'accesseurs `get profils`, `get bandes`, `get tremie`, qui rend la langue courante ; le test du lot 8, en français, reste vert.
+- Les CSV suivent `csv()` d'aedificium-ui : point-virgule et virgule décimale en français, virgule et point décimal en anglais, valeurs à 4 décimales fixes dans les deux langues.
+- L'en-tête commun, les pieds de `bandes.csv`, la mention, l'exclusivité des cas et les explications de `localisee.csv` passent par `textes()`.
+- Les messages de refus de `form.ts` et les noms des matériaux sont bilingues.
+- `e_t` s'affiche `eₜ` en anglais : la notation en indice donnerait « et », mot français que `constatsAffichage` signale.
+- Les phrases nouvelles non couvertes par les tables ou règles sortiraient en français ; les dix-huit entrées du jeu d'affichage et les messages testés passent.
+- Le JSON reste une donnée : seuls la mention et le profil suivent la langue, les libellés internes des cas restent ceux du noyau. Aucun test ne le contrôle.
+
+**Statut des tests**
+- `npx vitest run tests/app/anglais.test.ts -t "affichage en anglais"` : 4 tests passent, 3 ignorés (page).
+- Après T9.3, `npx vitest run tests/app/anglais.test.ts` : 7 tests passent.
+
+## T9.3 Page anglaise
+
+**Fichiers modifiés** : `app/en/index.html`.
+
+**Décisions**
+- La page reprend exactement le squelette de `app/index.html` : mêmes `id`, `data-*`, `type`, `value`, `for` et `name`, dans le même ordre. Seuls les textes, les `aria-label` et le `placeholder` changent.
+- Les six légendes sont `Geometry`, `Bottom`, `Material`, `Walls`, `Operation`, `Discretisation` ; le `h1` vaut `Pressures in silos`.
+- Le formulaire complet est désormais sur les deux pages ; `main.ts` les sert sans branche particulière.
+- Les commentaires qui annonçaient une page anglaise à construire ont été retirés de `main.ts` et des textes.
+
+**Statut des tests**
+- `npx vitest run tests/app/anglais.test.ts` : 7 tests passent (squelette, titre, légendes, écran, dessins, note, CSV, messages).
+
+## T9.4 PWA, README, publication
+
+**Fichiers modifiés** : `README.md`, `PLAN.md`.
+
+**Vérifications**
+- `npm run build` produit `docs/manifest.webmanifest` et `docs/sw.js`. Le manifeste porte le nom, le nom court, la description, `start_url`, `scope` et `id` à `./`, l'affichage `standalone`, la langue `fr` et les trois icônes.
+- Le service worker précache 15 entrées, dont `index.html` et `en/index.html`, les assets JS et CSS, les icônes et le manifeste.
+- Aucun essai d'installation dans un navigateur réel n'a été possible (séance sans interface) : le fonctionnement hors ligne est constaté sur la liste de précache du service worker.
+- `README.md` : état réel, « Ce que l'outil rend » en liste à puces, fichiers exportés, section « Points ouverts » qui renvoie à SPEC §9 et dit que P4 et P7 attendent la confirmation de l'utilisateur, référence sans annexe nationale.
+- Publication : le workflow `pages.yml` date du lot 0 ; aucun push n'a été fait, donc le déploiement effectif par la CI reste à constater après fusion.
+
+**Points douteux**
+- L'installation PWA et le fonctionnement hors ligne n'ont pas été essayés dans un navigateur : ils reposent sur les artefacts de construction vérifiés.
+
+**Statut des tests**
+- `npm run typecheck` : passe, aucune erreur.
+- `npm test` : 227 tests passent sur 23 fichiers.
+- `npm run build` : passe ; `git status` ne montre aucun fichier construit.
+
+## T9.5 Fin de lot
+
+**Fichiers modifiés** : `PLAN.md` (cases du lot 9 cochées), `HANDOFF.md`.
+
+**Décisions**
+- Les trois cases du lot 9 sont cochées : page anglaise, PWA et README. La vérification PWA est celle du build, précisée ci-dessus.
+
+**Points douteux**
+- Aucun test d'acceptation n'exerce les traductions hors du jeu d'affichage ; une phrase nouvelle du noyau devrait être ajoutée aux tables de `textes.ts`.
+
+**Statut des tests**
+- `npm run typecheck` : passe, aucune erreur.
+- `npm test` : 227 tests passent sur 23 fichiers.
+- `npm run build` : passe ; `git status` ne montre aucun fichier construit.
+- `git diff 5a13307 --stat -- tests docs/validation src SPEC.md CLAUDE.md CONVENTIONS.md package.json package-lock.json` : sortie vide, tests, cas de validation, noyau et dépendances intacts.
+
+## État final du lot 9
+
+Les trois commandes du lot passent. Trois commits de code ont été faits (`3810072` pour T9.1, `6ddcc12` pour T9.2, `5130641` pour T9.3), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 9 est le dernier lot de la v1 ; l'outil couvre le périmètre de `SPEC.md` et les points ouverts P4 et P7 restent à confirmer par l'utilisateur.

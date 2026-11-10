@@ -17,11 +17,11 @@ import {
   echapper,
   langueDuDocument,
   noteDeCalculHtml,
+  notationHtml,
   ouvrirOuTelecharger,
   svgAutonome,
   telecharger,
   type BarreFeuilles,
-  type BlocResultat,
   type Json,
 } from 'aedificium-ui';
 import {
@@ -37,7 +37,15 @@ import {
   modeleParDefaut,
   type ModeleSaisie,
 } from './form';
-import { blocsSynthese, lignesCas, lignesPointsOuverts, messageDErreur } from './vue';
+import {
+  blocsSynthese,
+  lignesCas,
+  lignesPointsOuverts,
+  identifiantsDeCas,
+  messageDErreur,
+  rendreBlocs,
+  rendreTableau,
+} from './vue';
 import { dessinElevation, dessinPlan, dessinProfils, dessinTremie } from './dessins';
 import {
   STYLES_DESSIN,
@@ -133,39 +141,8 @@ function initialiserCommandes(): void {
   ).join('');
 }
 
-/** Tableau HTML d'un bloc de resultats : symbole, libelle, valeur. */
-function rendreBlocs(blocs: readonly BlocResultat[]): string {
-  return blocs
-    .map((bloc) => {
-      const lignes = bloc.lignes
-        .map(
-          (l) =>
-            `<tr><th>${echapper(l.symbole)}</th><td class="libelle">${echapper(l.libelle)}</td><td class="valeur">${echapper(
-              l.valeur
-            )}</td></tr>`
-        )
-        .join('');
-      const note =
-        bloc.note === null ? '' : `<p class="note">${echapper(bloc.note)}</p>`;
-      // Le bloc des cas porte des valeurs longues : il autorise le retour a la
-      // ligne, la ou les autres blocs tiennent sur une ligne (style.css).
-      const classe = bloc.titre === textes().blocs.cas ? ' bloc-cas' : '';
-      return `<div class="bloc${classe}"><h3>${echapper(bloc.titre)}</h3><table class="grandeurs"><tbody>${lignes}</tbody></table>${note}</div>`;
-    })
-    .join('');
-}
-
-/** Tableau HTML a colonnes libres, en-tetes compris. */
-function rendreTableau(lignes: readonly string[][], entetes: readonly string[]): string {
-  const tete = entetes.map((e) => `<th>${echapper(e)}</th>`).join('');
-  const corps = lignes
-    .map((ligne) => `<tr>${ligne.map((v) => `<td>${echapper(v)}</td>`).join('')}</tr>`)
-    .join('');
-  return `<div class="defilement"><table class="zones"><thead><tr>${tete}</tr></thead><tbody>${corps}</tbody></table></div>`;
-}
-
-// La barre des feuilles est branchee sur les deux pages ; la saisie n'existe
-// que sur la page francaise, la page anglaise reste a construire (lot 9).
+// La barre des feuilles est branchee sur les deux pages, qui portent le meme
+// formulaire et le meme script.
 let barre: BarreFeuilles | null = null;
 let resultat: ResultatSilo | null = null;
 
@@ -189,7 +166,7 @@ function afficherErreur(message: string): void {
   resultat = null;
   for (const nom of Object.keys(dessinsCourants) as NomDessin[]) delete dessinsCourants[nom];
   if (zones === null) return;
-  zones.erreur.textContent = message;
+  zones.erreur.innerHTML = notationHtml(message);
   zones.erreur.hidden = false;
   for (const zone of [zones.synthese, zones.cas, zones.pointsOuverts, zones.elevation, zones.profils, zones.plan, zones.tremie]) {
     zone.innerHTML = '';
@@ -387,7 +364,7 @@ document.addEventListener('click', (evenement) => {
   } else if (action === 'exporter-note') {
     ouvrirOuTelecharger(
       'silo-note.html',
-      noteDeCalculHtml(noteDuCalcul(r, cartoucheNote()), STYLES_DESSIN)
+      identifiantsDeCas(noteDeCalculHtml(noteDuCalcul(r, cartoucheNote()), STYLES_DESSIN))
     );
   } else if (action === 'exporter-dessin') {
     const nom = cible.dataset.dessin as NomDessin | undefined;

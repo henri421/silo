@@ -439,10 +439,41 @@ Test d'acceptation, **à ne jamais modifier** : `tests/app/export.test.ts` (16 t
 
 ## Lot 9 : version anglaise, PWA, publication
 
-- [ ] Page `app/en/` et textes anglais (sur le modèle de `charges-climatiques`).
-- [ ] Installation PWA et fonctionnement hors ligne vérifiés.
-- [ ] README complet, `docs/validation/` relié, publication GitHub Pages par la CI.
+- [x] Page `app/en/` et textes anglais (sur le modèle de `charges-climatiques`).
+- [x] Manifeste et service worker produits pour les deux pages ; installation PWA et fonctionnement hors ligne vérifiés sur ces artefacts (voir `HANDOFF.md`).
+- [x] README complet, `docs/validation/` relié, publication GitHub Pages par la CI.
 - [x] Dans `WebAedificium` (autre dépôt, branche séparée) : une ligne dans le tableau du README, une entrée dans `OUTILS_EXTERNES` et `MENU`, une icône dans `icones/`.
+
+### Consignes d'exécution du lot 9 (séance `claude-ds`)
+
+Branche : `lot-9-anglais`. Modèle, en lecture seule : `../charges-climatiques` (`app/src/textes.ts` avec `FR`, `EN` et `traducteur`, `app/en/index.html`, `tests/app/anglais.test.ts` et `finitions.test.ts`).
+
+Tests d'acceptation, **à ne jamais modifier** : `tests/app/cas-affichage.ts`, `tests/app/finitions.test.ts` (3 tests), `tests/app/anglais.test.ts` (7 tests), et tous ceux des lots précédents.
+
+**T9.1 Finitions de l'affichage en français.**
+* Déplacer de `main.ts` vers `vue.ts` et exporter `rendreBlocs(blocs: readonly BlocResultat[]): string` et `rendreTableau(lignes: readonly string[][], entetes: readonly string[]): string` ; `main.ts` les importe.
+* Les symboles et les phrases qui contiennent une notation (`p_h`, `z_o`, `e_o/d_c`, `θ_c`…) passent par `notationHtml` d'`aedificium-ui` : indices en `<sub>`, aucun `_` visible, à l'écran, dans la note et dans le texte des dessins. Dans les SVG, l'indice s'écrit par un `<tspan>` décalé ; la notation brute peut rester dans un attribut (`data-symbole="h_o"`), ce qui garde vrais les tests du lot 7 qui cherchent `h_o`, `p_n` et `p_t` dans la chaîne.
+* Nombres affichés : au plus 3 décimales et aucun zéro final inutile (`nombreAffiche` ou équivalent), à l'écran et dans la note. Les CSV gardent leurs 4 décimales fixes : ce sont des données.
+* Les motifs du noyau qui s'affichent peuvent être reformulés dans `src/` (**chaînes de message seulement** : ni valeur, ni formule, ni signature, ni type), par exemple `1,10` en `1,1`, à condition que tous les tests restent verts. Toute autre modification de `src/` est interdite.
+* Test : `npx vitest run tests/app/finitions.test.ts`.
+
+**T9.2 Textes anglais.**
+* `textes.ts` : objet `EN` de même type que `FR` (une clé oubliée est une erreur de compilation), `textes()` rend l'un ou l'autre selon `langueCourante()`.
+* Les phrases produites en français par le noyau (motifs, libellés des cas, messages d'erreur, définitions des points ouverts) se traduisent à l'affichage par `traducteur(exactes, regles)` d'`aedificium-ui`, comme dans `charges-climatiques`. Le noyau reste en français.
+* Exports en anglais : `csv()` passe seul à la virgule séparatrice ; les nombres des CSV au point décimal ; en-têtes de colonnes anglais exactement comme dans `tests/app/anglais.test.ts`, la mention `characteristic values, partial factors not applied`. `ENTETES` reste lisible comme un objet (`ENTETES.profils`) et rend la langue courante : par exemple des accesseurs `get profils()`. Le test du lot 8, en français, doit rester vert.
+* Formulaire : libellés, options et messages de refus en anglais.
+* Test : `npx vitest run tests/app/anglais.test.ts -t "affichage en anglais"`.
+
+**T9.3 Page anglaise.** `app/en/index.html` reprend exactement le squelette de `app/index.html` (mêmes `id`, `data-*`, `type`, `value`, `for`, `name`, dans le même ordre), avec les textes en anglais : légendes `Geometry`, `Bottom`, `Material`, `Walls`, `Operation`, `Discretisation`. `main.ts` sert les deux pages. Retirer de `main.ts` et des textes toute mention « page anglaise à construire ». Test : `npx vitest run tests/app/anglais.test.ts`.
+
+**T9.4 PWA, README, publication.**
+* Vérifier que `npm run build` produit le manifeste et le service worker pour les deux pages, comme `charges-climatiques` ; noter dans `HANDOFF.md` ce qui a été vérifié et comment.
+* README : remplacer « En construction » par l'état réel ; mettre la section « Ce que l'outil rend » en liste à puces (une puce par lot, les lots 0 à 2 ne sont plus collés en un paragraphe) ; ajouter une section « Points ouverts » qui renvoie à `SPEC.md` §9 et dit que P4 et P7 attendent la confirmation de l'utilisateur ; ajouter les fichiers exportés ; retirer « (à la fin du lot 9) » ; dans « Références », remplacer « et son annexe nationale » par une phrase qui dit que seules les valeurs recommandées sont employées, sans annexe nationale.
+* Test : `npm run typecheck && npm test && npm run build`.
+
+**T9.5 Fin de lot.** Cocher le lot 9, sauf si une vérification n'a pas pu être faite (le dire). Section « Lot 9 » de `HANDOFF.md`, commit, arrêt.
+
+**Interdit** : modifier les tests, `docs/validation/`, `src/model/types.ts`, les valeurs, formules et signatures de `src/`, `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md` ; ajouter une dépendance ; pousser ; toucher au dépôt `WebAedificium`.
 
 ## Lots ultérieurs, hors v1
 

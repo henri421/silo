@@ -27,6 +27,7 @@ import type {
   TypeFond,
 } from '../../src/index';
 import { materiauParId } from '../../src/index';
+import { textes } from './textes';
 
 /**
  * Les cles des champs du formulaire, dans l'ordre des blocs de la page.
@@ -210,7 +211,7 @@ function nombre(valeurs: Record<string, string>, cle: CleChamp, requis: boolean)
   const texte = (valeurs[cle] ?? '').trim();
   const lu = lireNombre(texte);
   if (lu !== null) return lu;
-  if (requis) throw new ErreurDeSaisie(`Le champ ${cle} doit contenir un nombre lisible.`);
+  if (requis) throw new ErreurDeSaisie(textes().formulaire.nombreLisible(cle));
   return null;
 }
 
@@ -222,7 +223,7 @@ function choix<T extends string>(
 ): T {
   const v = (valeurs[cle] ?? '').trim();
   if ((permis as readonly string[]).includes(v)) return v as T;
-  throw new ErreurDeSaisie(`Le champ ${cle} doit prendre une valeur parmi : ${permis.join(', ')}.`);
+  throw new ErreurDeSaisie(textes().formulaire.choix(cle, permis));
 }
 
 /** Case a cocher : `oui` vaut vrai, toute autre valeur faux. */
@@ -235,7 +236,7 @@ function classeImposee(valeurs: Record<string, string>): Classe | null {
   const texte = (valeurs.classe_imposee ?? '').trim();
   if (texte === '') return null;
   if (texte === '1' || texte === '2' || texte === '3') return Number(texte) as Classe;
-  throw new ErreurDeSaisie('Le champ classe_imposee doit valoir 1, 2, 3 ou rester vide.');
+  throw new ErreurDeSaisie(textes().formulaire.classe);
 }
 
 /**
@@ -357,7 +358,7 @@ export function champsDepuisModele(m: ModeleSaisie): Record<string, string> {
  * modele ne doit jamais passer pour une valeur par defaut.
  */
 function requise(valeur: number | null, cle: CleChamp): number {
-  if (valeur === null) throw new Error(`Le champ ${cle} est requis pour le calcul.`);
+  if (valeur === null) throw new Error(textes().formulaire.requis(cle));
   return valeur;
 }
 
@@ -380,11 +381,11 @@ function materiauDepuisModele(m: ModeleSaisie): Materiau {
     C_op: requise(m.C_op, 'C_op'),
   };
   const sources: Record<string, string> = {};
-  for (const champ of CHAMPS_MATERIAU) sources[champ] = 'saisie utilisateur';
+  for (const champ of CHAMPS_MATERIAU) sources[champ] = textes().materiaux.sourceSaisie;
 
   return {
     id: 'saisi',
-    nom: 'Matériau saisi',
+    nom: textes().materiaux.saisi,
     gamma_l: nombres.gamma_l,
     gamma_u: nombres.gamma_u,
     phi_r: nombres.phi_r,

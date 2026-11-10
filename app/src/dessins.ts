@@ -10,9 +10,14 @@
  * Unites : longueurs en m, pressions en kPa, angles en degres.
  */
 
-import { echapper, nombreAffiche } from 'aedificium-ui';
+import { echapper, nombreAffiche, notationSvg } from 'aedificium-ui';
+
+/** Identifiant de cas tel quel : ce n'est pas une notation (pas d'indice). */
+function idSvg(id: string): string {
+  return echapper(id).replace(/_/g, '&#95;');
+}
 import type { CasDeCharge, IdCas, ResultatSilo } from '../../src/index';
-import { textes } from './textes';
+import { phrase, textes } from './textes';
 
 /** Nombre affiche : trois decimales au plus, sans zeros inutiles. */
 function aff(valeur: number, decimales = 3): string {
@@ -84,13 +89,13 @@ function lignesTexte(texte: string, x: number, y: number, longueur = 78): string
   }
   if (courante !== '') lignes.push(courante);
   return `<text class="texte" x="${c(x)}" y="${c(y)}">${lignes
-    .map((l, i) => `<tspan x="${c(x)}"${i === 0 ? '' : ' dy="14"'}>${echapper(l)}</tspan>`)
+    .map((l, i) => `<tspan x="${c(x)}"${i === 0 ? '' : ' dy="14"'}>${notationSvg(l)}</tspan>`)
     .join('')}</text>`;
 }
 
 /** Etat d'un cas pour le dessin : motif quand il n'est pas calcule. */
 function arretDeCas(cas: CasDeCharge): string {
-  return `${textes().statuts[cas.statut]} : ${cas.motif ?? ''}`;
+  return `${textes().statuts[cas.statut]} : ${phrase(cas.motif ?? '')}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -128,9 +133,7 @@ export function dessinElevation(r: ResultatSilo, id: IdCas, avecBandes: boolean)
   const morceaux: string[] = [];
 
   morceaux.push(
-    `<text class="titre" x="${c(ELEV_MARGE)}" y="${c(ELEV_MARGE + 4)}">${echapper(
-      `${t.dessins.titreElevation}, ${id}`
-    )}</text>`
+    `<text class="titre" x="${c(ELEV_MARGE)}" y="${c(ELEV_MARGE + 4)}">${notationSvg(t.dessins.titreElevation)}, ${idSvg(id)}</text>`
   );
 
   // Surface equivalente, parois, fond ou tremie.
@@ -164,7 +167,7 @@ export function dessinElevation(r: ResultatSilo, id: IdCas, avecBandes: boolean)
     )}"/>`
   );
   morceaux.push(
-    `<text class="texte" x="${c(gauche - 16)}" y="${c(y(cl.h_o / 2) + 4)}" text-anchor="end">${echapper(
+    `<text class="texte" data-symbole="h_o" x="${c(gauche - 16)}" y="${c(y(cl.h_o / 2) + 4)}" text-anchor="end">${notationSvg(
       t.dessins.ho
     )}</text>`
   );
@@ -191,12 +194,12 @@ export function dessinElevation(r: ResultatSilo, id: IdCas, avecBandes: boolean)
       )} Z"/>`
     );
     morceaux.push(
-      `<text class="texte" x="${c(gauche - 14)}" y="${c(y(0) - 10)}" text-anchor="end">${echapper(
+      `<text class="texte" x="${c(gauche - 14)}" y="${c(y(0) - 10)}" text-anchor="end">${notationSvg(
         t.dessins.ph
       )}</text>`
     );
     morceaux.push(
-      `<text class="texte" x="${c(droite + 14)}" y="${c(y(0) - 10)}">${echapper(t.dessins.pw)}</text>`
+      `<text class="texte" x="${c(droite + 14)}" y="${c(y(0) - 10)}">${notationSvg(t.dessins.pw)}</text>`
     );
     morceaux.push(
       `<text class="texte-doux" x="${c(gauche - 14)}" y="${c(y(hc) + 16)}" text-anchor="end">${echapper(
@@ -274,7 +277,7 @@ export function dessinProfils(
   const y = (z: number): number => haut + (z / hc) * hauteur;
 
   const morceaux: string[] = [
-    `<text class="titre" x="${c(PROF_GAUCHE - 40)}" y="${c(24)}">${echapper(
+    `<text class="titre" x="${c(PROF_GAUCHE - 40)}" y="${c(24)}">${notationSvg(
       `${t.dessins.titreProfils}, ${t.interface.grandeurs[grandeur]}`
     )}</text>`,
     `<line class="axe" x1="${c(gauche)}" y1="${c(haut)}" x2="${c(gauche)}" y2="${c(bas)}"/>`,
@@ -316,7 +319,7 @@ export function dessinProfils(
       )}" y2="${c(haut + 16 + rang * 18)}"${tirets}/>`
     );
     morceaux.push(
-      `<text class="texte" x="${c(droite + 52)}" y="${c(haut + 20 + rang * 18)}">${echapper(cas.id)}</text>`
+      `<text class="texte" x="${c(droite + 52)}" y="${c(haut + 20 + rang * 18)}">${idSvg(cas.id)}</text>`
     );
     rang += 1;
   }
@@ -445,7 +448,7 @@ function planRectangulaire(): string {
       `<rect class="zone-majoration" x="${c(x + 18)}" y="${c(y + 18)}" width="${c(largeur - 36)}" height="${c(
         hauteur - 36
       )}"/>`,
-      `<text class="texte" x="${c(PLAN_LARGEUR / 2)}" y="${c(y + hauteur / 2)}" text-anchor="middle">${echapper(
+      `<text class="texte" x="${c(PLAN_LARGEUR / 2)}" y="${c(y + hauteur / 2)}" text-anchor="middle">${notationSvg(
         `${t.dessins.majoration}, ${t.dessins.majorationUniforme}`
       )}</text>`,
     ].join('')
@@ -514,10 +517,10 @@ export function dessinTremie(r: ResultatSilo): string | null {
   }
 
   morceaux.push(
-    `<text class="texte" x="${c(droite)}" y="${c(haut)}">${echapper(t.dessins.pn)}</text>`
+    `<text class="texte" data-symbole="p_n" x="${c(droite)}" y="${c(haut)}">${notationSvg(t.dessins.pn)}</text>`
   );
   morceaux.push(
-    `<text class="texte" x="${c(droite)}" y="${c(haut + 16)}">${echapper(t.dessins.pt)}</text>`
+    `<text class="texte" data-symbole="p_t" x="${c(droite)}" y="${c(haut + 16)}">${notationSvg(t.dessins.pt)}</text>`
   );
 
   return enveloppe('tremie', TREM_LARGEUR, TREM_HAUTEUR, morceaux.join(''));

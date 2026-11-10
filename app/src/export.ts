@@ -6,14 +6,15 @@
  * resultat de `calculer` ; les valeurs d'action localisee viennent de
  * `valeursLocalisees` du noyau, jamais d'une formule recopiee ici.
  *
- * Tout CSV passe par `csv()` d'aedificium-ui : BOM, point-virgule, virgule
- * decimale et fins de ligne CRLF. AUCUNE LIGNE N'EST OMISE : un cas non
- * calcule sort avec son statut et son motif.
+ * Tout CSV passe par `csv()` d'aedificium-ui : BOM, separateur et decimales de
+ * la langue courante (point-virgule et virgule en francais, virgule et point en
+ * anglais), fins de ligne CRLF. AUCUNE LIGNE N'EST OMISE : un cas non calcule
+ * sort avec son statut et son motif.
  *
  * Unites : longueurs en m, pressions en kPa, efforts en kN/m, angles en degres.
  */
 
-import { JETONS, csv, nombreAffiche, resultatsEnCsv } from 'aedificium-ui';
+import { JETONS, csv, langueCourante, nombreAffiche, resultatsEnCsv } from 'aedificium-ui';
 import {
   valeursLocalisees,
   type CasDeCharge,
@@ -23,10 +24,8 @@ import {
 } from '../../src/index';
 import paquet from '../../package.json';
 import { STYLE_DESSIN } from './dessins';
+import { nomMateriau, phrase, textes } from './textes';
 import { blocsSynthese } from './vue';
-
-/** Mention imposee par SPEC §8.2, exacte. */
-export const MENTION = 'valeurs caractéristiques, coefficients partiels non appliqués';
 
 const NORME = 'EN 1991-4:2006';
 
@@ -36,58 +35,70 @@ const CAS_PAROI: readonly IdCas[] = ['REMP', 'VID', 'VID_EXC'];
 /** Cas de fond, dans l'ordre du fichier de tremie. */
 const CAS_FOND: readonly IdCas[] = ['FOND_REMP', 'FOND_VID'];
 
-/** Les colonnes des fichiers de valeurs, dans l'ordre de SPEC §8.2. */
+/**
+ * Les colonnes des fichiers de valeurs, dans l'ordre de SPEC §8.2. Ce sont des
+ * accesseurs : la langue courante au moment du rendu choisit les en-tetes.
+ */
 export const ENTETES = {
-  profils: [
-    'cas',
-    'z [m]',
-    'Z [m]',
-    'p_h sym [kPa]',
-    'p_h localisee ou majoree [kPa]',
-    'p_h total [kPa]',
-    'p_w [kPa]',
-    'p_v [kPa]',
-    'n_zSk [kN/m]',
-    'combinaison',
-  ],
-  bandes: [
-    'cas',
-    'bande',
-    'z haut [m]',
-    'z bas [m]',
-    'Z haut [m]',
-    'Z bas [m]',
-    'p_h haut [kPa]',
-    'p_h bas [kPa]',
-    'p_h constant [kPa]',
-    'p_w haut [kPa]',
-    'p_w bas [kPa]',
-    'p_w constant [kPa]',
-  ],
-  tremie: ['cas', 'x [m]', 'Z [m]', 'p_v [kPa]', 'p_n [kPa]', 'p_t [kPa]'],
-} as const;
+  get profils(): readonly string[] {
+    return textes().csv.entetesProfils;
+  },
+  get bandes(): readonly string[] {
+    return textes().csv.entetesBandes;
+  },
+  get tremie(): readonly string[] {
+    return textes().csv.entetesTremie;
+  },
+};
 
 /** Styles des dessins autonomes : jetons et regles de peinture du SVG. */
 export const STYLES_DESSIN = `${JETONS}\n${STYLE_DESSIN}`;
+
+/** Mention imposee par SPEC §8.2, dans la langue courante. */
+export function mention(): string {
+  return textes().csv.mention;
+}
 
 /** Date du calcul, au format ISO, sans l'heure. */
 function dateDuCalcul(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** Nombre a 4 decimales fixes, virgule decimale (`10,0000`). */
+/** Nombre a 4 decimales fixes, separateur decimal de la langue courante. */
 function n4(valeur: number): string {
-  return valeur.toFixed(4).replace('.', ',');
+  const texte = valeur.toFixed(4);
+  return langueCourante() === 'en' ? texte : texte.replace('.', ',');
 }
 
-/** Nombre a 3 decimales fixes, virgule decimale (`812,793`). */
+/** Nombre a 3 decimales fixes, separateur decimal de la langue courante. */
 function n3(valeur: number): string {
-  return valeur.toFixed(3).replace('.', ',');
+  const texte = valeur.toFixed(3);
+  return langueCourante() === 'en' ? texte : texte.replace('.', ',');
 }
 
-/** Statut d'un cas en francais accentue, tel qu'il s'affiche. */
+/** Statut d'un cas, tel qu'il s'affiche dans un fichier. */
 function statutTexte(statut: StatutCas): string {
-  return statut === 'non-applicable' ? 'non applicable' : 'hors périmètre';
+  const t = textes().csv;
+  return statut === 'non-applicable' ? t.nonApplicable : t.horsPerimetre;
+}
+
+/** Forme du silo, en anglais pour les exports anglais. */
+function formeTexte(forme: string): string {
+  if (langueCourante() !== 'en') return forme;
+  return forme === 'circulaire' ? 'circular' : 'rectangular';
+}
+
+/** Type de fond, en anglais pour les exports anglais. */
+function fondTexte(fond: string): string {
+  if (langueCourante() !== 'en') return fond;
+  const noms: Record<string, string> = {
+    plat: 'flat',
+    conique: 'conical hopper',
+    'pyramidale-carree': 'square pyramidal hopper',
+    'pyramidale-rectangulaire': 'rectangular pyramidal hopper',
+    biseau: 'wedge hopper',
+  };
+  return noms[fond] ?? fond;
 }
 
 /** Cas par identifiant. */
@@ -106,6 +117,7 @@ function dimension(valeur: number | undefined): string {
  * cas. Il tient en huit lignes, suivies d'une ligne vide.
  */
 function entete(r: ResultatSilo): string[][] {
+  const t = textes().csv;
   const d = r.donnees;
   const silo = d.silo;
   const dimensions =
@@ -113,36 +125,28 @@ function entete(r: ResultatSilo): string[][] {
       ? `d = ${dimension(silo.d)} m, t = ${dimension(silo.t)} m`
       : `a = ${dimension(silo.a)} m, b = ${dimension(silo.b)} m`;
   return [
-    ['outil', 'silo', 'version', paquet.version],
-    ['date', dateDuCalcul()],
-    ['norme', NORME, 'profil', r.profil],
-    ['forme', silo.forme, 'dimensions', dimensions, 'hc', `${n4(silo.hc)} m`],
+    [t.outil, 'silo', t.version, paquet.version],
+    [t.date, dateDuCalcul()],
+    [t.norme, NORME, t.profil, phrase(r.profil)],
+    [t.forme, formeTexte(silo.forme), t.dimensions, dimensions, t.hc, `${n4(silo.hc)} m`],
     [
-      'fond',
-      silo.fond,
-      'materiau',
-      d.materiau.nom,
-      'Z transition',
+      t.fond,
+      fondTexte(silo.fond),
+      t.materiau,
+      nomMateriau(d.materiau.nom),
+      t.zTransition,
       `${n4(silo.Z_transition)} m`,
     ],
-    [
-      'combinaisons',
-      'C1 pression normale max (p_h, action localisée)',
-      'C2 frottement max (p_w et n_zSk)',
-      'C3 charge verticale max (p_v)',
-      'T1 trémie remplissage',
-      'T2 trémie vidange',
-      'X vidange excentrée',
-    ],
-    ['mention', MENTION],
-    ['cas exclusifs', 'REMP, VID et VID_EXC sont exclusifs les uns des autres.'],
+    [t.combinaisons, ...t.roles],
+    [t.ligneMention, t.mention],
+    [t.ligneExclusifs, t.exclusivite],
     [],
   ];
 }
 
 /** Ligne d'un cas non calcule : identifiant, puis statut et motif. */
 function ligneArret(cas: CasDeCharge): string[] {
-  return [cas.id, `${statutTexte(cas.statut)} : ${cas.motif ?? ''}`];
+  return [cas.id, `${statutTexte(cas.statut)} : ${phrase(cas.motif ?? '')}`];
 }
 
 /**
@@ -169,7 +173,7 @@ export function csvProfils(r: ResultatSilo): string {
         n4(p.p_w),
         n4(p.p_v),
         n4(p.n_zSk),
-        cas.combinaisons,
+        phrase(cas.combinaisons),
       ]);
     }
   }
@@ -182,6 +186,7 @@ export function csvProfils(r: ResultatSilo): string {
  * kN/m a 3 decimales, ecart relatif en pourcentage.
  */
 export function csvBandes(r: ResultatSilo): string {
+  const t = textes().csv;
   const lignes: string[][] = [...entete(r), [...ENTETES.bandes]];
   for (const id of CAS_PAROI) {
     const cas = casDe(r, id);
@@ -213,10 +218,10 @@ export function csvBandes(r: ResultatSilo): string {
     }
   }
   lignes.push([]);
-  lignes.push(['contrôle', 'cas', 'somme des trapèzes [kN/m]', 'intégrale [kN/m]', 'écart relatif']);
+  lignes.push([...t.entetesControles]);
   for (const c of r.controles) {
     lignes.push([
-      'contrôle',
+      t.controle,
       c.cas,
       n3(c.sommeTrapezes),
       n3(c.integrale),
@@ -269,11 +274,9 @@ function pointLePlusProche(cas: CasDeCharge, z: number): CasDeCharge['profil'][n
  * negative de p_pi est expliquee par une ligne qui dit « vers l'intérieur ».
  */
 export function csvLocalisee(r: ResultatSilo): string {
+  const t = textes().csv;
   const hc = r.donnees.silo.hc;
-  const lignes: string[][] = [
-    ...entete(r),
-    ['cas', 'forme', 'C', 's [m]', 'z_p [m]', 'p_p [kPa]', 'p_pi [kPa]', 'p_nc [kPa]'],
-  ];
+  const lignes: string[][] = [...entete(r), [...t.entetesLocalisee]];
 
   const casRemp = casDe(r, 'REMP');
   const casVid = casDe(r, 'VID');
@@ -308,16 +311,13 @@ export function csvLocalisee(r: ResultatSilo): string {
       n4(r.actionLocalisee.s),
       def.z_p === null ? '' : n4(def.z_p),
       n4(v.p_p),
-      v.p_pi === 0 ? '0,0000' : `-${n4(v.p_pi)}`,
+      v.p_pi === 0 ? n4(0) : `-${n4(v.p_pi)}`,
       n4(v.p_nc),
     ]);
   }
 
   if (r.donnees.silo.forme === 'rectangulaire') {
-    lignes.push([
-      'majoration-uniforme',
-      'p_p,nc = 0,36 p_p sur toute la hauteur (5.2.1.5 et 5.2.2.5)',
-    ]);
+    lignes.push(['majoration-uniforme', t.majoration]);
   }
 
   const exc = casDe(r, 'VID_EXC');
@@ -327,7 +327,7 @@ export function csvLocalisee(r: ResultatSilo): string {
     exc.statut === 'calcule' &&
     exc.excentree !== null
   ) {
-    lignes.push(['zone', 'nom', 'theta min [deg]', 'theta max [deg]']);
+    lignes.push([...t.zoneEntetes]);
     for (const zone of exc.excentree.zones) {
       // Angles en degres, sans decimales inutiles : le fichier se lit a la main.
       lignes.push([
@@ -339,10 +339,7 @@ export function csvLocalisee(r: ResultatSilo): string {
     }
   }
 
-  lignes.push([
-    'p_pi',
-    "valeur négative : succion vers l'intérieur du silo (paroi épaisse, p_pi = p_p / 7).",
-  ]);
+  lignes.push(['p_pi', t.pPi]);
   return csv(lignes);
 }
 
@@ -361,8 +358,8 @@ export function jsonResultat(r: ResultatSilo): string {
       format: 'silo-resultat',
       version: 1,
       norme: NORME,
-      mention: MENTION,
-      profil: r.profil,
+      mention: mention(),
+      profil: phrase(r.profil),
       date: dateDuCalcul(),
       donnees: r.donnees,
       classement: r.classement,
