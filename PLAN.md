@@ -312,6 +312,38 @@ Un seul fichier : `src/parois/excentree.ts`.
 - [ ] `src/discretisation/bandes.ts` : bandes Δz, valeurs haut, bas et constante, cotes Z, contrôle trapèzes contre intégrale exacte.
 - [ ] Tests : bandes de V1 (bandes 1, 2, 3 et 20, somme, intégrale, écart), dernière bande plus courte quand hc n'est pas multiple de Δz.
 
+### Consignes d'exécution du lot 6 (séance `claude-ds`)
+
+Branche : `lot-6-cas`. Types **déjà écrits** dans `src/model/types.ts` (section « Cas de charge, profils et bandes ») : `IdCas`, `StatutCas`, `PointProfil`, `PointFond`, `CasDeCharge`, `Bande`, `ControleBandes`, `ResultatSilo`.
+
+Test d'acceptation, **à ne jamais modifier** : `tests/cas/calcul.test.ts` (15 tests), et tous ceux des lots précédents.
+
+Fichiers : `src/discretisation/bandes.ts`, `src/cas/` (un ou plusieurs modules, au choix), `src/calcul.ts`. Le lot assemble les fonctions des lots 1 à 5 ; il ne recalcule aucune formule de la norme.
+
+**T6.1 Bandes** : `src/discretisation/bandes.ts`.
+* `bandes(cas: IdCas, f: (z: number) => { p_h: number; p_w: number }, hc: number, dz: number, Z_transition: number): Bande[]`. Bornes `z_k = k dz` tant que `k dz < hc`, puis `hc` : la dernière bande est plus courte quand `hc` n'est pas multiple de `dz`. Une borne à moins de `1e-9` de `hc` est confondue avec `hc`. Numéros à partir de 1. `Z = Z_transition + hc − z`. `p_h_haut = f(z_haut).p_h`, `p_h_bas = f(z_bas).p_h`, `p_h_constant = p_h_bas` ; de même pour `p_w`. Erreur explicite si `dz ≤ 0` ou `hc ≤ 0`.
+* `controleBandes(cas, b: Bande[], f_h: (z: number) => number, hc: number): ControleBandes`. `sommeTrapezes = Σ (p_h_haut + p_h_bas)/2 × (z_bas − z_haut)`. `integrale` : Simpson composite sur `[0 ; hc]` avec au moins 2 000 intervalles (nombre pair). `ecartRelatif = sommeTrapezes / integrale − 1`, et 0 si `integrale` vaut 0.
+* Test : `npx vitest run tests/cas/calcul.test.ts -t "derniere bande"` (2 tests).
+
+**T6.2 Calcul complet** : `calculer(d: DonneesSilo, p: ProfilSilos): ResultatSilo` dans `src/calcul.ts`.
+* Commence par `validerDonnees(d)` et `verifierProfil(p)`. Toute erreur de données ou de géométrie hors périmètre (P6 compris) se propage : `calculer` lève.
+* Remplit `classement` (`classer`), `caracteristiques`, `combinaisons` (les six, dans l'ordre C1, C2, C3, T1, T2, X), `janssen` (`parametresJanssen` en C1, C2, C3), `vidange` (`coefficientsVidange`), `actionLocalisee`, `C_b` (`coefficientCb`), `excentree` (`declenchementExcentree`), `profil: p.nom`.
+* **Grille des profils** : `n = max(101, d.discretisation.pointsProfil)` points `z_i = hc × i / (n − 1)`, plus `h_o` et `z_o` en C1 s'ils sont dans `]0 ; hc[`, plus les bornes des bandes ; triés, doublons à moins de `1e-9` retirés. Le calcul en `z = 10` de V1 doit tomber exactement sur `10` : calculer `hc * i / (n - 1)`, pas une somme de pas.
+* **REMP** et **VID** : à chaque `z`, `etatParoi`, puis `valeursLocalisees` avec la définition de remplissage ou de vidange de `actionLocalisee`. `p_h_sym` = p_h symétrique, `p_h_total` et `p_w` = `p_h_total` et `p_w_total` de `valeursLocalisees`, `p_h_loc = p_h_total − p_h_sym`, `p_v` et `n_zSk` symétriques. `localisee` = la définition du cas. Combinaisons : `p_h : C1 ; p_w et n_zSk : C2 ; p_v : C3`.
+* **VID_EXC** : si `declenchementExcentree` rend `declenche: false`, statut `non-applicable` avec son motif. Si `zonesExcentrees` lève (classe 3), statut `hors-perimetre`, motif = message de l'erreur (il cite 5.2.4.3), profil vide. Sinon statut `calcule`, `excentree` = les zones, et à chaque `z` : `p_h_sym = p_hse`, `p_h_total = p_hae`, `p_h_loc = p_hae − p_hse`, `p_w = p_wae`, `p_v` et `n_zSk` de la même évaluation symétrique en combinaison X (Janssen ou Janssen modifié selon l'élancement, comme dans `excentree.ts` ; on peut y exporter une fonction auxiliaire sans changer les signatures existantes). Combinaisons : `X`.
+* **Écoulement en cheminée** (5.1(8)) : VID, VID_EXC et FOND_VID sont `non-applicable`, motif citant `5.1(8)`, profil et fond vides. REMP et FOND_REMP restent calculés.
+* **FOND_REMP**, **FOND_VID** : fond plat, un seul point `{ x: null, Z: Z_transition, p_v: p_vb, p_n: null, p_t: null }` de `fondPlat`, `fondPlat` renseigné. Trémie : `parametresTremie(d, cl, p, 'remplissage' | 'vidange')`, `tremie` renseigné, 50 points `x = h_h × (1 − i/50)` pour `i = 0 … 49`, avec `pressionsTremie` et `Z = Z_transition − (h_h − x)`. Combinaisons : celle de `ParametresTremie.combinaison` pour une trémie, `C3` pour un fond plat.
+* **Bandes et contrôles** : pour chaque cas de paroi **calculé** (REMP, VID, VID_EXC), `bandes` avec `f(z)` = (`p_h_total`, `p_w`) évalués directement en `z` (pas interpolés dans le profil), `d.discretisation.dz` et `Z_transition` ; puis `controleBandes` sur `p_h_total`. Aucun bande ni contrôle pour un cas non calculé.
+* **Points ouverts appliqués**, triés : `P5` toujours ; `P2` si le fond est une trémie ; `P1` et `P4` si VID_EXC est calculé ; `P3` ou `P7` si `pointOuvert` d'une définition localisée de REMP ou VID les porte.
+* Libellés en français accentué (ce sont des chaînes affichées), par exemple « Remplissage symétrique et action localisée ».
+* Test : `npx vitest run tests/cas/calcul.test.ts` (15 tests).
+
+**T6.3 Exports et fin de lot.** Réexporter dans `src/index.ts` `calculer`, `bandes`, `controleBandes` et les nouveaux types. `typecheck`, `test`, `build` passent. Cocher le lot 6. Ligne « Lot 6 » du README, en paragraphe séparé.
+
+**Interdit** : modifier les tests, `docs/validation/`, `src/model/types.ts`, `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md` ; changer la signature d'une fonction des lots précédents ; ajouter une dépendance ; commencer le lot 7 ; pousser.
+
+**Fin du lot** : section « Lot 6 » dans `HANDOFF.md`, commit, arrêt.
+
 ## Lot 7 : interface
 
 - [ ] Formulaire par blocs (géométrie, fond, matériau, parois, exploitation, discrétisation), au style de `DESIGN.md`. Recalcul en continu, pas de bouton « calculer ».
@@ -330,7 +362,7 @@ Un seul fichier : `src/parois/excentree.ts`.
 - [ ] Page `app/en/` et textes anglais (sur le modèle de `charges-climatiques`).
 - [ ] Installation PWA et fonctionnement hors ligne vérifiés.
 - [ ] README complet, `docs/validation/` relié, publication GitHub Pages par la CI.
-- [ ] Dans `WebAedificium` (autre dépôt, branche séparée) : une ligne dans le tableau du README, une entrée dans `OUTILS_EXTERNES` et `MENU`, une icône dans `icones/`.
+- [x] Dans `WebAedificium` (autre dépôt, branche séparée) : une ligne dans le tableau du README, une entrée dans `OUTILS_EXTERNES` et `MENU`, une icône dans `icones/`.
 
 ## Lots ultérieurs, hors v1
 

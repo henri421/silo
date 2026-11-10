@@ -406,3 +406,108 @@ export interface ValeursExcentrees {
   p_hae: number;
   p_wae: number;
 }
+
+// ---------------------------------------------------------------------------
+// Cas de charge, profils et bandes (lot 6, SPEC §7 et §8)
+// ---------------------------------------------------------------------------
+
+export type IdCas = 'REMP' | 'VID' | 'VID_EXC' | 'FOND_REMP' | 'FOND_VID';
+export type StatutCas = 'calcule' | 'non-applicable' | 'hors-perimetre';
+
+/** Un niveau d'un profil de paroi verticale. Pressions en kPa, n_zSk en kN/m. */
+export interface PointProfil {
+  z: number;
+  /** Cote globale Z = Z_transition + hc - z (m). */
+  Z: number;
+  /** Pression normale symetrique du cas (p_hf, p_he ; p_hse pour VID_EXC). */
+  p_h_sym: number;
+  /** Part localisee ou majoree : p_h_total - p_h_sym. */
+  p_h_loc: number;
+  /** Pression normale du cas, localisee ou majoree comprise ; 2 p_hf (p_hae) pour VID_EXC. */
+  p_h_total: number;
+  /** Frottement du cas, majoration comprise ; p_wae pour VID_EXC. */
+  p_w: number;
+  p_v: number;
+  n_zSk: number;
+}
+
+/** Un point du fond. x est null pour un fond plat. */
+export interface PointFond {
+  x: number | null;
+  Z: number;
+  p_v: number;
+  /** Pression normale et frottement de paroi de tremie ; null pour un fond plat. */
+  p_n: number | null;
+  p_t: number | null;
+}
+
+export interface CasDeCharge {
+  id: IdCas;
+  libelle: string;
+  statut: StatutCas;
+  /** Motif d'un cas non applicable ou hors perimetre ; null s'il est calcule. */
+  motif: string | null;
+  /** Combinaisons de proprietes employees, en clair (`p_h : C1 ; p_w et n_zSk : C2 ; p_v : C3`). */
+  combinaisons: string;
+  /** Profil de paroi verticale (REMP, VID, VID_EXC) ; vide sinon ou si le cas n'est pas calcule. */
+  profil: PointProfil[];
+  /** Points du fond (FOND_REMP, FOND_VID) ; vide sinon ou si le cas n'est pas calcule. */
+  fond: PointFond[];
+  /** Definition de l'action localisee (REMP, VID) ; null sinon. */
+  localisee: DefinitionLocalisee | null;
+  /** Zones de la vidange excentree (VID_EXC calcule) ; null sinon. */
+  excentree: ZonesExcentrees | null;
+  /** Fond plat ou parametres de tremie (FOND_*) ; null sinon. */
+  fondPlat: FondPlat | null;
+  tremie: ParametresTremie | null;
+}
+
+/** Une bande de chargement pour le modele EF. Pressions en kPa. */
+export interface Bande {
+  cas: IdCas;
+  /** Numero a partir de 1, du haut vers le bas. */
+  numero: number;
+  z_haut: number;
+  z_bas: number;
+  Z_haut: number;
+  Z_bas: number;
+  p_h_haut: number;
+  p_h_bas: number;
+  /** Valeur constante retenue : celle du bas de la bande (la plus forte en pratique). */
+  p_h_constant: number;
+  p_w_haut: number;
+  p_w_bas: number;
+  p_w_constant: number;
+}
+
+export interface ControleBandes {
+  cas: IdCas;
+  /** Force horizontale par metre de perimetre par la somme des trapezes (kN/m). */
+  sommeTrapezes: number;
+  /** Meme force par integration numerique fine de p_h_total sur [0 ; hc] (kN/m). */
+  integrale: number;
+  /** sommeTrapezes / integrale - 1. */
+  ecartRelatif: number;
+}
+
+/** Resultat complet d'un calcul, base des affichages et des exports. */
+export interface ResultatSilo {
+  donnees: DonneesSilo;
+  /** Nom du profil normatif employe. */
+  profil: string;
+  classement: Classement;
+  caracteristiques: ValeursCaracteristiques;
+  /** Les six combinaisons du tableau 3.1, dans l'ordre C1, C2, C3, T1, T2, X. */
+  combinaisons: Combinaison[];
+  /** z_o et p_ho en C1, C2 et C3. */
+  janssen: { C1: ParametresJanssen; C2: ParametresJanssen; C3: ParametresJanssen };
+  vidange: CoefficientsVidange;
+  actionLocalisee: ActionLocalisee;
+  C_b: CoefficientCb;
+  excentree: DeclenchementExcentree;
+  cas: CasDeCharge[];
+  bandes: Bande[];
+  controles: ControleBandes[];
+  /** Points ouverts de SPEC §9 appliques a ce calcul, tries (`P1`...). */
+  pointsOuverts: string[];
+}
