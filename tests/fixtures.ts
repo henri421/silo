@@ -79,9 +79,14 @@ export function v6(): DonneesSilo {
   return { ...base(), silo: { forme: 'circulaire', d: 10, t: 0.3, hc: 15, fond: 'conique', beta: 60, Z_transition: 0 } };
 }
 
-/** Verifie une egalite a une tolerance relative (1e-4 par defaut, PLAN.md), ou absolue si l'attendu est nul. */
+/**
+ * Verifie une egalite a une tolerance relative (1e-4 par defaut, PLAN.md). Les valeurs de
+ * docs/validation/ sont arrondies a 4 decimales : un ecart absolu d'au plus une demi-unite
+ * de la 4e decimale (5e-5) est donc toujours accepte.
+ */
 export function proche(obtenu: number, attendu: number, tol = 1e-4): void {
   expect(Number.isFinite(obtenu), `valeur non finie : ${obtenu}`).toBe(true);
-  const ecart = attendu === 0 ? Math.abs(obtenu) : Math.abs(obtenu / attendu - 1);
-  expect(ecart, `obtenu ${obtenu}, attendu ${attendu}`).toBeLessThanOrEqual(tol);
+  const absolu = Math.abs(obtenu - attendu);
+  const relatif = attendu === 0 ? absolu : absolu / Math.abs(attendu);
+  expect(absolu <= 5e-5 || relatif <= tol, `obtenu ${obtenu}, attendu ${attendu}, ecart relatif ${relatif}`).toBe(true);
 }
