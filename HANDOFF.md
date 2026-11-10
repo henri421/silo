@@ -575,3 +575,103 @@ Branche `lot-6-cas`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs/va
 ## État final du lot 6
 
 Les trois commandes du lot passent. Deux commits de code ont été faits (`2b973c2` pour T6.1, `9fb2315` pour T6.2), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 7 n'a pas été commencé.
+
+# Compte rendu du lot 7, séance `claude-ds`
+
+Branche `lot-7-interface`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs/validation/` n'a été modifié ; `src/` (noyau et types), `app/en/index.html`, `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md`, `package.json` et `package-lock.json` sont intacts (vérifié par `git diff 21d2c19 -- tests docs/validation src app/en package.json package-lock.json`, sortie vide). Aucune dépendance ajoutée, rien n'a été poussé.
+
+## T7.1 Formulaire
+
+**Fichiers modifiés** : `app/src/form.ts` (création).
+
+**Décisions**
+- `CHAMPS` reprend exactement les 37 clés et leur ordre. `ModeleSaisie` porte une propriété par clé : nombres en `number | null`, choix en unions de chaînes, cases en booléen. Toutes les valeurs restent dans le modèle, y compris celles des champs masqués.
+- `modeleParDefaut()` décrit V1 (rectangulaire 6 x 4 m, hc 20 m, fond plat, Z_transition 0, sable, parois D2 et D2, faiblement cohésif, pas d'engrènement, e_f et e_o nuls, e_t vide, cases décochées, assemblage soudé, classe imposée vide, méthode action localisée, dz 1, 101 points). Les champs masqués d, t et beta valent 6, 0,2 et 30 ; les douze champs du matériau sont pré-remplis avec les valeurs du sable.
+- `champsDepuisModele()` écrit les nombres avec `String(valeur).replace('.', ',')`, ce qui garantit l'aller-retour sans perte de précision, et les booléens en `oui` ou `non`.
+- `modeleDepuisChamps()` refuse un texte illisible ou un champ requis vide avec un message qui nomme la clé. Sont requis les champs de base du noyau (hc, Z_transition, e_f, e_o, dz, points), les dimensions de la forme choisie (d et t, ou a et b), beta pour une trémie, et les douze valeurs du matériau seulement si `materiau = saisi`. Les champs masqués vides ou illisibles valent null sans refus.
+- `donneesDepuisModele()` ne transmet que les grandeurs pertinentes ; e_t et la classe imposée vides sont omis. Un matériau saisi reçoit `id: 'saisi'`, le nom « Matériau saisi » et une source `saisie utilisateur` sur chacun des douze champs.
+- Les grandeurs de base absentes du modèle lèvent une erreur nommant la clé dans `donneesDepuisModele`, plutôt que de produire une valeur par défaut silencieuse.
+
+**Points douteux**
+- La phrase du PLAN, « un champ non exigé illisible ou vide vaut null sans refus », est lue comme visant les champs masqués par la forme, le fond ou le matériau. Les grandeurs de base (hc, Z_transition, excentrements, discrétisation) restent exigées : sans elles le noyau ne peut pas calculer, et le test d'acceptation attend le refus de `hc = 'abc'`. Ce point mérite confirmation par la séance de conception.
+- Le libellé des messages d'erreur n'est fixé par aucun test au-delà du nom de la clé ; il reste une décision de l'exécutant.
+
+**Statut des tests**
+- `npx vitest run tests/app/form.test.ts` : 10 tests passent.
+
+## T7.2 Synthèse
+
+**Fichiers modifiés** : `app/src/vue.ts` (création), `app/src/textes.ts`.
+
+**Décisions**
+- `blocsSynthese()` rend les six blocs dans l'ordre demandé. Les symboles imposés (hc/dc, capacité, classe, K, μ, φ_i, z_o, p_ho, C_h, C_w, C_pf, C_pe, s, C_b) viennent de `textes.ts`. Le bloc Classement porte ses motifs en note.
+- Les nombres sont affichés par `nombreAffiche`, à la française, avec l'unité dans la valeur (m, t, kPa, degrés).
+- `lignesCas()` rend quatre colonnes et les statuts affichés exactement « calculé », « non applicable » et « hors périmètre ». `lignesPointsOuverts()` reprend les questions de SPEC §9 reformulées dans `textes.ts`, avec le choix déclaré.
+- La méthode de fond plat est affichée sous forme explicite (« silo élancé (6.2.1) » ou « silo peu élancé ou intermédiaire (6.2.2) »), parce que le test refuse une valeur qui ressemble à un nombre décimal. C'est un libellé d'affichage : la valeur du noyau n'est pas transformée.
+- `messageDErreur()` rend le message d'une `Error`, sinon le texte de la valeur ; un texte vide donne un message de repli.
+
+**Points douteux** : aucun.
+
+**Statut des tests**
+- `npx vitest run tests/app/vue.test.ts` : 7 tests passent.
+
+## T7.3 Dessins
+
+**Fichiers modifiés** : `app/src/dessins.ts` (création), `app/src/textes.ts`.
+
+**Décisions**
+- Les quatre fonctions sont pures et rendent une chaîne SVG complète. Une feuille `<style>` interne rappelle les classes, toutes peintes par des `var(--...)` des jetons : aucune couleur en dur, aucune balise `rgb` ni `rgba`.
+- `dessinElevation()` dessine le silo à l'échelle, la surface équivalente, le talus, la cote h_o et les diagrammes de p_h_total à gauche et de p_w à droite. Avec `avecBandes`, chaque bande du cas devient un `<rect class="bande">`. Un cas non calculé affiche son statut et son motif.
+- `dessinProfils()` trace z vers le bas, un tracé `trace-<ID>` par cas calculé ; REMP est en trait plein, VID et VID_EXC portent `stroke-dasharray` sur l'élément du tracé.
+- `dessinPlan()` dessine la zone localisée d'un circulaire, les secteurs d'écoulement et de contrainte élevée avec leurs angles, et rappelle la majoration 0,36 d'un rectangulaire.
+- `dessinTremie()` rend `null` pour un fond plat ; sinon il trace p_n et p_t de FOND_REMP et FOND_VID le long de la paroi, en fonction de x.
+- Une coordonnée non finie lève une erreur de dessin au lieu de laisser sortir `NaN` dans le SVG.
+
+**Points douteux**
+- Le talus de l'élévation est une illustration simplifiée : son sommet est ramené à la surface équivalente quand h_o moins la demi-hauteur du talus devient négatif. Aucune valeur de calcul n'en dépend.
+- La paroi mince et la majoration uniforme d'un silo circulaire sont dessinées en plan par un anneau commun ; seules les formes épaisse et rectangulaire sont distinguées par les tests.
+- L'échelle des diagrammes de l'élévation est propre au cas affiché ; elle ne permet pas de comparer deux cas entre eux.
+
+**Statut des tests**
+- `npx vitest run tests/app/dessins.test.ts` : 8 tests passent.
+
+## T7.4 Page et câblage
+
+**Fichiers modifiés** : `app/index.html`, `app/src/main.ts`, `app/src/style.css`, `app/src/textes.ts`, `app/src/vue.ts`, `app/src/dessins.ts`.
+
+**Décisions**
+- La page porte six `fieldset` avec leurs légendes imposées, exactement un élément `data-champ` par clé de `CHAMPS` et aucun autre. Les sélecteurs d'affichage (cas de l'élévation, grandeur des profils, tracé des bandes) portent un `data-role`.
+- Les champs non applicables sont masqués par groupes : circulaire ou rectangulaire, trémie, matériau saisi. Le masquage suit aussi la saisie brute quand un nombre est en cours de frappe et que la lecture échoue.
+- Le recalcul part de l'événement `input` du formulaire, sans aucun bouton. Une saisie refusée ou une erreur du noyau affiche le message dans la zone `erreur` et efface tous les résultats, pour qu'un résultat périmé ne reste pas à l'écran.
+- La barre des feuilles est branchée sur `champsDepuisModele` et `modeleParDefaut` : une feuille de projet enregistre et recharge le relevé des champs. La page anglaise, encore « Interface under construction », ne porte pas de formulaire ; `main.ts` évite donc de lever une erreur sur cette page en l'absence de `#formulaire`.
+- `style.css` reprend les règles de base du modèle, ajoute la grille formulaire et résultats, les tableaux et l'habillage des dessins, uniquement avec les jetons. Le bloc `:root` n'est pas touché.
+- Aucun bouton n'est présent sur la page, donc aucun bouton « calculer ».
+
+**Points douteux**
+- L'interface est en français seulement ; la page anglaise reste à construire au lot 9, comme prévu par le PLAN.
+- Un essai de fumée temporaire sous jsdom, hors du dépôt de tests et supprimé ensuite, a vérifié le chargement de `main.ts`, le calcul de V1, l'effacement sur une saisie refusée, le passage en circulaire avec trémie et e_o = 2 (dessin du plan avec 35° et tracé de trémie), et le refus d'un matériau saisi sans K_m. Cet essai n'est pas conservé dans la suite.
+- Le rendu HTML des blocs de synthèse est fait dans `main.ts` ; `vue.ts` reste pur et rend des blocs, conformément au PLAN.
+
+**Statut des tests**
+- `npx vitest run tests/app/interface.test.ts` : 7 tests passent.
+- `npx vitest run tests/app/pages.test.ts tests/app/jetons.test.ts` : 10 tests passent.
+
+## T7.5 Fin de lot
+
+**Fichiers modifiés** : `PLAN.md` (cases du lot 7 cochées), `README.md` (paragraphe du lot 7), `HANDOFF.md`.
+
+**Décisions**
+- `PLAN.md` : les quatre cases du lot 7 sont cochées, y compris l'enregistrement de projet par `aedificium-ui`, branché à T7.4.
+- `README.md` : paragraphe « Lot 7 » séparé par une ligne vide, qui décrit le formulaire, la synthèse, les dessins et les feuilles de projet, et rappelle que la page anglaise vient au lot 9.
+
+**Points douteux** : aucun.
+
+**Statut des tests**
+- `npm run typecheck` : passe, aucune erreur.
+- `npm test` : 201 tests passent sur 20 fichiers.
+- `npm run build` : passe ; `git status` ne montre aucun fichier construit.
+- `git diff 21d2c19 -- tests docs/validation src app/en package.json package-lock.json` : vide, tests, cas de validation, noyau, page anglaise et dépendances intacts.
+
+## État final du lot 7
+
+Les trois commandes du lot passent. Quatre commits de code ont été faits (`1c642aa` pour T7.1, `51cac20` pour T7.2, `687fcd1` pour T7.3, `cc7c874` pour T7.4), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 8 n'a pas été commencé.

@@ -346,10 +346,10 @@ Fichiers : `src/discretisation/bandes.ts`, `src/cas/` (un ou plusieurs modules, 
 
 ## Lot 7 : interface
 
-- [ ] Formulaire par blocs (géométrie, fond, matériau, parois, exploitation, discrétisation), au style de `DESIGN.md`. Recalcul en continu, pas de bouton « calculer ».
-- [ ] Synthèse, liste des cas avec statut, points ouverts appliqués.
-- [ ] Dessins SVG : élévation avec diagrammes, profils, vue en plan, trémie (SPEC §8.1). Les dessins sont des fonctions pures testées sous jsdom.
-- [ ] Enregistrement de projet par `aedificium-ui`.
+- [x] Formulaire par blocs (géométrie, fond, matériau, parois, exploitation, discrétisation), au style de `DESIGN.md`. Recalcul en continu, pas de bouton « calculer ».
+- [x] Synthèse, liste des cas avec statut, points ouverts appliqués.
+- [x] Dessins SVG : élévation avec diagrammes, profils, vue en plan, trémie (SPEC §8.1). Les dessins sont des fonctions pures testées sous jsdom.
+- [x] Enregistrement de projet par `aedificium-ui`.
 
 ### Consignes d'exécution du lot 7 (séance `claude-ds`)
 

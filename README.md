@@ -25,6 +25,8 @@ Lot 5 : vidange à grand excentrement des silos circulaires (5.2.4.2 et 5.3.4), 
 
 Lot 6 : calcul complet des cinq cas de charge (REMP, VID, VID_EXC, FOND_REMP, FOND_VID), avec leur statut, leurs motifs et leurs profils, puis les bandes de chargement et leur contrôle par la somme des trapèzes et l'intégrale de Simpson.
 
+Lot 7 : interface de saisie par blocs, avec recalcul continu et sans bouton de calcul, synthèse des grandeurs, liste des cas avec leur statut et points ouverts appliqués, dessins SVG de l'élévation, des profils, de la vue en plan et de la trémie, et enregistrement de la saisie comme feuille de projet par `aedificium-ui`. La page anglaise reste à construire au lot 9.
+
 ## Choix de modélisation déclarés
 
 * Les pressions normales sont calculées avec la combinaison « pression normale maximale » (K supérieur, μ inférieur) et le frottement avec la combinaison « frottement maximal » (K et μ supérieurs). Les associer dans un même cas de charge est un choix enveloppe.
