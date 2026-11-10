@@ -18,13 +18,6 @@ function exigerPositif(valeur: number, nom: string, unite: string): void {
   }
 }
 
-/** Nombre fini, positif ou nul, sinon erreur nommant la grandeur. */
-function exigerPositifOuNul(valeur: number, nom: string, unite: string): void {
-  if (!Number.isFinite(valeur) || valeur < 0) {
-    throw new Error(`${nom} doit etre un nombre positif ou nul (${unite}).`);
-  }
-}
-
 /** Angle strictement compris entre 0 et 90 degres, sinon erreur nommant la grandeur. */
 function exigerAngle(valeur: number, nom: string): void {
   if (!Number.isFinite(valeur) || valeur <= 0 || valeur >= 90) {

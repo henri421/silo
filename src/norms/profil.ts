@@ -23,7 +23,8 @@ export interface ProfilSilos {
   date: string;
   /** Ce que le profil couvre et ne couvre pas. */
   perimetre: string;
-  valeurs: {    /** Capacite (t) sous laquelle un silo est de classe 1, tableau 2.1. */
+  valeurs: {
+    /** Capacite (t) sous laquelle un silo est de classe 1, tableau 2.1. */
     capaciteClasse1: ValeurSourcee;
     /** Capacite (t) au-dessus de laquelle un silo est de classe 3, tableau 2.1. */
     capaciteClasse3: ValeurSourcee;
