@@ -27,6 +27,12 @@ export { exposantN, janssenModifie } from './parois/janssen-modifie';
 export { coefficientsVidange } from './parois/vidange';
 export { etatParoi } from './parois/symetrique';
 export { actionLocalisee, coefficientCpe, coefficientCpf, valeursLocalisees } from './parois/localisee';
+export {
+  declenchementExcentree,
+  pressionsEnTheta,
+  valeursExcentrees,
+  zonesExcentrees,
+} from './parois/excentree';
 export { coefficientCb, pressionTransition } from './fond/transition';
 export { fondPlat } from './fond/fond-plat';
 export {

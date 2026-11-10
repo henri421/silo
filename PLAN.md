@@ -276,8 +276,35 @@ Test d'acceptation, **à ne jamais modifier** : `tests/fond/fond.test.ts` (16 te
 ## Lot 5 : vidange à grand excentrement
 
 - [ ] **Avant de coder** : faire confirmer le point ouvert P4 par l'utilisateur.
-- [ ] `src/parois/excentree.ts` : déclenchement (5.2.4.1, 5.3.4), zones en θ, valeurs (SPEC §5.5) ; erreur explicite en classe 3.
-- [ ] Tests : V2 aux deux niveaux, déclenchement par e_o et par e_f, classe 3 refusée avec cas symétriques conservés.
+- [x] `src/parois/excentree.ts` : déclenchement (5.2.4.1, 5.3.4), zones en θ, valeurs (SPEC §5.5) ; erreur explicite en classe 3.
+- [x] Tests : V2 aux deux niveaux, déclenchement par e_o et par e_f, classe 3 refusée avec cas symétriques conservés.
+
+### Consignes d'exécution du lot 5 (séance `claude-ds`)
+
+Branche : `lot-5-excentree`. **P4 n'est pas encore confirmé par l'utilisateur** : l'utilisateur a demandé de coder le choix déclaré et de valider l'ensemble à la fin. Le code applique donc P4 tel que déclaré dans SPEC §5.5 et §9, et le cite dans ses commentaires et ses motifs. Types **déjà écrits** dans `src/model/types.ts` (section « Vidange à grand excentrement ») : `DeclenchementExcentree`, `ZoneExcentree`, `ZonesExcentrees`, `ValeursExcentrees`.
+
+Test d'acceptation, **à ne jamais modifier** : `tests/parois/excentree.test.ts` (10 tests), et tous ceux des lots précédents.
+
+Un seul fichier : `src/parois/excentree.ts`.
+
+**T5.1 Déclenchement** : `declenchementExcentree(d, cl, p): DeclenchementExcentree`.
+* Silo rectangulaire : `declenche: false`, motif « Vidange à grand excentrement traitée pour les silos circulaires seulement (5.2.4). ».
+* `parEo = e_o > excentrementGrand × d_c` ; `parEf = e_f > excentrementGrand × d_c` et `hc/dc > elancementExcentrementRemplissage` ; `declenche = parEo || parEf` (inégalités strictes).
+* Motif : cite `5.2.4.1` pour un silo élancé, `5.3.4` pour un silo intermédiaire ou peu élancé, et dit quelle condition déclenche, ou qu'aucune ne le fait.
+* La classe n'intervient pas ici. En v1, `procedures` vaut 2 ou 3 : la classe 1 est calculée en classe 2.
+* Test : `npx vitest run tests/parois/excentree.test.ts -t "declenchement"` (5 tests).
+
+**T5.2 Zones et valeurs.**
+* `zonesExcentrees(d, cl, p): ZonesExcentrees` : erreur dont le message contient `declench` si `declenchementExcentree` rend `declenche: false`. Erreur au message exact `Vidange excentree en classe 3 : methode de 5.2.4.3 non traitee. Les cas symetriques restent rendus.` si `cl.procedures === 3`. Sinon `theta_c` du profil et trois zones `ecoulement [0 ; θ_c]`, `contrainte-elevee [θ_c ; 2 θ_c]`, `immobile [2 θ_c ; 180]`, `pointsOuverts: ['P1', 'P4']`, motif citant `5.2.4.2`, P1 et P4.
+* `valeursExcentrees(z, d, cl, p): ValeursExcentrees` : mêmes erreurs. Combinaison `X` du lot 1. `p_hse = p_h`, `p_wse = p_w` par `janssen` (silo élancé) ou `janssenModifie` (sinon), avec la combinaison X ; `p_hae = 2 p_hse`, `p_wae = 2 p_wse` ; `p_hce = p_wce = 0`. Erreur qui nomme `hc` si `z > hc`.
+* `pressionsEnTheta(v: ValeursExcentrees, zones: ZonesExcentrees, theta_deg: number): { p_h, p_w }` : `θ` ramené dans `]−180 ; 180]`, puis `|θ| ≤ θ_c` : écoulement ; `θ_c < |θ| ≤ 2 θ_c` : contrainte élevée ; sinon immobile.
+* Test : `npx vitest run tests/parois/excentree.test.ts` (10 tests).
+
+**T5.3 Exports et fin de lot.** Réexporter les types et les quatre fonctions. `typecheck`, `test`, `build` passent. Cocher le lot 5, sauf la case « Avant de coder : faire confirmer P4 », qui reste ouverte. Ligne « Lot 5 » du README, en paragraphe séparé, qui dit que P4 reste à confirmer.
+
+**Interdit** : modifier les tests, `docs/validation/`, `src/model/types.ts`, `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md` ; ajouter une dépendance ; commencer le lot 6 ; pousser.
+
+**Fin du lot** : section « Lot 5 » dans `HANDOFF.md`, commit, arrêt.
 
 ## Lot 6 : assemblage des cas et discrétisation
 

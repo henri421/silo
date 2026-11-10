@@ -441,3 +441,67 @@ Branche `lot-4-fond`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs/v
 ## État final du lot 4
 
 Les trois commandes du lot passent. Trois commits de code ont été faits (`6b3a8bc` pour T4.1, `baf5c90` pour T4.2, `1e64286` pour T4.3), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 5 n'a pas été commencé.
+
+# Compte rendu du lot 5, séance `claude-ds`
+
+Branche `lot-5-excentree`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs/validation/` n'a été modifié ; `src/model/types.ts`, `src/norms/profil.ts`, `SPEC.md`, `CLAUDE.md` et `CONVENTIONS.md` sont intacts (vérifié par `git diff 085bf5b -- tests docs/validation src/model/types.ts src/norms/profil.ts SPEC.md CLAUDE.md CONVENTIONS.md`, sortie vide). Aucune dépendance ajoutée, rien n'a été poussé. Le point ouvert P4 n'a pas été confirmé par l'utilisateur : le code applique la lecture déclarée dans `SPEC.md` §5.5 et §9, la cite dans ses commentaires et ses motifs, et la case correspondante de `PLAN.md` reste ouverte.
+
+## T5.1 Déclenchement
+
+**Fichiers modifiés** : `src/parois/excentree.ts` (création).
+
+**Décisions**
+- Un silo rectangulaire rend `declenche: false`, `parEo` et `parEf` faux, avec le motif imposé « Vidange à grand excentrement traitée pour les silos circulaires seulement (5.2.4). ».
+- `parEo = e_o > excentrementGrand d_c` ; `parEf = e_f > excentrementGrand d_c` et `hc/dc > elancementExcentrementRemplissage`. Les deux seuils sont lus dans le profil, les inégalités sont strictes.
+- Le motif cite `5.2.4.1(2)` pour un silo élancé et `5.3.4` pour un silo intermédiaire ou peu élancé. Il énonce la ou les conditions qui déclenchent, ou pourquoi aucune ne le fait (comparaisons chiffrées, virgule décimale).
+- La classe de calcul n'intervient pas dans le déclenchement ; seul l'élancement choisit la clause citée.
+- Le fichier de test importe les quatre fonctions dès son chargement : des squelettes pour `zonesExcentrees`, `valeursExcentrees` et `pressionsEnTheta` ont été posés à T5.1, puis remplacés à T5.2, comme aux lots 2 à 4.
+
+**Points douteux**
+- Pour un silo non déclenché, `zonesExcentrees` reprend le motif du déclenchement dans son erreur : « Vidange excentree non declenchee : ... ». C'est exigé par le test (le message doit contenir « declench ») ; pour un rectangle, la phrase est un peu redondante mais exacte.
+
+**Statut des tests**
+- Avant implémentation : `npx vitest run tests/parois/excentree.test.ts -t "declenchement"` : échec de chargement, module `src/parois/excentree` absent, 0 test.
+- Après implémentation : `npx vitest run tests/parois/excentree.test.ts -t "declenchement"` : 5 tests passent, 5 ignorés.
+- `npm run typecheck` : passe.
+
+## T5.2 Zones et valeurs
+
+**Fichiers modifiés** : `src/parois/excentree.ts`.
+
+**Décisions**
+- `zonesExcentrees` vérifie d'abord le déclenchement (erreur contenant « declench »), puis refuse la classe 3 avec le message exact de `SPEC.md` §11 citant 5.2.4.3. `theta_c` vient du profil ; les trois zones sont `[0 ; theta_c]` (écoulement), `[theta_c ; 2 theta_c]` (contrainte élevée, P4) et `[2 theta_c ; 180]` (immobile) ; `pointsOuverts` vaut `['P1', 'P4']` et le motif cite 5.2.4.2, P1 et P4.
+- `valeursExcentrees` appelle `zonesExcentrees` pour lever les mêmes erreurs, puis vérifie `z > hc` avec un message qui nomme `hc`. Elle construit la combinaison X par `valeursCaracteristiques` et `combinaison`, calcule `p_hse` et `p_wse` par `janssen` (silo élancé) ou `janssenModifie` (sinon), et rend `p_hce = p_wce = 0`, `p_hae = 2 p_hse`, `p_wae = 2 p_wse`.
+- `pressionsEnTheta` ramène `theta` dans `]-180 ; 180]`, puis applique les bornes inclusives `|theta| <= theta_c` (écoulement), `<= 2 theta_c` (contrainte élevée), sinon immobile.
+
+**Points douteux**
+- `pressionsEnTheta` lève une erreur si l'angle n'est pas fini. Le PLAN ne l'impose pas ; c'est une garde ajoutée au nom de la convention « nommer la grandeur et son unité », sans effet sur les cas de validation.
+- La vérification de classe 3 vient après celle du déclenchement : un cas de classe 3 non déclenché reçoit le message de non-déclenchement, non celui de 5.2.4.3. Cet ordre suit celui du PLAN et n'est pas exercé par les tests.
+- Dans V2, la combinaison X a les mêmes K et mu que C1 (P1 : K supérieur, mu inférieur), donc `p_hse` égale `p_hf` du cas V2 ; les valeurs attendues à z = 9 m et z = 18 m passent.
+
+**Statut des tests**
+- Avant implémentation : `npx vitest run tests/parois/excentree.test.ts` : 5 tests échouent sur les squelettes, 5 passent.
+- Après implémentation : `npx vitest run tests/parois/excentree.test.ts` : 10 tests passent.
+- `npm run typecheck` : passe.
+
+## T5.3 Exports et fin de lot
+
+**Fichiers modifiés** : `src/index.ts`, `PLAN.md` (cases du lot 5), `README.md` (paragraphe du lot 5), `HANDOFF.md`.
+
+**Décisions**
+- `src/index.ts` réexporte `declenchementExcentree`, `zonesExcentrees`, `valeursExcentrees` et `pressionsEnTheta` ; les types du lot sont déjà réexportés par `export * from './model/types'`.
+- `PLAN.md` : les cases « `src/parois/excentree.ts` » et « Tests » sont cochées ; la case « Avant de coder : faire confirmer le point ouvert P4 » reste ouverte, P4 n'ayant pas été confirmé.
+- `README.md` : paragraphe « Lot 5 » séparé par une ligne vide, qui dit que P4 reste à confirmer par l'utilisateur.
+
+**Points douteux**
+- Aucun test d'acceptation n'exerce directement les réexports de `src/index.ts` ; ils sont couverts par le contrôle de types et la suite complète.
+
+**Statut des tests**
+- `npm run typecheck` : passe, aucune erreur.
+- `npm test` : 154 tests passent sur 15 fichiers.
+- `npm run build` : passe ; `git status` ne montre aucun fichier construit.
+- `git diff 085bf5b -- tests docs/validation src/model/types.ts src/norms/profil.ts SPEC.md CLAUDE.md CONVENTIONS.md` : vide, tests, cas de validation et fichiers protégés intacts.
+
+## État final du lot 5
+
+Les trois commandes du lot passent. Deux commits de code ont été faits (`1e590ba` pour T5.1, `aaa4b6e` pour T5.2), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 6 n'a pas été commencé. P4 reste à confirmer par l'utilisateur.
