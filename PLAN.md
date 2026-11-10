@@ -276,8 +276,8 @@ Test d'acceptation, **à ne jamais modifier** : `tests/fond/fond.test.ts` (16 te
 ## Lot 5 : vidange à grand excentrement
 
 - [ ] **Avant de coder** : faire confirmer le point ouvert P4 par l'utilisateur.
-- [ ] `src/parois/excentree.ts` : déclenchement (5.2.4.1, 5.3.4), zones en θ, valeurs (SPEC §5.5) ; erreur explicite en classe 3.
-- [ ] Tests : V2 aux deux niveaux, déclenchement par e_o et par e_f, classe 3 refusée avec cas symétriques conservés.
+- [x] `src/parois/excentree.ts` : déclenchement (5.2.4.1, 5.3.4), zones en θ, valeurs (SPEC §5.5) ; erreur explicite en classe 3.
+- [x] Tests : V2 aux deux niveaux, déclenchement par e_o et par e_f, classe 3 refusée avec cas symétriques conservés.
 
 ### Consignes d'exécution du lot 5 (séance `claude-ds`)
 

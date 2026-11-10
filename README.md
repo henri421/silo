@@ -21,6 +21,8 @@ Lot 3 : action localisée (C_pf, C_pe) et ses formes : majoration 0,36 des paroi
 
 Lot 4 : fond plat (6.2.1 et 6.2.2) et trémie (6.3 et 6.4), avec C_b, p_vft, le classement profond ou peu profond et les pressions p_n et p_t.
 
+Lot 5 : vidange à grand excentrement des silos circulaires (5.2.4.2 et 5.3.4), avec le déclenchement, les zones en θ et les valeurs en combinaison X. Le point ouvert P4, étendue de la zone à 2 p_hf, reste à confirmer par l'utilisateur.
+
 ## Choix de modélisation déclarés
 
 * Les pressions normales sont calculées avec la combinaison « pression normale maximale » (K supérieur, μ inférieur) et le frottement avec la combinaison « frottement maximal » (K et μ supérieurs). Les associer dans un même cas de charge est un choix enveloppe.
