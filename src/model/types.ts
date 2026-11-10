@@ -191,3 +191,49 @@ export interface Combinaison {
   /** phi_i en degres. */
   phi_i: number;
 }
+
+// ---------------------------------------------------------------------------
+// Parois verticales, cas symetriques (lot 2, SPEC §5.1 a §5.3)
+// ---------------------------------------------------------------------------
+
+/** z_o (m) et p_ho (kPa) d'une combinaison, eq. 5.3 et 5.4 (ou 5.73, 5.74). */
+export interface ParametresJanssen {
+  z_o: number;
+  p_ho: number;
+}
+
+/** Valeurs a une profondeur z : pressions en kPa, effort vertical n_zSk en kN/m. */
+export interface ValeursParoi {
+  p_h: number;
+  p_w: number;
+  p_v: number;
+  n_zSk: number;
+}
+
+export interface ValeursJanssenModifie extends ValeursParoi {
+  /** Fonction de forme Y_R (eq. 5.75), 0 au dessus de h_o. */
+  Y_R: number;
+  /** Profondeur equivalente z_V (m) de p_vf = gamma z_V (eq. 5.80), z au dessus de h_o. */
+  z_V: number;
+}
+
+export interface CoefficientsVidange {
+  C_h: number;
+  C_w: number;
+  /** C_S = hc/dc - 1 pour un silo intermediaire, null sinon. */
+  C_S: number | null;
+  /** Clause appliquee, affichee telle quelle. */
+  motif: string;
+}
+
+/** Etat de la paroi verticale a une profondeur z, cas symetriques. */
+export interface EtatParoi {
+  z: number;
+  /** p_h en C1, p_w et n_zSk en C2, p_v en C3. */
+  remplissage: ValeursParoi;
+  /** Vidange symetrique ; null si elle est non applicable. */
+  vidange: ValeursParoi | null;
+  /** Motif quand la vidange est non applicable, null sinon. */
+  motifVidange: string | null;
+  combinaisons: { p_h: 'C1'; p_w: 'C2'; n_zSk: 'C2'; p_v: 'C3' };
+}
