@@ -22,3 +22,7 @@ export { grandeursGeometriques, hauteurTremie, volumeTremie, talus } from './cla
 export { classer } from './classement/classement';
 export { valeursCaracteristiques } from './proprietes/caracteristiques';
 export { combinaison } from './proprietes/combinaisons';
+export { parametresJanssen, janssen } from './parois/janssen';
+export { exposantN, janssenModifie } from './parois/janssen-modifie';
+export { coefficientsVidange } from './parois/vidange';
+export { etatParoi } from './parois/symetrique';
