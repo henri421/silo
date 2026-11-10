@@ -355,3 +355,7 @@ Branche `lot-3-localisee`, 2026-11-10. Aucun test d'acceptation ni fichier de `d
 - `npm run build` : passe ; `git status` ne montre aucun fichier construit.
 - Tests d'acceptation et cas de validation intacts.
 - Le lot 3 est arrêté à T3.3 ; le lot 4 n'a pas été commencé.
+
+### Reprise du lot 3 par la séance de conception
+
+Le test bloquant de T3.3 était faux, non le calcul : la valeur 0,2215 arrondie à 4 décimales ne tenait pas une tolérance relative de 1e−4. `proche()` de `tests/fixtures.ts` accepte désormais un écart absolu de 5e−5 (une demi-unité de la 4ᵉ décimale), règle reportée dans `PLAN.md`. T3.3 passe sans changement de code. T3.4 (réexports, cases, README) a été fait par la séance de conception. `npm test` : 128 tests passent.

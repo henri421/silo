@@ -6,7 +6,7 @@
 
 **Pile.** TypeScript strict, Vite, Vitest (+ jsdom pour `tests/app/`), vite-plugin-pwa. Aucune autre dépendance sans accord.
 
-**Règle de chaque lot.** Les tests s'écrivent d'abord, avec les valeurs de `docs/validation/` en dur (tolérance relative 1e−4 sauf mention, ou écart absolu d au plus 5e−5 puisque les valeurs sont arrondies à 4 décimales). Un lot se termine quand `npm run typecheck`, `npm test` et `npm run build` passent. Ensuite on s'arrête (voir `CLAUDE.md`).
+**Règle de chaque lot.** Les tests s'écrivent d'abord, avec les valeurs de `docs/validation/` en dur (tolérance relative 1e−4 sauf mention, ou écart absolu d'au plus 5e−5 puisque les valeurs sont arrondies à 4 décimales). Un lot se termine quand `npm run typecheck`, `npm test` et `npm run build` passent. Ensuite on s'arrête (voir `CLAUDE.md`).
 
 ## Lot 0 : squelette
 
@@ -192,9 +192,9 @@ Tests d'acceptation, **à ne jamais modifier** : `tests/parois/janssen.test.ts`,
 
 ## Lot 3 : action localisée
 
-- [ ] `src/parois/localisee.ts` : C_pf et C_pe avec leurs branches (SPEC §5.4) et la matrice d'applicabilité.
-- [ ] Formes : non circulaire (0,36), circulaire épaisse (carrés, p/7, z_p), circulaire mince (cosθ, F_pf, z_p), majorations uniformes 5.38 à 5.45 avec leurs conditions.
-- [ ] Tests : V1 (C_pf, C_pe, majorations), V2 (C_pf, C_pe avec E = 0,667, p_pf et p_pfi, ζ, p_hf,u et p_he,u), V3 (C_pf, C_pe intermédiaire), un cas peu élancé où l'action est nulle avec son motif.
+- [x] `src/parois/localisee.ts` : C_pf et C_pe avec leurs branches (SPEC §5.4) et la matrice d'applicabilité.
+- [x] Formes : non circulaire (0,36), circulaire épaisse (carrés, p/7, z_p), circulaire mince (cosθ, F_pf, z_p), majorations uniformes 5.38 à 5.45 avec leurs conditions.
+- [x] Tests : V1 (C_pf, C_pe, majorations), V2 (C_pf, C_pe avec E = 0,667, p_pf et p_pfi, ζ, p_hf,u et p_he,u), V3 (C_pf, C_pe intermédiaire), un cas peu élancé où l'action est nulle avec son motif.
 
 ### Consignes d'exécution du lot 3 (séance `claude-ds`)
 
