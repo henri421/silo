@@ -157,7 +157,7 @@ export function messageDErreur(e: unknown): string {
  * indice, jamais avec un souligne.
  */
 export function rendreBlocs(blocs: readonly BlocResultat[]): string {
-  return blocs
+  return identifiantsDeCas(blocs
     .map((bloc) => {
       const lignes = bloc.lignes
         .map(
@@ -173,7 +173,16 @@ export function rendreBlocs(blocs: readonly BlocResultat[]): string {
       const classe = bloc.titre === textes().blocs.cas ? ' bloc-cas' : '';
       return `<div class="bloc${classe}"><h3>${notationHtml(bloc.titre)}</h3><table class="grandeurs"><tbody>${lignes}</tbody></table>${note}</div>`;
     })
-    .join('');
+    .join(''));
+}
+
+/**
+ * Les identifiants de cas (`VID_EXC`, `FOND_REMP`, `FOND_VID`) ne sont pas des
+ * notations : `notationHtml` mettrait leur suffixe en indice. On retablit le
+ * souligne, ecrit en entite, pour qu'ils s'affichent comme dans les CSV.
+ */
+export function identifiantsDeCas(html: string): string {
+  return html.replace(/\b(VID|FOND)<sub>(EXC|REMP|VID)<\/sub>/g, '$1&#95;$2');
 }
 
 /** Tableau HTML a colonnes libres, en-tetes compris. */
@@ -182,5 +191,7 @@ export function rendreTableau(lignes: readonly string[][], entetes: readonly str
   const corps = lignes
     .map((ligne) => `<tr>${ligne.map((v) => `<td>${notationHtml(v)}</td>`).join('')}</tr>`)
     .join('');
-  return `<div class="defilement"><table class="zones"><thead><tr>${tete}</tr></thead><tbody>${corps}</tbody></table></div>`;
+  return identifiantsDeCas(
+    `<div class="defilement"><table class="zones"><thead><tr>${tete}</tr></thead><tbody>${corps}</tbody></table></div>`
+  );
 }

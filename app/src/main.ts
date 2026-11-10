@@ -41,6 +41,7 @@ import {
   blocsSynthese,
   lignesCas,
   lignesPointsOuverts,
+  identifiantsDeCas,
   messageDErreur,
   rendreBlocs,
   rendreTableau,
@@ -363,7 +364,7 @@ document.addEventListener('click', (evenement) => {
   } else if (action === 'exporter-note') {
     ouvrirOuTelecharger(
       'silo-note.html',
-      noteDeCalculHtml(noteDuCalcul(r, cartoucheNote()), STYLES_DESSIN)
+      identifiantsDeCas(noteDeCalculHtml(noteDuCalcul(r, cartoucheNote()), STYLES_DESSIN))
     );
   } else if (action === 'exporter-dessin') {
     const nom = cible.dataset.dessin as NomDessin | undefined;

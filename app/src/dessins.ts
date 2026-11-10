@@ -11,6 +11,11 @@
  */
 
 import { echapper, nombreAffiche, notationSvg } from 'aedificium-ui';
+
+/** Identifiant de cas tel quel : ce n'est pas une notation (pas d'indice). */
+function idSvg(id: string): string {
+  return echapper(id).replace(/_/g, '&#95;');
+}
 import type { CasDeCharge, IdCas, ResultatSilo } from '../../src/index';
 import { phrase, textes } from './textes';
 
@@ -128,9 +133,7 @@ export function dessinElevation(r: ResultatSilo, id: IdCas, avecBandes: boolean)
   const morceaux: string[] = [];
 
   morceaux.push(
-    `<text class="titre" x="${c(ELEV_MARGE)}" y="${c(ELEV_MARGE + 4)}">${notationSvg(
-      `${t.dessins.titreElevation}, ${id}`
-    )}</text>`
+    `<text class="titre" x="${c(ELEV_MARGE)}" y="${c(ELEV_MARGE + 4)}">${notationSvg(t.dessins.titreElevation)}, ${idSvg(id)}</text>`
   );
 
   // Surface equivalente, parois, fond ou tremie.
@@ -316,7 +319,7 @@ export function dessinProfils(
       )}" y2="${c(haut + 16 + rang * 18)}"${tirets}/>`
     );
     morceaux.push(
-      `<text class="texte" x="${c(droite + 52)}" y="${c(haut + 20 + rang * 18)}">${notationSvg(cas.id)}</text>`
+      `<text class="texte" x="${c(droite + 52)}" y="${c(haut + 20 + rang * 18)}">${idSvg(cas.id)}</text>`
     );
     rang += 1;
   }
