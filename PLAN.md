@@ -475,6 +475,49 @@ Tests d'acceptation, **à ne jamais modifier** : `tests/app/cas-affichage.ts`, `
 
 **Interdit** : modifier les tests, `docs/validation/`, `src/model/types.ts`, les valeurs, formules et signatures de `src/`, `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md` ; ajouter une dépendance ; pousser ; toucher au dépôt `WebAedificium`.
 
+## Lot 10 : carte p(z, θ) pour les modèles en coque
+
+- [ ] `src/discretisation/carte.ts` : `cartePressions` (SPEC §5.7).
+- [ ] Export `carte.csv`, développé de la paroi en SVG, commandes de la carte sur les deux pages.
+- [ ] Tests : V2 paroi épaisse et mince, VID_EXC, classe 3 à position choisie, cartes sans objet.
+
+### Consignes d'exécution du lot 10 (séance `claude-ds`)
+
+Branche : `lot-10-carte`. Types **déjà écrits** dans `src/model/types.ts` (section « Carte p(z, theta) ») : `PointCarte`, `OptionsCarte`, `CarteCas`.
+
+Tests d'acceptation, **à ne jamais modifier** : `tests/discretisation/carte.test.ts`, `tests/app/carte.test.ts`, et tous ceux des lots précédents.
+
+**T10.1 Noyau** : `src/discretisation/carte.ts`, `cartePressions(r: ResultatSilo, p: ProfilSilos, id: IdCas, o: OptionsCarte = {}): CarteCas`. Réexporter dans `src/index.ts`. La fonction assemble les fonctions existantes (`etatParoi`, `valeursLocalisees`, `valeursExcentrees`, `pressionsEnTheta`, `actionLocalisee`) ; elle ne recalcule aucune formule.
+* Ordre des contrôles : `pasTheta` (10 par défaut) doit être un entier strictement positif qui divise 360, sinon erreur dont le message contient `360` ; `o.z_p`, s'il est donné, doit être dans [0 ; hc], sinon erreur qui nomme `hc`.
+* `FOND_REMP` et `FOND_VID` : `non-applicable`, motif « carte des parois verticales seulement ». Silo rectangulaire : `non-applicable`, motif qui contient `rectangulaire` et renvoie à `profils.csv`. Cas non calculé : même statut et même motif que le cas de `r.cas`. Définition localisée `hors-perimetre` (P3) : `hors-perimetre`, motif de la définition. Dans tous ces cas, grille et points vides.
+* REMP et VID : définition `actionLocalisee(...).remplissage` ou `.vidange`. `s = π d_c / 16`. `z_p` = celui de la définition ; s'il est null pour une forme circulaire épaisse ou mince (classe 3), `o.z_p ?? hc/2`, `z_pChoisi: true`, et le motif dit que la norme laisse la zone à toute hauteur (« toute hauteur ») et que les autres positions restent à vérifier. Forme `nulle` ou `majoration-uniforme` : `z_p`, `s` et `demiAngle` null, pas de bande.
+* Grille en z : multiples de `d.discretisation.dz` dans [0 ; hc], `hc`, et pour une zone localisée `z_p`, `z_p − s/2`, `z_p + s/2` ramenés dans [0 ; hc] ; triée, doublons à moins de 1e-9 retirés. Grille en θ : `k × pasTheta` pour k = 0 … 360/pasTheta − 1, plus pour une paroi épaisse `demiAngle`, `180 − demiAngle`, `180 + demiAngle`, `360 − demiAngle` (avec `demiAngle = (s / d_c)` converti en degrés, soit 11,25°), plus pour VID_EXC `θ_c`, `2 θ_c`, `360 − 2 θ_c`, `360 − θ_c` ; triée, doublons retirés.
+* Valeurs, avec `p_h`, `p_w` symétriques du cas à la profondeur du nœud (`etatParoi`) et `p_p = C × p_h,sym(z_p)` constant sur la bande (C = `C` de la définition) :
+  * nœud hors de la bande fermée [z_p − s/2 ; z_p + s/2] : symétrique ;
+  * épaisse, dans la bande : `p_h + p_p` si l'angle à 0 ou à 180° est au plus `demiAngle` (bord compris), sinon `p_h − p_p/7` ;
+  * mince, dans la bande : `p_h + p_p cos θ` ;
+  * `majoration-uniforme` : `p_h_total` et `p_w_total` de `valeursLocalisees` à chaque nœud ; `nulle` : symétrique ;
+  * `p_w` n'est jamais modifié par la zone localisée (sauf la majoration uniforme, déjà dans `p_w_total`).
+  * VID_EXC : `pressionsEnTheta(valeursExcentrees(z, ...), zones, θ)` à chaque nœud ; `z_p`, `s`, `demiAngle` null.
+* `Z = Z_transition + hc − z`. Points triés par z puis par θ. Motif d'une carte calculée : le rappel du repère (θ depuis la direction de l'excentrement, zone centrée sur θ = 0) et, le cas échéant, de z_p.
+* Test : `npx vitest run tests/discretisation/carte.test.ts`.
+
+**T10.2 Export et dessin** : `app/src/export.ts` et `app/src/dessins.ts`.
+* `ENTETES.carte` (accesseur bilingue, comme les autres). `csvCarte(r, cartes: CarteCas[])` : bloc d'en-tête commun, plus des lignes qui rappellent le repère des angles, et pour chaque carte z_p, s et le demi-angle (nombres affichés sans zéro inutile, par exemple `11,25`) ; puis une ligne par nœud, 4 décimales fixes, et une ligne motivée par carte non calculée.
+* `dessinDeveloppe(c: CarteCas): string` : développé de la paroi, θ en abscisse de 0 à 360°, z vers le bas, une cellule `<rect class="cellule">` par maille, teinte par `fill-opacity` proportionnelle à `p_h` sur une couleur de jeton (`var(--…)`), échelle et axes légendés (`θ (°)`, `z (m)`). Carte non calculée : le cadre et le motif (« non applicable » ou « hors périmètre »). Mêmes règles que les autres dessins : notations en indice, aucune couleur en dur, textes par `textes()`.
+* Test : `npx vitest run tests/app/carte.test.ts -t "carte.csv|developpe"`.
+
+**T10.3 Page** : `app/index.html`, `app/en/index.html` (même squelette), `app/src/main.ts`, `textes.ts`.
+* Dans la zone des dessins, un bloc « Carte p(z, θ) » avec : sélecteur du cas `data-role="carte-cas"` (REMP, VID, VID_EXC), pas angulaire `data-role="carte-pas"` (5, 10, 15, 30 ; 10 par défaut), position `data-role="carte-zp"` (champ numérique, actif seulement quand la carte a `z_pChoisi`), et la zone `data-role="developpe"` avec ses boutons SVG et PNG. Ce ne sont pas des `data-champ`.
+* Bouton `data-action="exporter-carte"` dans la zone des exports : `silo-carte.csv` avec les cartes de REMP, VID et VID_EXC au pas et à la position choisis.
+* Test : `npx vitest run tests/app/carte.test.ts`, puis `tests/app/anglais.test.ts` et `tests/app/interface.test.ts` restent verts.
+
+**T10.4 Fin de lot.** `typecheck`, `test`, `build` passent. Cocher le lot 10. Puce « Lot 10 » du README et `carte.csv` dans la liste des fichiers exportés.
+
+**Interdit** : modifier les tests, `docs/validation/`, `src/model/types.ts`, `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md`, et les fonctions existantes du noyau ; ajouter une dépendance ; pousser.
+
+**Fin du lot** : section « Lot 10 » dans `HANDOFF.md`, commit, arrêt.
+
 ## Lots ultérieurs, hors v1
 
 - Voie simplifiée de la classe 1 (valeurs moyennes, éq. 5.23, 5.24, 5.88, 5.89, 6.4, 6.6).

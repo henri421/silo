@@ -228,6 +228,22 @@ Le grand excentrement de remplissage d'un silo peu élancé ou intermédiaire de
 
 Pour chaque z : `p_h`, `p_w`, `p_v`, `n_zSk`, les majorations ou les valeurs localisées, et la combinaison de propriétés employée.
 
+### 5.7 Carte p(z, θ) d'un silo circulaire
+
+Pour charger un modèle en coque, chaque cas de paroi d'un silo circulaire se rend aussi en grille de nœuds (z, θ), avec p_h et p_w.
+
+* **Repère.** θ en degrés dans [0 ; 360[, mesuré depuis la direction de l'excentrement (orifice ou point de remplissage). La zone localisée est centrée sur θ = 0. La norme permet de la placer à toute position sur la circonférence : le modèle EF la fait tourner s'il le faut.
+* **Grille.** En z : les multiples de Δz, 0, hc, la profondeur z_p du centre de la zone et les bords de sa bande. En θ : les multiples du pas angulaire (diviseur de 360, 10° par défaut) et les bords des zones. Un nœud sur un bord de zone appartient à la zone.
+* **REMP et VID.** Hors de la bande [z_p − s/2 ; z_p + s/2], la pression symétrique. Dans la bande, avec p_p (p_pf ou p_pe) pris à la profondeur z_p et constant sur s :
+  * paroi épaisse : p_h + p_p sur deux carrés opposés centrés sur 0 et 180°, de demi-angle s / d_c (en radians) ; p_h − p_p/7 sur le reste de la bande ;
+  * paroi mince : p_h + p_p cos θ ;
+  * majoration uniforme : p_h,u et p_w,u, sans variation en θ, sur toute la hauteur ;
+  * action nulle : la pression symétrique ;
+  * hors périmètre (P3) : la carte est hors périmètre avec le même motif.
+* **Position z_p.** Celle de la norme quand elle est fixée (5.2.1.3(4), 5.16). En classe 3, la norme laisse la zone à toute hauteur : la carte la place à la profondeur choisie par l'utilisateur, hc/2 par défaut, et le dit dans son motif. Les autres positions restent à vérifier.
+* **VID_EXC.** Les zones et les valeurs de §5.5 à chaque nœud, avec p_w.
+* **Non applicable.** Silo rectangulaire (la majoration ne varie pas en θ : profils.csv suffit) et tout cas non calculé, avec son motif.
+
 ## 6. Fond et trémie
 
 ### 6.1 Contrainte à la transition (6.1.2(2) à (6))
@@ -317,6 +333,7 @@ Les fichiers passent par `csv()` d'`aedificium-ui` : point-virgule et virgule d�
 3. `tremie.csv` : une ligne par (cas, x). Colonnes : `cas ; x [m] ; Z [m] ; p_v ; p_n ; p_t`.
 4. `localisee.csv` (circulaire) : position, dimensions et valeurs des zones de l'action localisée, et zones de la vidange excentrée en angle θ.
 5. `synthese.csv` : les blocs de la synthèse, par `resultatsEnCsv`.
+6. `carte.csv` (silo circulaire) : une ligne par (cas, z, θ). Colonnes : `cas ; z [m] ; Z [m] ; θ [°] ; p_h [kPa] ; p_w [kPa]`. Le bloc d'en-tête rappelle le repère des angles, z_p, s et le demi-angle des carrés (§5.7).
 
 ### 8.3 Autres sorties
 

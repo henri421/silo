@@ -49,3 +49,26 @@ Cas reproduit par les tests des lots 1, 3 et 5. Valeurs établies par `reference
 | 18 | 0 | 53,1442 | 106,2885 | 21,9907 | 43,9814 |
 
 Zones (P4) : écoulement pour |θ| ≤ 35°, contrainte élevée pour 35° < |θ| ≤ 70°, matériau immobile ailleurs.
+
+## Carte p(z, θ) (lot 10)
+
+Convention : θ en degrés dans [0 ; 360[, mesuré depuis la direction de l'excentrement ; la zone localisée est centrée sur θ = 0 et, pour une paroi épaisse, sur θ = 180°. La valeur de la zone (p_pf ou p_pe) est prise à la profondeur z_p de son centre et reste constante sur la hauteur s. Un nœud placé sur un bord de zone appartient à la zone.
+
+* s = 1,1781 m, s/2 = **0,589049 m** ; demi-angle d'un carré de côté s : s / d_c = π/16 rad = **11,25°**.
+
+Paroi épaisse (t = 0,20 m), classe 2, z_p = hc/2 = 9 m :
+
+| Cas | θ = 0 | θ = 90° |
+|-|-|-|
+| REMP, z = 9 m | 44,5080 | 40,7480 |
+| VID, z = 9 m | 61,6937 | 45,3589 |
+
+Hors de la bande [z_p − s/2 ; z_p + s/2], la pression est symétrique : REMP à z = 18 m, 53,1442 kPa pour tout θ.
+
+Paroi mince soudée (même silo avec t = 0,02 m, d_c/t = 300), classe 2 : z_p = min(z_o ; hc/2) = **7,2573 m** (5.16), p_hf(z_p) = 36,6630 kPa, p_pf = 2,9264 kPa.
+
+| θ | 0 | 60° | 90° | 180° |
+|-|-|-|-|-|
+| REMP, z = z_p | 39,5894 | 38,1262 | 36,6630 | 33,7366 |
+
+Vidange excentrée (VID_EXC), z = 9 m : 0 pour θ ≤ 35° ou θ ≥ 325° ; 82,4361 kPa pour 35° < θ ≤ 70° ou 290° ≤ θ < 325° ; 41,2180 kPa ailleurs. p_w vaut 34,1115 kPa dans la zone de contrainte élevée.
