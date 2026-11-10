@@ -17,6 +17,7 @@ Cas reproduit par les tests des lots 1, 2, 3, 4 et 6. Valeurs établies indépen
 
 * A = 24 m², U = 20 m, A/U = 1,2 m, d_c = 4 m, hc/dc = 5,0 : **élancé**.
 * Capacité de la partie verticale : 24 × 20 × 16 / 9,81 = **782,9 t** : **classe 2**.
+* Talus (prisme, éq. 5.78) : h_o = 4 tan 39° / 4 = **0,809784 m** ; h_tp = 2 h_o = **1,619568 m**.
 * K sup = 0,4995 ; K inf = 0,405405 ; μ sup = 0,5568 ; μ inf = 0,413793.
 
 ## Janssen

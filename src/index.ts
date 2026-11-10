@@ -12,3 +12,13 @@
  */
 
 export const NORME = 'EN 1991-4:2006';
+
+export * from './model/types';
+export * from './norms/profil';
+export { validerDonnees } from './model/valider';
+export { bibliotheque, materiauParId, materiauxDepuisJson } from './materiaux/bibliotheque';
+export { en1991_4Recommande } from './norms/en1991-4-recommande';
+export { grandeursGeometriques, hauteurTremie, volumeTremie, talus } from './classement/geometrie';
+export { classer } from './classement/classement';
+export { valeursCaracteristiques } from './proprietes/caracteristiques';
+export { combinaison } from './proprietes/combinaisons';

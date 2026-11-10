@@ -113,6 +113,7 @@ La bibliothèque est un fichier JSON, `src/materiaux/bibliotheque.json`. Chaque 
 * `1,0 < hc/dc < 2,0` : intermédiaire ;
 * `0,4 < hc/dc ≤ 1,0` : peu élancé ;
 * `hc/dc ≤ 0,4` avec fond plat : magasin de stockage, **hors périmètre** (5.4), erreur explicite ;
+* `hc/dc ≤ 0,4` avec trémie : point ouvert P6, erreur explicite ;
 * fond ventilé : hors périmètre (5.1(3), 5.5).
 
 Les limites de 1.1(3) sont contrôlées : `h_b/d_c < 10`, `h_b < 100 m`, `d_c < 60 m`. En dehors, le noyau lève une erreur.
@@ -334,6 +335,7 @@ Chacun est codé selon le choix déclaré ici, affiché dans l'interface et la n
 | P3 | Paroi mince boulonnée de classe 2 : 5.2.1.4(4) demande une majoration « dans une proportion uniforme » sans en donner la valeur. | Non traité : statut hors périmètre, avec la clause. |
 | P4 | Étendue de la zone à `2 p_hf` en vidange excentrée : lue comme un arc θ_c de chaque côté de la zone d'écoulement (figure 5.5c). | À confirmer par l'utilisateur sur la figure avant le lot 5. Si la lecture est infirmée, le cas de validation V2 sera complété. |
 | P5 | Capacité pour le tableau 2.1 : γ_u ou γ_l, volume de trémie compris ou non. | γ_u, trémie comprise (la classe la plus haute). |
+| P6 | Silo à trémie avec `hc/dc ≤ 0,4` : 5.1(2) ne le range pas clairement parmi les silos peu élancés. | Non traité : erreur explicite qui cite P6 et 5.1(2), à confirmer par l'utilisateur. |
 
 ## 10. Hors périmètre en v1
 

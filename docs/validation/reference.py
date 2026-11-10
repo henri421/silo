@@ -177,6 +177,7 @@ titre("V4 - tremie conique profonde sous V2 (d = 6 m, hc = 18 m), beta = 30 deg,
 g = geom_circ(6.0); hc = 18.0; beta = 30.0
 hh = 3.0 / math.tan(math.radians(beta)); mu_h = c["mu_inf"]; S = 2
 crit = (1 - c["K_inf"]) / (2 * mu_h)
+print("volume tremie (m3) =", f(math.pi * 9 * hh / 3), " ho V1 =", f(4 * math.tan(math.radians(39)) / 4, 6), " ho V2 =", f(math.tan(math.radians(39)), 6))
 print("hh =", f(hh), " tan beta =", f(math.tan(math.radians(beta))), " (1-K inf)/(2 mu_h) =", f(crit), " -> profonde :",
       math.tan(math.radians(beta)) < crit)
 # remplissage : K inf, mu inf

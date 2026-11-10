@@ -1,0 +1,42 @@
+{
+  "format": "silo-materiaux",
+  "version": 1,
+  "materiaux": [
+    {
+      "id": "defaut",
+      "nom": "Matériau par défaut",
+      "valeurs": {
+        "gamma_l": { "valeur": 6.0, "source": "EN 1991-4:2006, tableau E.1" },
+        "gamma_u": { "valeur": 22.0, "source": "EN 1991-4:2006, tableau E.1" },
+        "phi_r": { "valeur": 40, "source": "EN 1991-4:2006, tableau E.1" },
+        "phi_im": { "valeur": 35, "source": "EN 1991-4:2006, tableau E.1" },
+        "a_phi": { "valeur": 1.3, "source": "EN 1991-4:2006, tableau E.1" },
+        "K_m": { "valeur": 0.5, "source": "EN 1991-4:2006, tableau E.1" },
+        "a_K": { "valeur": 1.5, "source": "EN 1991-4:2006, tableau E.1" },
+        "mu_m_D1": { "valeur": 0.32, "source": "EN 1991-4:2006, tableau E.1" },
+        "mu_m_D2": { "valeur": 0.39, "source": "EN 1991-4:2006, tableau E.1" },
+        "mu_m_D3": { "valeur": 0.5, "source": "EN 1991-4:2006, tableau E.1" },
+        "a_mu": { "valeur": 1.4, "source": "EN 1991-4:2006, tableau E.1" },
+        "C_op": { "valeur": 1.0, "source": "EN 1991-4:2006, tableau E.1" }
+      }
+    },
+    {
+      "id": "sable",
+      "nom": "Sable",
+      "valeurs": {
+        "gamma_l": { "valeur": 14.0, "source": "EN 1991-4:2006, tableau E.1" },
+        "gamma_u": { "valeur": 16.0, "source": "EN 1991-4:2006, tableau E.1" },
+        "phi_r": { "valeur": 39, "source": "EN 1991-4:2006, tableau E.1" },
+        "phi_im": { "valeur": 36, "source": "EN 1991-4:2006, tableau E.1" },
+        "a_phi": { "valeur": 1.09, "source": "EN 1991-4:2006, tableau E.1" },
+        "K_m": { "valeur": 0.45, "source": "EN 1991-4:2006, tableau E.1" },
+        "a_K": { "valeur": 1.11, "source": "EN 1991-4:2006, tableau E.1" },
+        "mu_m_D1": { "valeur": 0.38, "source": "EN 1991-4:2006, tableau E.1" },
+        "mu_m_D2": { "valeur": 0.48, "source": "EN 1991-4:2006, tableau E.1" },
+        "mu_m_D3": { "valeur": 0.57, "source": "EN 1991-4:2006, tableau E.1" },
+        "a_mu": { "valeur": 1.16, "source": "EN 1991-4:2006, tableau E.1" },
+        "C_op": { "valeur": 0.4, "source": "EN 1991-4:2006, tableau E.1" }
+      }
+    }
+  ]
+}
