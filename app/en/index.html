@@ -33,13 +33,175 @@
       </p>
     </header>
 
-    <!-- Barre des feuilles de calcul (projets de la suite, aedificium-ui) -->
+    <!-- Project sheets bar (suite projects, aedificium-ui) -->
     <div class="feuilles" data-role="feuilles"></div>
 
     <main>
       <section id="saisie" aria-label="input">
-        <p>Interface under construction.</p>
+        <form id="formulaire" autocomplete="off">
+          <fieldset>
+            <legend>Geometry</legend>
+            <label><span>Silo shape</span>
+              <select data-champ="forme">
+                <option value="rectangulaire">rectangular</option>
+                <option value="circulaire">circular</option>
+              </select>
+            </label>
+            <div class="groupe" data-groupe="circulaire">
+              <label><span>Internal diameter d (m)</span><input type="text" inputmode="decimal" data-champ="d" /></label>
+              <label><span>Wall thickness t (m)</span><input type="text" inputmode="decimal" data-champ="t" /></label>
+            </div>
+            <div class="groupe" data-groupe="rectangulaire">
+              <label><span>Internal long side a (m)</span><input type="text" inputmode="decimal" data-champ="a" /></label>
+              <label><span>Internal short side b (m)</span><input type="text" inputmode="decimal" data-champ="b" /></label>
+            </div>
+            <label><span>Vertical wall height h<sub>c</sub> (m)</span><input type="text" inputmode="decimal" data-champ="hc" /></label>
+            <label><span>Transition level Z (m)</span><input type="text" inputmode="decimal" data-champ="Z_transition" /></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Bottom</legend>
+            <label><span>Bottom type</span>
+              <select data-champ="fond">
+                <option value="plat">flat</option>
+                <option value="conique">conical hopper</option>
+                <option value="pyramidale-carree">square pyramidal hopper</option>
+                <option value="pyramidale-rectangulaire">rectangular pyramidal hopper</option>
+                <option value="biseau">wedge hopper</option>
+              </select>
+            </label>
+            <div class="groupe" data-groupe="tremie">
+              <label><span>Half opening angle &beta; (&deg;)</span><input type="text" inputmode="decimal" data-champ="beta" /></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Material</legend>
+            <label><span>Material</span>
+              <select data-champ="materiau">
+                <option value="sable">Sand, Table E.1</option>
+                <option value="defaut">Default material, Table E.1</option>
+                <option value="saisi">entered material</option>
+              </select>
+            </label>
+            <div class="groupe" data-groupe="materiau-saisi">
+              <label><span>Lower unit weight &gamma;<sub>l</sub> (kN/m&sup3;)</span><input type="text" inputmode="decimal" data-champ="gamma_l" /></label>
+              <label><span>Upper unit weight &gamma;<sub>u</sub> (kN/m&sup3;)</span><input type="text" inputmode="decimal" data-champ="gamma_u" /></label>
+              <label><span>Angle of repose &phi;<sub>r</sub> (&deg;)</span><input type="text" inputmode="decimal" data-champ="phi_r" /></label>
+              <label><span>Mean internal friction angle &phi;<sub>im</sub> (&deg;)</span><input type="text" inputmode="decimal" data-champ="phi_im" /></label>
+              <label><span>Coefficient a<sub>&phi;</sub> (-)</span><input type="text" inputmode="decimal" data-champ="a_phi" /></label>
+              <label><span>Mean lateral pressure ratio K<sub>m</sub> (-)</span><input type="text" inputmode="decimal" data-champ="K_m" /></label>
+              <label><span>Coefficient a<sub>K</sub> (-)</span><input type="text" inputmode="decimal" data-champ="a_K" /></label>
+              <label><span>Mean friction &mu;<sub>m</sub>, wall D1 (-)</span><input type="text" inputmode="decimal" data-champ="mu_D1" /></label>
+              <label><span>Mean friction &mu;<sub>m</sub>, wall D2 (-)</span><input type="text" inputmode="decimal" data-champ="mu_D2" /></label>
+              <label><span>Mean friction &mu;<sub>m</sub>, wall D3 (-)</span><input type="text" inputmode="decimal" data-champ="mu_D3" /></label>
+              <label><span>Coefficient a<sub>&mu;</sub> (-)</span><input type="text" inputmode="decimal" data-champ="a_mu" /></label>
+              <label><span>Coefficient C<sub>op</sub> (-)</span><input type="text" inputmode="decimal" data-champ="C_op" /></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Walls</legend>
+            <label><span>Vertical wall category</span>
+              <select data-champ="paroi_verticale">
+                <option value="D1">D1</option>
+                <option value="D2">D2</option>
+                <option value="D3">D3</option>
+              </select>
+            </label>
+            <label><span>Hopper wall category</span>
+              <select data-champ="paroi_tremie">
+                <option value="D1">D1</option>
+                <option value="D2">D2</option>
+                <option value="D3">D3</option>
+              </select>
+            </label>
+            <label class="case"><input type="checkbox" data-champ="faiblement_cohesif" /><span>slightly cohesive material (dry sand)</span></label>
+            <label class="case"><input type="checkbox" data-champ="engrainement" /><span>mechanical interlocking of the material</span></label>
+            <label><span>Thin wall assembly</span>
+              <select data-champ="assemblage">
+                <option value="soude">welded</option>
+                <option value="boulonne">bolted</option>
+              </select>
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Operation</legend>
+            <label><span>Filling eccentricity e<sub>f</sub> (m)</span><input type="text" inputmode="decimal" data-champ="e_f" /></label>
+            <label><span>Full silo eccentricity eₜ (m), empty = e<sub>f</sub></span><input type="text" inputmode="decimal" data-champ="e_t" placeholder="empty = ef" /></label>
+            <label><span>Outlet eccentricity e<sub>o</sub> (m)</span><input type="text" inputmode="decimal" data-champ="e_o" /></label>
+            <label class="case"><input type="checkbox" data-champ="vidange_haut" /><span>discharge from the top</span></label>
+            <label class="case"><input type="checkbox" data-champ="cheminee" /><span>internal pipe flow guaranteed</span></label>
+            <label class="case"><input type="checkbox" data-champ="forme_maintenue" /><span>shape held at top and bottom</span></label>
+            <label><span>Imposed class, empty = none</span>
+              <select data-champ="classe_imposee">
+                <option value="">none</option>
+                <option value="1">class 1</option>
+                <option value="2">class 2</option>
+                <option value="3">class 3</option>
+              </select>
+            </label>
+            <label><span>Localised method, circular silo of class 2</span>
+              <select data-champ="methode_localisee">
+                <option value="action-localisee">localised action</option>
+                <option value="majoration-uniforme">uniform increase</option>
+              </select>
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Discretisation</legend>
+            <label><span>Strip height &Delta;z (m)</span><input type="text" inputmode="decimal" data-champ="dz" /></label>
+            <label><span>Profile points, at least 101</span><input type="text" inputmode="decimal" data-champ="points" /></label>
+          </fieldset>
+        </form>
+        <p data-role="erreur" class="erreur" role="alert" hidden></p>
       </section>
+
+      <div class="colonne">
+        <section id="synthese" aria-label="summary">
+          <h2>Summary</h2>
+          <div data-role="synthese"></div>
+        </section>
+
+        <section id="cas" aria-label="load cases">
+          <h2>Load cases</h2>
+          <div data-role="cas"></div>
+          <h2>Applied open points</h2>
+          <div data-role="points-ouverts"></div>
+        </section>
+
+        <section id="dessins" aria-label="drawings">
+          <h2>Drawings</h2>
+          <div class="commandes" id="commandes-dessins">
+            <label><span>Elevation case</span>
+              <select data-role="cas-elevation"></select>
+            </label>
+            <label class="case"><input type="checkbox" data-role="bandes-elevation" /><span>draw the &Delta;z strips</span></label>
+            <label><span>Quantity for profiles</span>
+              <select data-role="grandeur-profils"></select>
+            </label>
+          </div>
+          <div data-role="elevation"></div>
+          <div data-role="profils"></div>
+          <div data-role="plan"></div>
+          <div data-role="tremie"></div>
+        </section>
+
+        <section id="exports" aria-label="exports">
+          <h2>Exports</h2>
+          <div class="exports">
+            <button type="button" data-action="exporter-profils">Profiles, CSV</button>
+            <button type="button" data-action="exporter-bandes">Strips, CSV</button>
+            <button type="button" data-action="exporter-tremie">Hopper, CSV</button>
+            <button type="button" data-action="exporter-localisee">Localised action, CSV</button>
+            <button type="button" data-action="exporter-synthese">Summary, CSV</button>
+            <button type="button" data-action="exporter-json">Result, JSON</button>
+            <button type="button" data-action="exporter-note">Calculation note</button>
+          </div>
+        </section>
+      </div>
     </main>
 
     <footer>
