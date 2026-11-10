@@ -486,7 +486,7 @@ export function dessinDeveloppe(carte: CarteCas): string {
     carte.zs.length > 1 &&
     carte.thetas.length > 1;
   const morceaux: string[] = [
-    `<text class="titre" x="20" y="26">${notationSvg(`${t.dessins.titreCarte}, ${carte.cas}`)}</text>`,
+    `<text class="titre" x="20" y="26">${notationSvg(t.dessins.titreCarte)}, ${idSvg(carte.cas)}</text>`,
   ];
 
   const x0 = CARTE_GAUCHE;
