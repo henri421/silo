@@ -1,4 +1,4 @@
-# Plan d'implémentation de `pressions-silos`
+# Plan d'implémentation de `silo`
 
 **Objectif.** Un outil web hors ligne, publié sur GitHub Pages, qui rend les actions de l'EN 1991-4 sur les parois et le fond d'un silo circulaire ou rectangulaire, avec profils graphiques et fichiers CSV prêts pour un modèle aux éléments finis.
 
@@ -25,8 +25,8 @@ Tests d'acceptation, déjà écrits, **à ne jamais modifier** : `tests/index.te
 
 **T0.1 Configuration.**
 Fichiers : `package.json`, `package-lock.json`, `tsconfig.json`, `vite.config.ts`, `.gitignore`, `.github/workflows/pages.yml`.
-* Reprendre ceux de `charges-climatiques` : mêmes scripts et mêmes `devDependencies` (versions comprises), avec `"name": "pressions-silos"`, `"version": "0.1.0"`. Aucune autre dépendance.
-* `vite.config.ts` identique, sauf le manifeste : `name: 'pressions-silos, actions dans les silos selon l EN 1991-4'`, `short_name: 'Silos'`, `description: 'Pressions des matériaux ensilés sur les parois et les fonds des silos, profils et fichiers CSV pour un modèle aux éléments finis, selon l EN 1991-4.'`. Les commentaires citant `/charges-climatiques/` deviennent `/pressions-silos/`.
+* Reprendre ceux de `charges-climatiques` : mêmes scripts et mêmes `devDependencies` (versions comprises), avec `"name": "silo"`, `"version": "0.1.0"`. Aucune autre dépendance.
+* `vite.config.ts` identique, sauf le manifeste : `name: 'Silos, pressions des matériaux ensilés selon l EN 1991-4'`, `short_name: 'Silos'`, `description: 'Pressions des matériaux ensilés sur les parois et les fonds des silos, profils et fichiers CSV pour un modèle aux éléments finis, selon l EN 1991-4.'`. Les commentaires citant `/charges-climatiques/` deviennent `/silo/`.
 * `.gitignore` : ajouter une ligne `*.pdf` (le PDF de la norme ne doit jamais entrer dans le dépôt).
 * Puis `npm install`.
 * Test : `npx vitest run tests/app/configuration.test.ts`. Attendu : 7 tests passent.

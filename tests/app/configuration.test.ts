@@ -10,7 +10,7 @@ describe('package.json', () => {
   const pkg = JSON.parse(texte('package.json'));
 
   it('porte le nom du depot et les scripts de la suite', () => {
-    expect(pkg.name).toBe('pressions-silos');
+    expect(pkg.name).toBe('silo');
     expect(pkg.private).toBe(true);
     expect(pkg.type).toBe('module');
     expect(pkg.scripts.test).toBe('vitest run');
@@ -49,7 +49,7 @@ describe('vite.config.ts', () => {
 
   it('declare une PWA propre au silo', () => {
     expect(cfg).toContain("short_name: 'Silos'");
-    expect(cfg).toContain("name: 'pressions-silos, actions dans les silos selon l EN 1991-4'");
+    expect(cfg).toContain("name: 'Silos, pressions des matériaux ensilés selon l EN 1991-4'");
     expect(cfg).toContain("registerType: 'prompt'");
     expect(cfg).toContain('icone-masquable-512.png');
     expect(cfg).not.toContain('charges-climatiques');
