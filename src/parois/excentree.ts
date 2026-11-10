@@ -22,6 +22,10 @@ import type {
   ZonesExcentrees,
 } from '../model/types';
 import type { ProfilSilos } from '../norms/profil';
+import { valeursCaracteristiques } from '../proprietes/caracteristiques';
+import { combinaison } from '../proprietes/combinaisons';
+import { janssen } from './janssen';
+import { janssenModifie } from './janssen-modifie';
 
 /** Nombre a la francaise, virgule decimale, nombre fixe de decimales. */
 function nombreFr(valeur: number, decimales: number): string {
@@ -107,34 +111,106 @@ export function declenchementExcentree(
 }
 
 /**
- * Zones en theta de la vidange excentree (5.2.4.2) : ecoulement, contrainte
- * elevee et materiau immobile. Squelette de la tache T5.2, remplace ensuite.
+ * Zones en theta de la vidange excentree, methode simplifiee de la classe 2
+ * (5.2.4.2) : ecoulement sur |theta| <= theta_c, contrainte elevee a 2 p_hf
+ * sur l'arc theta_c suivant (P4), materiau immobile ailleurs.
+ *
+ * Leve une erreur si la vidange excentree n'est pas declenchee, et une erreur
+ * explicite nommant 5.2.4.3 pour une classe 3, dont la methode est hors
+ * perimetre en v1 : les cas symetriques restent rendus.
  */
-export function zonesExcentrees(_d: DonneesSilo, _cl: Classement, _p: ProfilSilos): ZonesExcentrees {
-  throw new Error('zonesExcentrees : non implemente (tache T5.2 du lot 5).');
+export function zonesExcentrees(d: DonneesSilo, cl: Classement, p: ProfilSilos): ZonesExcentrees {
+  const det = declenchementExcentree(d, cl, p);
+  if (!det.declenche) {
+    throw new Error(`Vidange excentree non declenchee : ${det.motif}`);
+  }
+  if (cl.procedures === 3) {
+    throw new Error(
+      'Vidange excentree en classe 3 : methode de 5.2.4.3 non traitee. Les cas symetriques restent rendus.',
+    );
+  }
+
+  const theta_c = p.valeurs.theta_c.valeur;
+  const thetaFr = nombreFr(theta_c, 0);
+  return {
+    theta_c,
+    zones: [
+      { nom: 'ecoulement', thetaMin: 0, thetaMax: theta_c },
+      { nom: 'contrainte-elevee', thetaMin: theta_c, thetaMax: 2 * theta_c },
+      { nom: 'immobile', thetaMin: 2 * theta_c, thetaMax: 180 },
+    ],
+    pointsOuverts: ['P1', 'P4'],
+    motif:
+      `Méthode simplifiée de 5.2.4.2, classe 2 : écoulement sur |theta| <= ${thetaFr}°, ` +
+      `contrainte élevée à 2 p_hf sur un arc de ${thetaFr}° de chaque côté de l'écoulement ` +
+      '(P4 : étendue à confirmer), matériau immobile au-delà. ' +
+      'K supérieur (P1), mu inférieur et phi_i supérieur (5.2.4.1(4)).',
+  };
 }
 
 /**
- * Valeurs de la vidange excentree a la profondeur z, combinaison X. Squelette
- * de la tache T5.2, remplace ensuite.
+ * Valeurs de la vidange excentree a la profondeur z, combinaison X : materiau
+ * immobile p_hse et p_wse (Janssen ou Janssen modifie selon l'elancement),
+ * contrainte elevee p_hae = 2 p_hse et p_wae = 2 p_wse, ecoulement nul.
+ *
+ * Leve les memes erreurs que `zonesExcentrees`, et une erreur nommant hc si
+ * z depasse la hauteur de paroi verticale.
  */
 export function valeursExcentrees(
-  _z: number,
-  _d: DonneesSilo,
-  _cl: Classement,
-  _p: ProfilSilos,
+  z: number,
+  d: DonneesSilo,
+  cl: Classement,
+  p: ProfilSilos,
 ): ValeursExcentrees {
-  throw new Error('valeursExcentrees : non implemente (tache T5.2 du lot 5).');
+  // Memes conditions d'application que les zones (declenchement, classe 3).
+  zonesExcentrees(d, cl, p);
+  if (z > d.silo.hc) {
+    throw new Error(
+      `La profondeur z = ${z} m depasse la hauteur de paroi verticale hc = ${d.silo.hc} m.`,
+    );
+  }
+
+  const v = valeursCaracteristiques(d.materiau, d.parois);
+  const cx = combinaison('X', v, d.materiau);
+  const base =
+    cl.elancement === 'elance'
+      ? janssen(z, cl.geometrie, cx)
+      : janssenModifie(z, cl.geometrie, cx, cl.h_o, d.materiau.phi_r);
+
+  const p_hse = base.p_h;
+  const p_wse = base.p_w;
+  return {
+    z,
+    combinaison: 'X',
+    p_hce: 0,
+    p_wce: 0,
+    p_hse,
+    p_wse,
+    p_hae: 2 * p_hse,
+    p_wae: 2 * p_wse,
+  };
 }
 
 /**
- * Pressions de la vidange excentree pour un angle theta donne. Squelette de la
- * tache T5.2, remplace ensuite.
+ * Pressions de la vidange excentree a l'angle theta (deg), mesure depuis l'axe
+ * de l'excentrement, cote orifice. theta est ramene dans ]-180 ; 180] :
+ * |theta| <= theta_c : ecoulement (nul) ; jusqu'a 2 theta_c : contrainte
+ * elevee ; sinon materiau immobile (5.2.4.2, P4).
  */
 export function pressionsEnTheta(
-  _v: ValeursExcentrees,
-  _zones: ZonesExcentrees,
-  _theta_deg: number,
+  v: ValeursExcentrees,
+  zones: ZonesExcentrees,
+  theta_deg: number,
 ): { p_h: number; p_w: number } {
-  throw new Error('pressionsEnTheta : non implemente (tache T5.2 du lot 5).');
+  if (!Number.isFinite(theta_deg)) {
+    throw new Error(`L angle theta doit etre un nombre fini (deg) : ${theta_deg}.`);
+  }
+  let theta = theta_deg % 360;
+  if (theta <= -180) theta += 360;
+  if (theta > 180) theta -= 360;
+  const absTheta = Math.abs(theta);
+
+  if (absTheta <= zones.theta_c) return { p_h: v.p_hce, p_w: v.p_wce };
+  if (absTheta <= 2 * zones.theta_c) return { p_h: v.p_hae, p_w: v.p_wae };
+  return { p_h: v.p_hse, p_w: v.p_wse };
 }
