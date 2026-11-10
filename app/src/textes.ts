@@ -199,6 +199,19 @@ const FR = {
     },
     nonCalcule: 'non calculé',
   },
+
+  exports: {
+    titre: 'Exports',
+    profils: 'Profils, CSV',
+    bandes: 'Bandes, CSV',
+    tremie: 'Trémie, CSV',
+    localisee: 'Action localisée, CSV',
+    synthese: 'Synthèse, CSV',
+    json: 'Résultat, JSON',
+    note: 'Note de calcul',
+    svg: 'SVG',
+    png: 'PNG',
+  },
 } as const;
 
 type Textes = typeof FR;

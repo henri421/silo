@@ -16,6 +16,10 @@ import {
   definirLangue,
   echapper,
   langueDuDocument,
+  noteDeCalculHtml,
+  ouvrirOuTelecharger,
+  svgAutonome,
+  telecharger,
   type BarreFeuilles,
   type BlocResultat,
   type Json,
@@ -35,6 +39,16 @@ import {
 } from './form';
 import { blocsSynthese, lignesCas, lignesPointsOuverts, messageDErreur } from './vue';
 import { dessinElevation, dessinPlan, dessinProfils, dessinTremie } from './dessins';
+import {
+  STYLES_DESSIN,
+  csvBandes,
+  csvLocalisee,
+  csvProfils,
+  csvSynthese,
+  csvTremie,
+  jsonResultat,
+} from './export';
+import { noteDuCalcul } from './note';
 import { textes } from './textes';
 import './style.css';
 
@@ -133,7 +147,10 @@ function rendreBlocs(blocs: readonly BlocResultat[]): string {
         .join('');
       const note =
         bloc.note === null ? '' : `<p class="note">${echapper(bloc.note)}</p>`;
-      return `<div class="bloc"><h3>${echapper(bloc.titre)}</h3><table class="grandeurs"><tbody>${lignes}</tbody></table>${note}</div>`;
+      // Le bloc des cas porte des valeurs longues : il autorise le retour a la
+      // ligne, la ou les autres blocs tiennent sur une ligne (style.css).
+      const classe = bloc.titre === textes().blocs.cas ? ' bloc-cas' : '';
+      return `<div class="bloc${classe}"><h3>${echapper(bloc.titre)}</h3><table class="grandeurs"><tbody>${lignes}</tbody></table>${note}</div>`;
     })
     .join('');
 }
@@ -170,6 +187,7 @@ let rafraichir: () => void = () => {};
 /** Affiche une erreur et efface les resultats, qui ne sont plus a jour. */
 function afficherErreur(message: string): void {
   resultat = null;
+  for (const nom of Object.keys(dessinsCourants) as NomDessin[]) delete dessinsCourants[nom];
   if (zones === null) return;
   zones.erreur.textContent = message;
   zones.erreur.hidden = false;
@@ -178,16 +196,43 @@ function afficherErreur(message: string): void {
   }
 }
 
+/** Nom court d'un dessin exportable. */
+type NomDessin = 'elevation' | 'profils' | 'plan' | 'tremie';
+
+/** Les SVG du dernier rendu, pour les boutons d'export des dessins. */
+const dessinsCourants: Partial<Record<NomDessin, string>> = {};
+
+/** Sous chaque dessin, les boutons SVG et PNG autonomes. */
+function boutonsDessin(nom: NomDessin): string {
+  const t = textes().exports;
+  return `<div class="boutons-dessin"><button type="button" data-action="exporter-dessin" data-dessin="${nom}" data-format="svg">${echapper(
+    t.svg
+  )}</button><button type="button" data-action="exporter-dessin" data-dessin="${nom}" data-format="png">${echapper(
+    t.png
+  )}</button></div>`;
+}
+
+/** Pose un dessin et ses boutons ; un dessin absent efface la zone. */
+function poserDessin(zone: HTMLElement, nom: NomDessin, svg: string | null): void {
+  if (svg === null) {
+    delete dessinsCourants[nom];
+    zone.innerHTML = '';
+    return;
+  }
+  dessinsCourants[nom] = svg;
+  zone.innerHTML = svg + boutonsDessin(nom);
+}
+
 /** Redessine les quatre dessins pour le resultat courant. */
 function redessiner(): void {
   if (resultat === null || zones === null) return;
   const r = resultat;
   const { cas, grandeur } = choixAffichage();
   const avecBandes = exige<HTMLInputElement>('[data-role="bandes-elevation"]').checked;
-  zones.elevation.innerHTML = dessinElevation(r, cas, avecBandes);
-  zones.profils.innerHTML = dessinProfils(r, grandeur, ['REMP', 'VID', 'VID_EXC']);
-  zones.plan.innerHTML = dessinPlan(r);
-  zones.tremie.innerHTML = dessinTremie(r) ?? '';
+  poserDessin(zones.elevation, 'elevation', dessinElevation(r, cas, avecBandes));
+  poserDessin(zones.profils, 'profils', dessinProfils(r, grandeur, ['REMP', 'VID', 'VID_EXC']));
+  poserDessin(zones.plan, 'plan', dessinPlan(r));
+  poserDessin(zones.tremie, 'tremie', dessinTremie(r));
 }
 
 /** Peint un resultat complet : synthese, cas, points ouverts et dessins. */
@@ -272,6 +317,88 @@ barre = brancherFeuilles({
     }
     rafraichir();
   },
+});
+
+/** Date du jour, pour le cartouche et les en-tetes de fichiers. */
+function dateDuJour(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** Cartouche de la note : projet fixe, element de la page, date du jour. */
+function cartoucheNote(): { projet: string; element: string; date: string } {
+  return {
+    projet: 'Silo',
+    element: document.querySelector('header h1')?.textContent?.trim() || 'Silo',
+    date: dateDuJour(),
+  };
+}
+
+/** Telecharge un dessin en PNG : SVG autonome rendu dans un canvas, puis toBlob. */
+function telechargerPng(svg: string, nom: string): void {
+  const autonome = svgAutonome(svg, STYLES_DESSIN);
+  const url = URL.createObjectURL(new Blob([autonome], { type: 'image/svg+xml;charset=utf-8' }));
+  const image = new Image();
+  image.onload = (): void => {
+    const boite = /viewBox="0 0 ([0-9.]+) ([0-9.]+)"/.exec(svg);
+    const largeur = boite === null ? 1200 : Math.max(300, Math.round(Number(boite[1]) * 2));
+    const hauteur = boite === null ? 900 : Math.max(200, Math.round(Number(boite[2]) * 2));
+    const canvas = document.createElement('canvas');
+    canvas.width = largeur;
+    canvas.height = hauteur;
+    const contexte = canvas.getContext('2d');
+    URL.revokeObjectURL(url);
+    if (contexte === null) return;
+    contexte.drawImage(image, 0, 0, largeur, hauteur);
+    canvas.toBlob((blob) => {
+      if (blob === null) return;
+      const adresse = URL.createObjectURL(blob);
+      const lien = document.createElement('a');
+      lien.href = adresse;
+      lien.download = `silo-${nom}.png`;
+      document.body.appendChild(lien);
+      lien.click();
+      lien.remove();
+      URL.revokeObjectURL(adresse);
+    });
+  };
+  image.onerror = (): void => {
+    URL.revokeObjectURL(url);
+  };
+  image.src = url;
+}
+
+// Les exports : un bouton par fichier, et un couple SVG / PNG sous chaque dessin.
+document.addEventListener('click', (evenement) => {
+  const cible = evenement.target;
+  if (!(cible instanceof HTMLElement)) return;
+  const action = cible.dataset.action;
+  if (action === undefined || !action.startsWith('exporter-') || resultat === null) return;
+  const r = resultat;
+  const telechargerCsv = (nom: string, contenu: string): void => {
+    telecharger(`silo-${nom}.csv`, contenu, 'text/csv;charset=utf-8');
+  };
+  if (action === 'exporter-profils') telechargerCsv('profils', csvProfils(r));
+  else if (action === 'exporter-bandes') telechargerCsv('bandes', csvBandes(r));
+  else if (action === 'exporter-tremie') telechargerCsv('tremie', csvTremie(r));
+  else if (action === 'exporter-localisee') telechargerCsv('localisee', csvLocalisee(r));
+  else if (action === 'exporter-synthese') telechargerCsv('synthese', csvSynthese(r));
+  else if (action === 'exporter-json') {
+    telecharger('silo-resultat.json', jsonResultat(r), 'application/json;charset=utf-8');
+  } else if (action === 'exporter-note') {
+    ouvrirOuTelecharger(
+      'silo-note.html',
+      noteDeCalculHtml(noteDuCalcul(r, cartoucheNote()), STYLES_DESSIN)
+    );
+  } else if (action === 'exporter-dessin') {
+    const nom = cible.dataset.dessin as NomDessin | undefined;
+    if (nom === undefined) return;
+    const svg = dessinsCourants[nom];
+    if (svg === undefined) return;
+    if (cible.dataset.format === 'png') telechargerPng(svg, nom);
+    else {
+      telecharger(`silo-${nom}.svg`, svgAutonome(svg, STYLES_DESSIN), 'image/svg+xml;charset=utf-8');
+    }
+  }
 });
 
 // Hors navigateur (tests), pas de service worker.
