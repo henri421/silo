@@ -16,7 +16,7 @@ import { echapper, nombreAffiche, notationSvg } from 'aedificium-ui';
 function idSvg(id: string): string {
   return echapper(id).replace(/_/g, '&#95;');
 }
-import type { CasDeCharge, IdCas, ResultatSilo } from '../../src/index';
+import type { CarteCas, CasDeCharge, IdCas, PointCarte, ResultatSilo } from '../../src/index';
 import { phrase, textes } from './textes';
 
 /** Nombre affiche : trois decimales au plus, sans zeros inutiles. */
@@ -59,7 +59,8 @@ export const STYLE_DESSIN = `.dessin{background:var(--surface);color:var(--texte
 .zone-ecoulement{fill:var(--accent-doux);stroke:var(--accent);stroke-width:1}
 .zone-contrainte-elevee{fill:var(--alerte-fond);stroke:var(--alerte);stroke-width:1}
 .zone-immobile{fill:var(--surface-appui);stroke:var(--bordure);stroke-width:1}
-.zone-majoration{fill:var(--accent-doux);stroke:var(--accent);stroke-width:1.2}`;
+.zone-majoration{fill:var(--accent-doux);stroke:var(--accent);stroke-width:1.2}
+.cellule{stroke:var(--bordure-douce);stroke-width:0.2}`;
 
 /** Feuille de style interne du SVG : memes regles de peinture que l'export. */
 const STYLE = `<style>${STYLE_DESSIN}</style>`;
@@ -458,6 +459,133 @@ function planRectangulaire(): string {
 /** Vue en plan : action localisee et zones de vidange excentree (SPEC §8.1). */
 export function dessinPlan(r: ResultatSilo): string {
   return r.donnees.silo.forme === 'circulaire' ? planCirculaire(r) : planRectangulaire();
+}
+
+// ---------------------------------------------------------------------------
+// Developpe de la carte p(z, theta)
+// ---------------------------------------------------------------------------
+
+const CARTE_LARGEUR = 760;
+const CARTE_HAUTEUR = 460;
+const CARTE_GAUCHE = 72;
+const CARTE_DROITE = 32;
+const CARTE_HAUT = 58;
+const CARTE_BAS = 56;
+
+/**
+ * Developpe de la paroi d'une carte p(z, theta) (SPEC §5.7 et §8.2) : theta en
+ * abscisse de 0 a 360 degres, z vers le bas, une cellule par maille teintee
+ * selon p_h sur une couleur de jeton. Une carte non calculee affiche son cadre,
+ * son statut et son motif.
+ */
+export function dessinDeveloppe(carte: CarteCas): string {
+  const t = textes();
+  const calcule =
+    carte.statut === 'calcule' &&
+    carte.points.length > 0 &&
+    carte.zs.length > 1 &&
+    carte.thetas.length > 1;
+  const morceaux: string[] = [
+    `<text class="titre" x="20" y="26">${notationSvg(`${t.dessins.titreCarte}, ${carte.cas}`)}</text>`,
+  ];
+
+  const x0 = CARTE_GAUCHE;
+  const x1 = CARTE_LARGEUR - CARTE_DROITE;
+  const y0 = CARTE_HAUT;
+  const y1 = CARTE_HAUTEUR - CARTE_BAS;
+
+  if (!calcule) {
+    morceaux.push(
+      `<rect class="axe" x="${c(x0)}" y="${c(y0)}" width="${c(x1 - x0)}" height="${c(y1 - y0)}" fill="none"/>`
+    );
+    morceaux.push(
+      lignesTexte(
+        `${t.statuts[carte.statut]} : ${phrase(carte.motif ?? '')}`,
+        x0 + 18,
+        y0 + 36,
+        Math.max(40, Math.floor((x1 - x0 - 36) / 7))
+      )
+    );
+    return enveloppe('carte', CARTE_LARGEUR, CARTE_HAUTEUR, morceaux.join(''));
+  }
+
+  const hc = carte.zs[carte.zs.length - 1];
+  const x = (theta: number): number => x0 + (theta / 360) * (x1 - x0);
+  const y = (z: number): number => y0 + (z / Math.max(hc, 1e-9)) * (y1 - y0);
+
+  const noeuds = new Map<string, PointCarte>();
+  for (const noeud of carte.points) noeuds.set(`${noeud.z}|${noeud.theta}`, noeud);
+  const valeur = (i: number, j: number): number => {
+    const noeud = noeuds.get(`${carte.zs[i]}|${carte.thetas[j]}`);
+    return noeud === undefined ? 0 : noeud.p_h;
+  };
+  const maxP = Math.max(0, ...carte.points.map((noeud) => noeud.p_h));
+
+  // Une cellule par maille ; la teinte suit le maximum des quatre coins, pour
+  // que les pics de l'action localisee restent visibles.
+  for (let i = 0; i < carte.zs.length - 1; i += 1) {
+    const zA = carte.zs[i];
+    const zB = carte.zs[i + 1];
+    for (let j = 0; j < carte.thetas.length; j += 1) {
+      const jSuivant = (j + 1) % carte.thetas.length;
+      const thetaA = carte.thetas[j];
+      const thetaB = j + 1 < carte.thetas.length ? carte.thetas[j + 1] : 360;
+      const p = Math.max(valeur(i, j), valeur(i + 1, j), valeur(i, jSuivant), valeur(i + 1, jSuivant));
+      const opacite = maxP > 0 ? 0.05 + 0.55 * (p / maxP) : 0.05;
+      morceaux.push(
+        `<rect class="cellule" x="${c(x(thetaA))}" y="${c(y(zA))}" width="${c(
+          x(thetaB) - x(thetaA)
+        )}" height="${c(y(zB) - y(zA))}" fill="var(--compression)" fill-opacity="${opacite.toFixed(
+          3
+        )}"/>`
+      );
+    }
+  }
+
+  morceaux.push(
+    `<rect class="axe" x="${c(x0)}" y="${c(y0)}" width="${c(x1 - x0)}" height="${c(y1 - y0)}" fill="none"/>`
+  );
+
+  // Theta en abscisse de 0 a 360, z vers le bas en ordonnee.
+  for (const theta of [0, 90, 180, 270, 360]) {
+    morceaux.push(
+      `<line class="grille" x1="${c(x(theta))}" y1="${c(y0)}" x2="${c(x(theta))}" y2="${c(y1)}"/>`
+    );
+    morceaux.push(
+      `<text class="texte" x="${c(x(theta))}" y="${c(y1 + 16)}" text-anchor="middle">${echapper(
+        nombreAffiche(theta)
+      )}</text>`
+    );
+  }
+  for (const z of [0, hc / 2, hc]) {
+    morceaux.push(
+      `<line class="grille" x1="${c(x0)}" y1="${c(y(z))}" x2="${c(x1)}" y2="${c(y(z))}"/>`
+    );
+    morceaux.push(
+      `<text class="texte" x="${c(x0 - 8)}" y="${c(y(z) + 4)}" text-anchor="end">${echapper(
+        aff(z, 2)
+      )}</text>`
+    );
+  }
+  morceaux.push(
+    `<text class="texte-doux" x="${c((x0 + x1) / 2)}" y="${c(
+      CARTE_HAUTEUR - 16
+    )}" text-anchor="middle">${notationSvg(t.dessins.axeTheta)}</text>`
+  );
+  morceaux.push(
+    `<text class="texte-doux" x="16" y="${c(
+      (y0 + y1) / 2
+    )}" transform="rotate(-90 16 ${c((y0 + y1) / 2)})" text-anchor="middle">${notationSvg(
+      t.dessins.axeProfondeur
+    )}</text>`
+  );
+  morceaux.push(
+    `<text class="texte-doux" x="${c(x1)}" y="${c(y0 - 10)}" text-anchor="end">${echapper(
+      `${aff(maxP, 2)} kPa`
+    )}</text>`
+  );
+
+  return enveloppe('carte', CARTE_LARGEUR, CARTE_HAUTEUR, morceaux.join(''));
 }
 
 // ---------------------------------------------------------------------------

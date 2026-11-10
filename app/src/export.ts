@@ -17,6 +17,7 @@
 import { JETONS, csv, langueCourante, nombreAffiche, resultatsEnCsv } from 'aedificium-ui';
 import {
   valeursLocalisees,
+  type CarteCas,
   type CasDeCharge,
   type IdCas,
   type ResultatSilo,
@@ -48,6 +49,9 @@ export const ENTETES = {
   },
   get tremie(): readonly string[] {
     return textes().csv.entetesTremie;
+  },
+  get carte(): readonly string[] {
+    return textes().csv.entetesCarte;
   },
 };
 
@@ -340,6 +344,48 @@ export function csvLocalisee(r: ResultatSilo): string {
   }
 
   lignes.push(['p_pi', t.pPi]);
+  return csv(lignes);
+}
+
+/**
+ * `carte.csv` (SPEC §8.2) : une ligne par (cas, z, θ). Le bloc d'en-tete
+ * rappelle le repere des angles et, pour chaque carte, z_p, s et le demi-angle
+ * des carres. Une carte non calculee sort avec son statut et son motif.
+ */
+export function csvCarte(r: ResultatSilo, cartes: CarteCas[]): string {
+  const t = textes().csv;
+  const lignes: string[][] = [...entete(r)];
+  const rappels: string[][] = [[t.repereAngles, t.repereAnglesTexte]];
+  for (const carte of cartes) {
+    rappels.push([
+      t.carteCas,
+      carte.cas,
+      t.positionZp,
+      carte.z_p === null ? '' : nombreAffiche(carte.z_p),
+      t.hauteurZone,
+      carte.s === null ? '' : nombreAffiche(carte.s),
+      t.demiAngle,
+      carte.demiAngle === null ? '' : nombreAffiche(carte.demiAngle),
+    ]);
+  }
+  lignes.splice(lignes.length - 1, 0, ...rappels);
+  lignes.push([...ENTETES.carte]);
+  for (const carte of cartes) {
+    if (carte.statut !== 'calcule') {
+      lignes.push([carte.cas, `${statutTexte(carte.statut)} : ${phrase(carte.motif ?? '')}`]);
+      continue;
+    }
+    for (const noeud of carte.points) {
+      lignes.push([
+        carte.cas,
+        n4(noeud.z),
+        n4(noeud.Z),
+        n4(noeud.theta),
+        n4(noeud.p_h),
+        n4(noeud.p_w),
+      ]);
+    }
+  }
   return csv(lignes);
 }
 
