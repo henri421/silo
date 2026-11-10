@@ -359,3 +359,85 @@ Branche `lot-3-localisee`, 2026-11-10. Aucun test d'acceptation ni fichier de `d
 ### Reprise du lot 3 par la séance de conception
 
 Le test bloquant de T3.3 était faux, non le calcul : la valeur 0,2215 arrondie à 4 décimales ne tenait pas une tolérance relative de 1e−4. `proche()` de `tests/fixtures.ts` accepte désormais un écart absolu de 5e−5 (une demi-unité de la 4ᵉ décimale), règle reportée dans `PLAN.md`. T3.3 passe sans changement de code. T3.4 (réexports, cases, README) a été fait par la séance de conception. `npm test` : 128 tests passent.
+
+# Compte rendu du lot 4, séance `claude-ds`
+
+Branche `lot-4-fond`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs/validation/` n'a été modifié ; `src/model/types.ts`, `src/norms/profil.ts`, `SPEC.md`, `CLAUDE.md` et `CONVENTIONS.md` sont intacts (vérifié par `git diff d2cf051 -- tests docs/validation src/model/types.ts src/norms/profil.ts SPEC.md CLAUDE.md CONVENTIONS.md`, sortie vide). Aucune dépendance ajoutée, rien n'a été poussé.
+
+## T4.1 Transition
+
+**Fichiers modifiés** : `src/fond/transition.ts` (création), `src/fond/tremie.ts` (création, `classerTremie` seulement), `src/fond/fond-plat.ts` (squelette, pour permettre le chargement du fichier de test).
+
+**Décisions**
+- `coefficientCb` lit `C_b` et `C_b_majore` dans le profil et rend 1,2 si le matériau n'est pas faiblement cohésif ou s'il est sujet à engrainement mécanique, 1,0 sinon. Les motifs citent 6.1.2(4) et 6.1.2(5) et (6), avec la valeur réellement lue.
+- `pressionTransition` applique C3 au remplissage. À la vidange, elle applique C3 pour un fond plat (6.2.1(2) et 6.2.2(3)) ou une trémie peu profonde (6.4.3), et T2 pour une trémie profonde (point ouvert P2). `p_vf(hc)` vient de `janssen` pour un silo élancé et de `janssenModifie` pour un silo intermédiaire ou peu élancé.
+- La détermination « profonde ou peu profonde » nécessaire au choix de combinaison est faite par `classerTremie`, implémentée dès T4.1 dans `src/fond/tremie.ts`. C'est un prérequis de la combinaison T2 et la fonction est de toute façon exigée par T4.3.
+- `classerTremie` et `pressionTransition` s'importent mutuellement. Le cycle ne porte que sur des appels situés dans des corps de fonctions : les deux modules se chargent sans erreur et les tests passent.
+
+**Points douteux**
+- Le fichier de test importe les trois modules du lot dès son chargement : des squelettes pour `fondPlat` et pour les fonctions de trémie ont donc été posés à T4.1, puis remplacés aux tâches suivantes.
+- La commande de T4.1, `npx vitest run tests/fond/fond.test.ts -t "C_b|V1"`, sélectionne aussi le test « p_v uniforme » qui appelle `fondPlat` (T4.2). Après T4.1 seul, ce test échoue sur le squelette ; il passe après T4.2.
+- Cycle d'imports `transition.ts` et `tremie.ts`, sans effet constaté à l'exécution.
+
+**Statut des tests**
+- Après T4.1 seul : `npx vitest run tests/fond/fond.test.ts -t "C_b|V1"` : 3 tests passent, 1 échoue (`fondPlat` non encore implémenté), 12 ignorés.
+- Les valeurs attendues de C_b (1,0 et 1,2) et de p_vft de V1 (107,4648 et 128,9578) passent.
+
+## T4.2 Fond plat
+
+**Fichiers modifiés** : `src/fond/fond-plat.ts`.
+
+**Décisions**
+- `fondPlat` refuse un fond non plat avec une erreur dont le message contient « plat ».
+- Silo élancé (6.2.1) : `p_v = p_vft` au remplissage, C_b compris, termes de 6.13 à `null`, motif citant 6.2.1(2) et l'identité entre remplissage et vidange.
+- Silo peu élancé ou intermédiaire (6.2.2) : `p_vb = p_vft`, `p_vtp = gamma_u h_tp`, `p_vho = gamma_u h_o`, `facteur = (2 - hc/dc)/(2 - h_tp/dc)` et `p_v = p_vb + (p_vtp - p_vho) facteur`. Le motif cite 6.2.2(4) pour le voisinage du centre et 6.2.2(3) pour l'identité entre remplissage et vidange.
+- Le `C_b` rendu est celui de `pressionTransition` au remplissage.
+
+**Points douteux** : aucun. Les valeurs de V3 (p_vb 143,2587 ; p_vtp 64,7827 ; p_vho 21,5942 ; facteur 0,313458 ; p_v 156,7965) passent.
+
+**Statut des tests**
+- Avant implémentation : `npx vitest run tests/fond/fond.test.ts -t "V3"` : 2 tests échouent, l'un sur le squelette, l'autre sur le message qui ne contenait pas « plat ».
+- Après T4.2 : `npx vitest run tests/fond/fond.test.ts -t "V3|C_b|V1"` : 6 tests passent, 10 ignorés.
+
+## T4.3 Trémie
+
+**Fichiers modifiés** : `src/fond/tremie.ts`.
+
+**Décisions**
+- `classerTremie` applique l'éq. 6.1 : profonde si `tan(beta) < (1 - K_inf) / (2 mu_h,inf)`, peu profonde sinon.
+- `coefficientS` applique 6.9 à 6.11 : 2 pour une trémie conique ou pyramidale carrée, 1 pour un biseau, `1 + b/a` pour une pyramidale rectangulaire. Erreur pour un fond plat.
+- `pvTremie` applique l'éq. 6.7. Si `|n - 1| < 1e-9`, le premier terme prend la limite `gamma h_h (-(x/h_h) ln(x/h_h))`. Une erreur nomme `x` (m) si `x <= 0` ou si `x > h_h` au-delà de la tolérance 1e-9 sur `h_h`.
+- `facteurWalker` applique 6.21 à 6.23 ; `epsilon` est rendu en degrés. Si `phi_wh > phi_i`, l'erreur nomme les deux angles, avec une décimale et une virgule, et cite la note 1 sous 6.23.
+- `parametresTremie` : trémie profonde au remplissage avec T1, `F_f` de 6.17 et `n` de 6.18 ; trémie profonde à la vidange avec T2, `F_e` de Walker et `n` par la forme générale 6.8, `epsilon` renseigné ; trémie peu profonde avec `mu_heff` de 6.26, `F_f` de 6.27 et `n` de 6.28, la vidange rendant les mêmes valeurs que le remplissage avec `cas: 'vidange'`, `combinaison: 'T1'` et un motif citant 6.4.3.
+- `pressionsTremie` rend `p_n = F p_v` et `p_t = mu_heff F p_v`.
+- `p_vft` vient toujours de `pressionTransition`, donc C3 au remplissage, C3 à la vidange d'une trémie peu profonde et T2 à la vidange d'une trémie profonde (P2).
+
+**Points douteux**
+- Le cycle d'imports avec `transition.ts` subsiste, pour l'appel à `pressionTransition`.
+- La vidange d'une trémie peu profonde porte `combinaison: 'T1'` alors que `p_vft` est calculé en C3 par `pressionTransition`, conformément à T4.1 : 6.4.3 renvoie aux valeurs du remplissage pour la paroi de trémie, tandis que la pression verticale à la transition reste celle prescrite à T4.1.
+- Les branches de `coefficientS` pour les pyramides et le biseau sont exercées par le test « S selon la forme », mais aucun cas de validation ne pousse les pressions d'une trémie non conique.
+
+**Statut des tests**
+- Avant implémentation : `npx vitest run tests/fond/fond.test.ts` : 9 tests échouent, 7 passent (dont le classement V4 et V6 de la trémie, déjà couvert par `classerTremie`).
+- Après T4.3 : `npx vitest run tests/fond/fond.test.ts` : 16 tests passent. Les valeurs de V4 et V6 passent pour le remplissage et la vidange, y compris le cas limite `n = 1` (38,8629 kPa), la valeur `n = 1,5` (29,3934 kPa) et l'erreur `phi_wh > phi_i`.
+
+## T4.4 Exports et fin de lot
+
+**Fichiers modifiés** : `src/index.ts`, `PLAN.md` (cases du lot 4 cochées), `README.md` (paragraphe du lot 4), `HANDOFF.md`.
+
+**Décisions**
+- `src/index.ts` réexporte les neuf fonctions du lot : `coefficientCb`, `pressionTransition`, `fondPlat`, `classerTremie`, `coefficientS`, `pvTremie`, `facteurWalker`, `parametresTremie` et `pressionsTremie`. Les types étaient déjà réexportés par `export * from './model/types'`.
+- `README.md` : paragraphe « Lot 4 : fond plat (6.2.1 et 6.2.2) et trémie (6.3 et 6.4), avec C_b, p_vft, le classement profond ou peu profond et les pressions p_n et p_t. », séparé du lot 3 par une ligne vide.
+
+**Points douteux**
+- Aucun test d'acceptation n'exerce directement les réexports de `src/index.ts` ; ils sont couverts par le contrôle de types et la suite complète.
+
+**Statut des tests**
+- `npm run typecheck` : passe, aucune erreur.
+- `npm test` : 144 tests passent sur 14 fichiers.
+- `npm run build` : passe ; `git status` ne montre aucun fichier construit.
+- `git diff d2cf051 -- tests docs/validation src/model/types.ts src/norms/profil.ts SPEC.md CLAUDE.md CONVENTIONS.md` : vide, tests, cas de validation et types intacts.
+
+## État final du lot 4
+
+Les trois commandes du lot passent. Trois commits de code ont été faits (`6b3a8bc` pour T4.1, `baf5c90` pour T4.2, `1e64286` pour T4.3), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 5 n'a pas été commencé.

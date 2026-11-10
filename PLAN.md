@@ -237,10 +237,10 @@ Un seul fichier : `src/parois/localisee.ts`.
 
 ## Lot 4 : fond et trémie
 
-- [ ] `src/fond/transition.ts` : p_vft et C_b (SPEC §6.1).
-- [ ] `src/fond/fond-plat.ts` : élancé et 6.2.2 avec le facteur d'interpolation de l'éq. 6.13.
-- [ ] `src/fond/tremie.ts` : classement profond ou peu profond, S, p_v(x) avec le cas limite n = 1, F_f, F_e de Walker, p_n et p_t (SPEC §6.3).
-- [ ] Tests : V1 (fond plat, C_b = 1,0 et 1,2), V3 (p_vsq), V4 (remplissage et vidange en trois points), cas n = 1, erreur φ_wh > φ_i.
+- [x] `src/fond/transition.ts` : p_vft et C_b (SPEC §6.1).
+- [x] `src/fond/fond-plat.ts` : élancé et 6.2.2 avec le facteur d'interpolation de l'éq. 6.13.
+- [x] `src/fond/tremie.ts` : classement profond ou peu profond, S, p_v(x) avec le cas limite n = 1, F_f, F_e de Walker, p_n et p_t (SPEC §6.3).
+- [x] Tests : V1 (fond plat, C_b = 1,0 et 1,2), V3 (p_vsq), V4 (remplissage et vidange en trois points), cas n = 1, erreur φ_wh > φ_i.
 
 ### Consignes d'exécution du lot 4 (séance `claude-ds`)
 
