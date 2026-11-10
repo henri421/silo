@@ -10,12 +10,12 @@
 
 ## Lot 0 : squelette
 
-- [ ] Cloner `charges-climatiques` à côté et en reprendre `package.json` (nom, scripts), `tsconfig.json`, `vite.config.ts` (racine `app`, sortie `docs`, page anglaise `app/en/`, PWA avec nom et icône propres), `.gitignore` et `.github/workflows/pages.yml`.
-- [ ] Ajouter `aedificium-ui` à la dernière étiquette publiée (lire la liste des étiquettes du dépôt `henri421/aedificium-ui`).
-- [ ] Créer `src/index.ts`, `app/index.html` avec la barre commune et le lien vers le hub, `app/src/main.ts`, `app/src/style.css` (jetons d'`aedificium-ui`).
-- [ ] Icône SVG propre au silo (un cylindre en élévation avec un diagramme de pression), dans le style des icônes de `WebAedificium/icones/`.
-- [ ] Un test qui vérifie que le `:root` de la feuille de style concorde avec `JETONS`, comme dans `assemblages-ec3`.
-- [ ] La CI passe sur une page vide.
+- [x] Cloner `charges-climatiques` à côté et en reprendre `package.json` (nom, scripts), `tsconfig.json`, `vite.config.ts` (racine `app`, sortie `docs`, page anglaise `app/en/`, PWA avec nom et icône propres), `.gitignore` et `.github/workflows/pages.yml`.
+- [x] Ajouter `aedificium-ui` à la dernière étiquette publiée (lire la liste des étiquettes du dépôt `henri421/aedificium-ui`).
+- [x] Créer `src/index.ts`, `app/index.html` avec la barre commune et le lien vers le hub, `app/src/main.ts`, `app/src/style.css` (jetons d'`aedificium-ui`).
+- [x] Icône SVG propre au silo (un cylindre en élévation avec un diagramme de pression), dans le style des icônes de `WebAedificium/icones/`.
+- [x] Un test qui vérifie que le `:root` de la feuille de style concorde avec `JETONS`, comme dans `assemblages-ec3`.
+- [x] La CI passe sur une page vide.
 
 ### Consignes d'exécution du lot 0 (séance `claude-ds`)
 

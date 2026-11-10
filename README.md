@@ -13,7 +13,7 @@ En construction. Le périmètre visé est décrit dans [`SPEC.md`](SPEC.md) et l
 
 ## Ce que l'outil rend
 
-*À compléter lot par lot.*
+Lot 0 : squelette publiable, sans calcul.
 
 ## Choix de modélisation déclarés
 
