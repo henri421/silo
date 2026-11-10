@@ -477,9 +477,9 @@ Tests d'acceptation, **à ne jamais modifier** : `tests/app/cas-affichage.ts`, `
 
 ## Lot 10 : carte p(z, θ) pour les modèles en coque
 
-- [ ] `src/discretisation/carte.ts` : `cartePressions` (SPEC §5.7).
-- [ ] Export `carte.csv`, développé de la paroi en SVG, commandes de la carte sur les deux pages.
-- [ ] Tests : V2 paroi épaisse et mince, VID_EXC, classe 3 à position choisie, cartes sans objet.
+- [x] `src/discretisation/carte.ts` : `cartePressions` (SPEC §5.7).
+- [x] Export `carte.csv`, développé de la paroi en SVG, commandes de la carte sur les deux pages.
+- [x] Tests : V2 paroi épaisse et mince, VID_EXC, classe 3 à position choisie, cartes sans objet.
 
 ### Consignes d'exécution du lot 10 (séance `claude-ds`)
 
