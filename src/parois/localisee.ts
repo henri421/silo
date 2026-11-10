@@ -147,11 +147,7 @@ function definitionLocalisee(
  * non circulaire (5.2.1.5), puis circulaire localisee ou majoree (5.2.1.3,
  * 5.2.1.4 et 5.2.3).
  */
-function definitionRemplissage(
-  d: DonneesSilo,
-  cl: Classement,
-  p: ProfilSilos,
-): DefinitionLocalisee {
+function definitionRemplissage(d: DonneesSilo, cl: Classement): DefinitionLocalisee {
   if (cl.elancement === 'peu-elance') {
     return definitionNulle('Silo peu élancé : action localisée nulle au remplissage (5.3.1.2(3)).');
   }
@@ -301,14 +297,25 @@ export function actionLocalisee(d: DonneesSilo, cl: Classement, p: ProfilSilos):
     E: (2 * Math.max(d.exploitation.e_f, d.exploitation.e_o)) / d_c,
     s: (Math.PI * d_c) / 16,
     d_c,
-    remplissage: definitionRemplissage(d, cl, p),
+    remplissage: definitionRemplissage(d, cl),
     vidange: definitionVidange(d, cl, p),
   };
 }
 
 /**
  * Valeurs de l'action localisee a une profondeur, a partir du resultat
- * symetrique du meme cas.
+ * symetrique du meme cas `v` (p_h en C1) :
+ * - nulle ou hors perimetre : aucune valeur, p_h_total = p_h et p_w_total = p_w ;
+ * - non circulaire : p_p = C p_h et p_nc = 0,36 p_p sur toute la hauteur ;
+ * - circulaire epaisse : p_p vers l'exterieur et p_pi = p_p/7 vers l'interieur ;
+ * - circulaire mince : p_p et effort total F_p = (pi/2) s d_c p_p (5.15) ;
+ * - majoration uniforme : p_p pour information, puis paroi epaisse
+ *   p_h_total = p_h (1 + zeta C) (5.38 a 5.41) ou paroi mince
+ *   p_h_total = p_h (1 + 0,5 C) et p_w_total = p_w (1 + C) (5.42 a 5.45).
+ *
+ * `zeta` n'est renseigne que pour une majoration uniforme sur paroi epaisse :
+ * sa valeur distingue les deux branches de majoration. La signature impose les
+ * donnees d'entree `d`, non utilisees ici.
  */
 export function valeursLocalisees(
   def: DefinitionLocalisee,
@@ -316,9 +323,73 @@ export function valeursLocalisees(
   d: DonneesSilo,
   v: ValeursParoi,
 ): ValeursLocalisees {
-  void def;
-  void a;
   void d;
-  void v;
-  throw new Error('valeursLocalisees : implementation a venir (tache T3.3).');
+
+  switch (def.forme) {
+    case 'nulle':
+    case 'hors-perimetre':
+      // Un cas sans objet rend des valeurs nulles, avec son motif dans `def`.
+      return { p_p: 0, p_pi: 0, p_nc: 0, F_p: null, p_h_total: v.p_h, p_w_total: v.p_w };
+
+    case 'non-circulaire': {
+      const p_p = def.C * v.p_h;
+      const p_nc = 0.36 * p_p;
+      return {
+        p_p,
+        p_pi: 0,
+        p_nc,
+        F_p: null,
+        p_h_total: v.p_h + p_nc,
+        p_w_total: v.p_w,
+      };
+    }
+
+    case 'circulaire-epaisse': {
+      const p_p = def.C * v.p_h;
+      return {
+        p_p,
+        p_pi: p_p / 7,
+        p_nc: 0,
+        F_p: null,
+        p_h_total: v.p_h + p_p,
+        p_w_total: v.p_w,
+      };
+    }
+
+    case 'circulaire-mince': {
+      const p_p = def.C * v.p_h;
+      return {
+        p_p,
+        p_pi: 0,
+        p_nc: 0,
+        F_p: (Math.PI / 2) * a.s * a.d_c * p_p,
+        p_h_total: v.p_h + p_p,
+        p_w_total: v.p_w,
+      };
+    }
+
+    case 'majoration-uniforme': {
+      const p_p = def.C * v.p_h;
+      if (def.zeta !== null) {
+        // Paroi epaisse : 5.38 a 5.41, p_w n'est pas majore.
+        return {
+          p_p,
+          p_pi: 0,
+          p_nc: 0,
+          F_p: null,
+          p_h_total: v.p_h * (1 + def.zeta * def.C),
+          p_w_total: v.p_w,
+        };
+      }
+      // Paroi mince : 5.42 a 5.45.
+      return {
+        p_p,
+        p_pi: 0,
+        p_nc: 0,
+        F_p: null,
+        p_h_total: v.p_h * (1 + 0.5 * def.C),
+        p_w_total: v.p_w * (1 + def.C),
+      };
+    }
+  }
 }
