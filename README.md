@@ -15,6 +15,7 @@ En construction. Le périmètre visé est décrit dans [`SPEC.md`](SPEC.md) et l
 
 Lot 0 : squelette publiable, sans calcul.
 Lot 1 : géométrie, bibliothèque de matériaux, classement et combinaisons de propriétés, sans pressions encore.
+Lot 2 : pressions des parois verticales aux cas symétriques, remplissage et vidange, par Janssen et Janssen modifié.
 
 ## Choix de modélisation déclarés
 

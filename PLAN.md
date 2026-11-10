@@ -153,10 +153,10 @@ Règles communes : chaque fonction exportée porte un commentaire qui dit ce qu'
 
 ## Lot 2 : parois verticales, cas symétriques
 
-- [ ] `src/parois/janssen.ts` (élancés, SPEC §5.1) et `src/parois/janssen-modifie.ts` (SPEC §5.2), avec n_zSk.
-- [ ] `src/parois/vidange.ts` : C_h et C_w selon l'élancement, la classe et `vidangeParLeHaut` (SPEC §5.3).
-- [ ] Gestion de `ecoulementEnCheminee` : cas de vidange non applicables avec motif.
-- [ ] Tests : V1 (z = 1, 5, 10, 20 ; z_o et p_ho des trois combinaisons ; n_zSk), V3 (Y_R, z_V, C_h, C_w), et p_w et n_zSk en C2.
+- [x] `src/parois/janssen.ts` (élancés, SPEC §5.1) et `src/parois/janssen-modifie.ts` (SPEC §5.2), avec n_zSk.
+- [x] `src/parois/vidange.ts` : C_h et C_w selon l'élancement, la classe et `vidangeParLeHaut` (SPEC §5.3).
+- [x] Gestion de `ecoulementEnCheminee` : cas de vidange non applicables avec motif.
+- [x] Tests : V1 (z = 1, 5, 10, 20 ; z_o et p_ho des trois combinaisons ; n_zSk), V3 (Y_R, z_V, C_h, C_w), et p_w et n_zSk en C2.
 
 ### Consignes d'exécution du lot 2 (séance `claude-ds`)
 
