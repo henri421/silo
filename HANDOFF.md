@@ -191,3 +191,92 @@ Branche `lot-1-geometrie`, 2026-11-10. Les interfaces `src/model/types.ts` et le
 ## État final du lot 1
 
 Les trois commandes du lot passent. Six commits de code ont été faits (T1.1 à T1.6), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 2 n'a pas été commencé.
+
+# Compte rendu du lot 2, séance `claude-ds`
+
+Branche `lot-2-parois`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs/validation/` n'a été modifié ; `src/model/types.ts` et les types de `src/norms/profil.ts` sont intacts (vérifié par `git diff 1d51236 -- tests docs/validation src/model/types.ts src/norms/profil.ts`, sortie vide). Aucune dépendance ajoutée, rien n'a été poussé.
+
+## T2.1 Janssen
+
+**Fichiers modifiés** : `src/parois/janssen.ts`, `src/parois/janssen-modifie.ts` (squelette seulement, pour permettre le chargement du fichier de test).
+
+**Décisions**
+- `parametresJanssen` applique les équations 5.3 et 5.4 : `z_o = A / (K mu U)`, `p_ho = gamma K z_o`.
+- `janssen` applique les équations 5.1 à 5.7 : `Y_J = 1 - exp(-z / z_o)`, `p_h`, `p_w`, `p_v` et `n_zSk = mu p_ho (z - z_o Y_J)`.
+- `z` non fini ou négatif lève une erreur qui nomme `z` et son unité (m).
+- Le squelette `src/parois/janssen-modifie.ts` exporte les signatures de T2.2 avec des corps qui lèvent une erreur, le temps de la tâche.
+
+**Points douteux**
+- Le fichier `tests/parois/janssen.test.ts` importe `janssen-modifie` dès sa première ligne. Le test filtré de T2.1 ne peut donc pas se charger sans ce module. Un squelette a été posé pour respecter l'ordre des tâches ; il est remplacé à T2.2.
+
+**Statut des tests**
+- `npx vitest run tests/parois/janssen.test.ts -t "V1|V2|domaine"` : 7 tests passent, 5 ignorés.
+
+## T2.2 Janssen modifié
+
+**Fichiers modifiés** : `src/parois/janssen-modifie.ts`.
+
+**Décisions**
+- `exposantN` applique l'équation 5.76 : `n = -(1 + tan phi_r) (1 - h_o / z_o)`, avec le `z_o` de la combinaison et `phi_r` en degrés converti en radians.
+- `janssenModifie` applique `Y_R` (5.75), `p_h`, `p_w`, `z_V` (5.80), `p_v = gamma z_V` et `n_zSk = mu p_ho (z - z_V)` (5.81).
+- Pour `z <= h_o`, `Y_R`, `p_h`, `p_w` et `n_zSk` sont nuls ; le choix déclaré `z_V = z` et `p_v = gamma z` est commenté dans le module.
+- `z` non fini ou négatif lève la même erreur que T2.1.
+
+**Points douteux** : aucun. Les valeurs de V3 (Y_R, p_h, p_w, z_V, p_v) concordent avec les valeurs attendues écrites en dur.
+
+**Statut des tests**
+- `npx vitest run tests/parois/janssen.test.ts` : 12 tests passent.
+
+## T2.3 Coefficients de vidange
+
+**Fichiers modifiés** : `src/parois/vidange.ts`, `src/parois/symetrique.ts` (squelette seulement, pour permettre le chargement du fichier de test).
+
+**Décisions**
+- L'ordre des branches est celui de T2.3 : vidange par le haut (5.20 et 5.84), silo peu élancé (5.3.2.1(2)), silo intermédiaire (5.85 à 5.87, `C_S = hc/dc - 1`), silo élancé (5.21 et 5.22).
+- Les valeurs sont lues dans le profil normatif, jamais codées en dur ; le motif affiché reprend les valeurs effectives du profil.
+- `C_S` n'est renseigné que pour un silo intermédiaire, `null` sinon, comme le prévoit le type.
+- La classe de calcul n'intervient pas : en v1, les classes 2 et 3 suivent les mêmes coefficients, conformément à T2.3.
+
+**Points douteux**
+- Même remarque qu'à T2.1 : `tests/parois/vidange.test.ts` importe `symetrique`, d'où le squelette de `src/parois/symetrique.ts`.
+
+**Statut des tests**
+- `npx vitest run tests/parois/vidange.test.ts -t "coefficients"` : 4 tests passent, 10 ignorés.
+
+## T2.4 État de la paroi
+
+**Fichiers modifiés** : `src/parois/symetrique.ts`.
+
+**Décisions**
+- `etatParoi` lève une erreur qui nomme `hc` si `z > hc` ; les valeurs négatives ou non finies sont refusées par `janssen` ou `janssenModifie`, avec une erreur qui nomme `z`.
+- Les combinaisons viennent de `valeursCaracteristiques` et `combinaison` du lot 1 : `p_h` en C1, `p_w` et `n_zSk` en C2, `p_v` en C3, avec l'objet `combinaisons` imposé par le type.
+- Un silo élancé suit `janssen`, un silo intermédiaire ou peu élancé suit `janssenModifie` avec `cl.h_o` et `d.materiau.phi_r`.
+- À la vidange, `p_h` est multipliée par `C_h`, `p_w` et `n_zSk` par `C_w`, `p_v` reste inchangée.
+- Si `ecoulementEnCheminee` est vrai, `vidange` vaut `null` et `motifVidange` porte la phrase imposée citant 5.1(8) ; le remplissage reste rendu.
+
+**Points douteux**
+- Le motif de la cheminée interne est une chaîne affichée, avec accents et apostrophe droite, reprise de la phrase de T2.4.
+
+**Statut des tests**
+- `npx vitest run tests/parois/vidange.test.ts` : 14 tests passent.
+
+## T2.5 Exports et fin de lot
+
+**Fichiers modifiés** : `src/index.ts`, `PLAN.md` (cases du lot 2 cochées), `README.md` (ligne du lot 2), `HANDOFF.md`.
+
+**Décisions**
+- `src/index.ts` réexporte `parametresJanssen`, `janssen`, `exposantN`, `janssenModifie`, `coefficientsVidange` et `etatParoi` ; les types du lot 2 sont déjà réexportés par `export * from './model/types'`.
+- `README.md` : ligne « Lot 2 : pressions des parois verticales aux cas symétriques, remplissage et vidange, par Janssen et Janssen modifié. »
+
+**Points douteux**
+- Aucun test d'acceptation n'exerce directement les réexports de `src/index.ts` ; ils sont couverts par le typecheck et la suite complète.
+
+**Statut des tests**
+- `npm run typecheck` : passe, aucune erreur.
+- `npm test` : 108 tests passent sur 12 fichiers.
+- `npm run build` : passe ; `git status` ne montre aucun fichier construit.
+- `git diff 1d51236 -- tests docs/validation src/model/types.ts src/norms/profil.ts` : vide, tests, cas de validation et types intacts.
+
+## État final du lot 2
+
+Les trois commandes du lot passent. Quatre commits de code ont été faits (`aa3c8be`, `376d980`, `52f532f`, `a7af3c8`), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 3 n'a pas été commencé.

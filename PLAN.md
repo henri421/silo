@@ -153,10 +153,42 @@ Règles communes : chaque fonction exportée porte un commentaire qui dit ce qu'
 
 ## Lot 2 : parois verticales, cas symétriques
 
-- [ ] `src/parois/janssen.ts` (élancés, SPEC §5.1) et `src/parois/janssen-modifie.ts` (SPEC §5.2), avec n_zSk.
-- [ ] `src/parois/vidange.ts` : C_h et C_w selon l'élancement, la classe et `vidangeParLeHaut` (SPEC §5.3).
-- [ ] Gestion de `ecoulementEnCheminee` : cas de vidange non applicables avec motif.
-- [ ] Tests : V1 (z = 1, 5, 10, 20 ; z_o et p_ho des trois combinaisons ; n_zSk), V3 (Y_R, z_V, C_h, C_w), et p_w et n_zSk en C2.
+- [x] `src/parois/janssen.ts` (élancés, SPEC §5.1) et `src/parois/janssen-modifie.ts` (SPEC §5.2), avec n_zSk.
+- [x] `src/parois/vidange.ts` : C_h et C_w selon l'élancement, la classe et `vidangeParLeHaut` (SPEC §5.3).
+- [x] Gestion de `ecoulementEnCheminee` : cas de vidange non applicables avec motif.
+- [x] Tests : V1 (z = 1, 5, 10, 20 ; z_o et p_ho des trois combinaisons ; n_zSk), V3 (Y_R, z_V, C_h, C_w), et p_w et n_zSk en C2.
+
+### Consignes d'exécution du lot 2 (séance `claude-ds`)
+
+Branche : `lot-2-parois`, déjà créée. Les types de résultat sont **déjà écrits** dans `src/model/types.ts` (section « Parois verticales ») : `ParametresJanssen`, `ValeursParoi`, `ValeursJanssenModifie`, `CoefficientsVidange`, `EtatParoi`.
+
+Tests d'acceptation, **à ne jamais modifier** : `tests/parois/janssen.test.ts`, `tests/parois/vidange.test.ts`, et tous ceux des lots précédents.
+
+**T2.1 Janssen** : `src/parois/janssen.ts`.
+* `parametresJanssen(g: Geometrie, c: Combinaison): ParametresJanssen` : `z_o = A / (K μ U)`, `p_ho = γ K z_o` (éq. 5.3, 5.4).
+* `janssen(z: number, g: Geometrie, c: Combinaison): ValeursParoi` selon SPEC §5.1 (éq. 5.1 à 5.7). Erreur qui nomme `z` (m) si `z` n'est pas un nombre fini positif ou nul.
+* Test : `npx vitest run tests/parois/janssen.test.ts -t "V1|V2|domaine"`.
+
+**T2.2 Janssen modifié** : `src/parois/janssen-modifie.ts`.
+* `exposantN(g, c, h_o, phi_r_deg): number` (éq. 5.76).
+* `janssenModifie(z, g, c, h_o, phi_r_deg): ValeursJanssenModifie` selon SPEC §5.2. Pour `z ≤ h_o` : `Y_R = 0`, `p_h = p_w = n_zSk = 0`, `z_V = z` et `p_v = γ z` (choix déclaré : pas de contact paroi, matériau au repos sous le talus ; le commentaire le dit).
+* Test : `npx vitest run tests/parois/janssen.test.ts` (12 tests).
+
+**T2.3 Coefficients de vidange** : `src/parois/vidange.ts`, `coefficientsVidange(d: DonneesSilo, cl: Classement, p: ProfilSilos): CoefficientsVidange`.
+* Ordre : vidange par le haut (1 ; 1 ; motif citant `5.20 et 5.84`) ; silo peu élancé (1 ; 1 ; motif citant `5.3.2.1(2)`) ; silo intermédiaire (`1 + C_h_pente C_S`, `1 + C_w_pente C_S`, `C_S = hc/dc − 1` ; motif citant `5.85 à 5.87`) ; silo élancé (`C_h_elance`, `C_w_elance` ; motif citant `5.21 et 5.22`). Valeurs lues dans le profil. En v1, `procedures` vaut toujours 2 ou 3 : les deux classes ont les mêmes coefficients.
+* Test : `npx vitest run tests/parois/vidange.test.ts -t "coefficients"` (4 tests).
+
+**T2.4 État de la paroi** : `src/parois/symetrique.ts`, `etatParoi(z: number, d: DonneesSilo, cl: Classement, p: ProfilSilos): EtatParoi`.
+* Erreur qui nomme `hc` si `z > hc` (et celle de T2.1 si `z < 0`).
+* Combinaisons par `valeursCaracteristiques` et `combinaison` du lot 1 : `p_h` en C1, `p_w` et `n_zSk` en C2, `p_v` en C3. Silo élancé : `janssen` ; intermédiaire ou peu élancé : `janssenModifie` avec `cl.h_o` et `d.materiau.phi_r`.
+* Vidange : `p_h × C_h`, `p_w × C_w`, `n_zSk × C_w`, `p_v` inchangé. Si `ecoulementEnCheminee` : `vidange = null` et `motifVidange` = « Écoulement en cheminée interne garanti par l'utilisateur : vidange non applicable (5.1(8)). » ; sinon `motifVidange = null`.
+* Test : `npx vitest run tests/parois/vidange.test.ts` (14 tests).
+
+**T2.5 Exports et fin de lot.** `src/index.ts` réexporte les nouveaux types et `parametresJanssen`, `janssen`, `exposantN`, `janssenModifie`, `coefficientsVidange`, `etatParoi`. `npm run typecheck`, `npm test`, `npm run build` passent. Cocher les cases du lot 2 ; une ligne « Lot 2 » dans « Ce que l'outil rend » du README.
+
+**Interdit** : modifier les tests, `docs/validation/`, `src/model/types.ts`, `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md` ; ajouter une dépendance ; commencer le lot 3 ; pousser.
+
+**Fin du lot** : section « Lot 2 » dans `HANDOFF.md`, commit, arrêt.
 
 ## Lot 3 : action localisée
 
