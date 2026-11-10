@@ -400,6 +400,43 @@ Toutes les chaînes affichées passent par `app/src/textes.ts`, en français seu
 - [ ] JSON versionné, note HTML imprimable, SVG et PNG des graphiques.
 - [ ] Tests : en-têtes, nombre de lignes, valeurs de V1 dans `bandes.csv`, présence des motifs des cas non applicables.
 
+### Consignes d'exécution du lot 8 (séance `claude-ds`)
+
+Branche : `lot-8-exports`. Modèle, en lecture seule : `../charges-climatiques/app/src/export.ts`, `note.ts` et la partie exports de `main.ts`. Le noyau (`src/`) ne change pas.
+
+Test d'acceptation, **à ne jamais modifier** : `tests/app/export.test.ts` (16 tests), et tous ceux des lots précédents.
+
+**T8.1 CSV** : `app/src/export.ts`.
+* Tout passe par `csv()` d'`aedificium-ui` (point-virgule, virgule décimale, BOM, CRLF). Valeurs numériques à 4 décimales fixes (`10,0000`), sauf mention.
+* `ENTETES` : objet `as const` avec `profils`, `bandes`, `tremie`, dans l'ordre exact du test.
+* Bloc d'en-tête commun, en tête de chaque CSV (au plus 15 lignes avant la ligne d'en-tête de colonnes) : outil `silo` et version de `package.json` si elle est accessible, sinon le nom seul ; date du calcul ; `EN 1991-4:2006` et nom du profil normatif ; données d'entrée résumées (forme, dimensions, hc, fond, matériau) ; combinaisons employées (C1, C2, C3, T1, T2, X avec leur rôle) ; la mention exacte `valeurs caractéristiques, coefficients partiels non appliqués` ; une ligne qui dit que `REMP`, `VID` et `VID_EXC` sont des cas exclusifs les uns des autres (le mot `exclusifs` après les trois identifiants). Puis une ligne vide, puis la ligne d'en-tête de colonnes.
+* `csvProfils(r)` : une ligne par (cas, z) pour chaque cas de paroi calculé ; une seule ligne par cas non calculé, avec l'identifiant en première colonne et `non applicable : motif` ou `hors périmètre : motif` dans la colonne suivante. Colonne `combinaison` : les combinaisons du cas.
+* `csvBandes(r)` : une ligne par (cas, bande) ; une ligne motivée par cas de paroi non calculé. Pied de fichier, après une ligne vide : pour chaque contrôle, une ligne `contrôle;<cas>;…` avec la somme des trapèzes et l'intégrale en kN/m à 3 décimales (`812,793`) et l'écart relatif en pourcentage à 3 décimales suivi de ` %` (`-0,097 %`).
+* `csvTremie(r)` : une ligne par (cas, point) de FOND_REMP et FOND_VID ; `x`, `p_n`, `p_t` vides pour un fond plat ; une ligne motivée par cas non calculé.
+* `csvLocalisee(r)` : définition de l'action localisée au remplissage et à la vidange (forme, `C`, `s`, `z_p`, valeurs `p_p`, `p_pi`, `p_nc` à la profondeur `z_p`, avec 4 décimales), et pour un silo circulaire dont VID_EXC est calculé, une ligne par zone `nom;θ min;θ max` en degrés. Le signe négatif de `p_pi` est expliqué par une ligne qui contient « vers l'intérieur » (succion vers l'intérieur du silo). Pour un silo rectangulaire, la majoration uniforme est rappelée avec son coefficient `0,36`.
+* `csvSynthese(r)` : `resultatsEnCsv(blocsSynthese(r))`.
+* `jsonResultat(r): string` : `JSON.stringify` d'un objet `{ format: 'silo-resultat', version: 1, norme: 'EN 1991-4:2006', mention, profil, date, donnees, classement, cas, bandes, controles, pointsOuverts }`, indenté de deux espaces.
+* Test : `npx vitest run tests/app/export.test.ts -t "csv|JSON|en-tete"`, puis le fichier entier à la fin de T8.2.
+
+**T8.2 Note de calcul** : `app/src/note.ts`, `noteDuCalcul(r, cartouche: { projet; element; date }): NoteDeCalcul`.
+* Ouvre sur les hypothèses : la mention, l'exclusivité des cas, le choix enveloppe de SPEC §7 (p_h en C1 et p_w en C2 dans le même cas), le profil normatif.
+* Puis les blocs de `blocsSynthese`, l'élévation de REMP et de VID, les profils `p_h` et `p_w` (REMP et VID superposés), la vue en plan, la trémie s'il y en a une : au moins trois figures SVG.
+* Un bloc par cas avec son statut et son motif, et le tableau des points ouverts appliqués (`lignesPointsOuverts`).
+* Test : `npx vitest run tests/app/export.test.ts -t "note"`.
+
+**T8.3 Boutons** : `app/index.html` et `app/src/main.ts`.
+* Une zone « Exports » avec sept boutons `data-action="exporter-profils"`, `-bandes`, `-tremie`, `-localisee`, `-synthese`, `-json`, `-note`. Fichiers téléchargés nommés `silo-profils.csv`, etc. ; la note s'ouvre par `ouvrirOuTelecharger` comme dans `charges-climatiques`.
+* Sous chaque dessin, un bouton SVG (`svgAutonome` avec les styles du dessin) et un bouton PNG (rendu du SVG autonome dans un `canvas`, puis `toBlob`). Ces boutons portent `data-action="exporter-dessin"` et ne sont pas des `data-champ`.
+* Corriger au passage le débordement du bloc « Cas de charge » de la synthèse (texte long dans la colonne des valeurs) : retour à la ligne autorisé dans `style.css`, sans toucher à `vue.ts` au-delà de ce qui est nécessaire.
+* Ajouter `app/dev-dist/` à `.gitignore` s'il n'y est pas.
+* Test : `npx vitest run tests/app/export.test.ts`.
+
+**T8.4 Fin de lot.** `typecheck`, `test`, `build` passent. Cocher le lot 8. Ligne « Lot 8 » du README, en paragraphe séparé.
+
+**Interdit** : modifier les tests, `docs/validation/`, `src/` (noyau, types compris), `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md` ; ajouter une dépendance ; commencer le lot 9 ; pousser.
+
+**Fin du lot** : section « Lot 8 » dans `HANDOFF.md`, commit, arrêt.
+
 ## Lot 9 : version anglaise, PWA, publication
 
 - [ ] Page `app/en/` et textes anglais (sur le modèle de `charges-climatiques`).
