@@ -308,9 +308,9 @@ Un seul fichier : `src/parois/excentree.ts`.
 
 ## Lot 6 : assemblage des cas et discrétisation
 
-- [ ] `src/cas/` : construction de REMP, VID, VID_EXC, FOND_REMP, FOND_VID avec statut, combinaison et motif (SPEC §7).
-- [ ] `src/discretisation/bandes.ts` : bandes Δz, valeurs haut, bas et constante, cotes Z, contrôle trapèzes contre intégrale exacte.
-- [ ] Tests : bandes de V1 (bandes 1, 2, 3 et 20, somme, intégrale, écart), dernière bande plus courte quand hc n'est pas multiple de Δz.
+- [x] `src/cas/` : construction de REMP, VID, VID_EXC, FOND_REMP, FOND_VID avec statut, combinaison et motif (SPEC §7).
+- [x] `src/discretisation/bandes.ts` : bandes Δz, valeurs haut, bas et constante, cotes Z, contrôle trapèzes contre intégrale exacte.
+- [x] Tests : bandes de V1 (bandes 1, 2, 3 et 20, somme, intégrale, écart), dernière bande plus courte quand hc n'est pas multiple de Δz.
 
 ### Consignes d'exécution du lot 6 (séance `claude-ds`)
 

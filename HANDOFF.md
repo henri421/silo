@@ -505,3 +505,73 @@ Branche `lot-5-excentree`, 2026-11-10. Aucun test d'acceptation ni fichier de `d
 ## État final du lot 5
 
 Les trois commandes du lot passent. Deux commits de code ont été faits (`1e590ba` pour T5.1, `aaa4b6e` pour T5.2), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 6 n'a pas été commencé. P4 reste à confirmer par l'utilisateur.
+
+# Compte rendu du lot 6, séance `claude-ds`
+
+Branche `lot-6-cas`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs/validation/` n'a été modifié ; `src/model/types.ts`, `src/norms/profil.ts`, `SPEC.md`, `CLAUDE.md` et `CONVENTIONS.md` sont intacts (vérifié par `git diff c76e099 -- tests docs/validation src/model/types.ts src/norms/profil.ts SPEC.md CLAUDE.md CONVENTIONS.md`, sortie vide). Aucune dépendance ajoutée, rien n'a été poussé.
+
+## T6.1 Bandes
+
+**Fichiers modifiés** : `src/discretisation/bandes.ts` (création), `src/calcul.ts` (squelette temporaire, pour permettre le chargement du fichier de test).
+
+**Décisions**
+- `bornesBandes` applique `k dz` tant que `k dz < hc`, puis `hc` ; une borne à moins de `1e-9` de `hc` est confondue avec `hc`. La dernière bande est donc plus courte quand `hc` n'est pas multiple de `dz`.
+- `bandes` numérote à partir de 1, du haut vers le bas, évalue `f` directement aux deux bornes et retient la valeur du bas comme valeur constante. `Z = Z_transition + hc - z`.
+- `controleBandes` somme les trapèzes de `p_h_total` et compare à une intégrale de Simpson composite à 2 000 intervalles (nombre pair). L'écart relatif vaut 0 quand l'intégrale est nulle.
+- Erreurs explicites en français sans accents si `hc` ou `dz` n'est pas un nombre strictement positif.
+
+**Points douteux**
+- Le fichier de test appelle `calculer` dès la collecte des `describe` (bloc des bandes de V1). Un squelette de `src/calcul.ts` rendant un résultat vide a donc été posé pour que le test filtré de T6.1 puisse se charger. Il a été remplacé intégralement à T6.2 et n'existe plus dans le code final.
+
+**Statut des tests**
+- Avant implémentation : `npx vitest run tests/cas/calcul.test.ts -t "derniere bande"` : échec de chargement, module `src/calcul` absent, 0 test.
+- Après implémentation : `npx vitest run tests/cas/calcul.test.ts -t "derniere bande"` : 2 tests passent, 13 ignorés.
+- `npm run typecheck` : passe.
+
+## T6.2 Calcul complet
+
+**Fichiers modifiés** : `src/calcul.ts`, `src/cas/profils.ts` (création).
+
+**Décisions**
+- `calculer` valide les données et le profil, puis assemble `classer`, `valeursCaracteristiques`, les six combinaisons dans l'ordre C1, C2, C3, T1, T2, X, les trois `parametresJanssen`, `coefficientsVidange`, `actionLocalisee`, `coefficientCb` et `declenchementExcentree`. Aucune formule de la norme n'est recalculée dans ce module.
+- La grille des profils contient les points `hc i / (n - 1)` avec `n = max(101, pointsProfil)`, `h_o` et `z_o` en C1 dans `]0 ; hc[`, et les bornes des bandes. Elle est triée, les doublons à moins de `1e-9` sont retirés. Les points réguliers sont calculés par multiplication et division, jamais par une somme de pas : `z = 10` de V1 tombe exactement sur 10.
+- REMP et VID évaluent `etatParoi` puis `valeursLocalisees` à chaque z. `p_h_sym` est la pression symétrique, `p_h_total` et `p_w` viennent de `valeursLocalisees`, `p_h_loc = p_h_total - p_h_sym`, `p_v` et `n_zSk` sont symétriques.
+- VID_EXC : non applicable si le déclenchement est faux (motif de `declenchementExcentree`) ou en écoulement de cheminée ; hors périmètre si `zonesExcentrees` lève pour la classe 3, avec le message de l'erreur et un profil vide ; sinon calculé, avec `p_h_sym = p_hse`, `p_h_total = p_hae`, `p_h_loc = p_hae - p_hse`, `p_w = p_wae`. `p_v` et `n_zSk` viennent d'une évaluation symétrique directe en combinaison X, par `janssen` ou `janssenModifie` selon l'élancement, sans changer la signature d'`excentree.ts`.
+- Écoulement en cheminée (5.1(8)) : VID, VID_EXC et FOND_VID sont non applicables avec le motif citant 5.1(8) et des profils vides ; REMP et FOND_REMP restent calculés.
+- Fond plat : un seul point `{ x: null, Z: Z_transition, p_v, p_n: null, p_t: null }`. Trémie : `parametresTremie` au remplissage ou à la vidange, puis 50 points `x = h_h (1 - i/50)` pour `i = 0` à 49, avec `Z = Z_transition - (h_h - x)`.
+- Bandes et contrôles pour les seuls cas de paroi calculés, avec `f(z)` évalué directement, jamais interpolé dans le profil.
+- Points ouverts : P5 toujours ; P2 si le fond est une trémie ; P1 et P4 si VID_EXC est calculé ; P3 ou P7 si une définition localisée de REMP ou VID le porte. Triés.
+- Libellés accentués, par exemple « Remplissage symétrique et action localisée ». Chaînes de combinaisons : `p_h : C1 ; p_w et n_zSk : C2 ; p_v : C3` pour REMP et VID, `p_h, p_w, p_v et n_zSk : X` pour VID_EXC, `p_v : C3` pour un fond plat, `p_n et p_t : <combinaison>` pour une trémie.
+
+**Points douteux**
+- T6.2 demande pour un fond plat un point de `p_v: p_vb`. Or `p_vb` vaut `null` dans la méthode 6.2.1 d'un silo élancé, et le cas V1 attend `p_v = 107,4648 kPa`, qui est `p_vft`. Le code retient donc `fondPlat(...).p_v`, qui vaut `p_vb` en 6.2.2 et `p_vft` en 6.2.1. Les tests passent sans être modifiés.
+- P2 est ajouté dès que le fond est une trémie, y compris peu profonde, lecture littérale de T6.2. Aucun test ne couvre ce cas.
+- La combinaison X de VID_EXC fournit aussi `p_v` et `n_zSk`, que le type `ValeursExcentrees` ne porte pas. Le calcul les obtient par une évaluation directe en X dans `calcul.ts`, sans ajouter de fonction exportée à `excentree.ts`.
+- Les chaînes de `combinaisons` ne sont fixées par aucun test au-delà de leur présence ; leur formulation reste une décision de l'exécutant.
+
+**Statut des tests**
+- La commande de T6.2 n'a pas été lancée avant l'implémentation : le squelette de T6.1 aurait fait échouer les 13 tests restants, ce qui était connu d'avance.
+- Après implémentation : `npx vitest run tests/cas/calcul.test.ts` : 15 tests passent.
+- `npm test` : 169 tests passent sur 16 fichiers.
+- `npm run typecheck` : passe.
+
+## T6.3 Exports et fin de lot
+
+**Fichiers modifiés** : `src/index.ts`, `PLAN.md` (cases du lot 6 cochées), `README.md` (paragraphe du lot 6), `HANDOFF.md`.
+
+**Décisions**
+- `src/index.ts` réexporte `calculer`, `bandes` et `controleBandes` ; les types du lot sont déjà réexportés par `export * from './model/types'`.
+- `README.md` : paragraphe « Lot 6 » séparé par une ligne vide, qui décrit les cinq cas, leurs statuts et motifs, les profils et les bandes avec leur contrôle.
+
+**Points douteux**
+- Aucun test d'acceptation n'exerce directement les réexports de `src/index.ts` ; ils sont couverts par le contrôle de types et la suite complète.
+
+**Statut des tests**
+- `npm run typecheck` : passe, aucune erreur.
+- `npm test` : 169 tests passent sur 16 fichiers.
+- `npm run build` : passe ; `git status` ne montre aucun fichier construit.
+- `git diff c76e099 -- tests docs/validation src/model/types.ts src/norms/profil.ts SPEC.md CLAUDE.md CONVENTIONS.md` : vide, tests, cas de validation et fichiers protégés intacts.
+
+## État final du lot 6
+
+Les trois commandes du lot passent. Deux commits de code ont été faits (`2b973c2` pour T6.1, `9fb2315` pour T6.2), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 7 n'a pas été commencé.
