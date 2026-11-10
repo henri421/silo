@@ -305,6 +305,29 @@ function texteNombre(valeur: number | null): string {
   return valeur === null ? '' : String(valeur).replace('.', ',');
 }
 
+/**
+ * Les douze champs du materiau pre-remplis par un materiau de la bibliotheque :
+ * l'utilisateur voit les valeurs employees, coefficients a_phi, a_K, a_mu
+ * compris, et peut partir d'elles pour un materiau saisi.
+ */
+export function champsDuMateriau(id: 'sable' | 'defaut'): Record<string, string> {
+  const m = materiauParId(id);
+  return {
+    gamma_l: texteNombre(m.gamma_l),
+    gamma_u: texteNombre(m.gamma_u),
+    phi_r: texteNombre(m.phi_r),
+    phi_im: texteNombre(m.phi_im),
+    a_phi: texteNombre(m.a_phi),
+    K_m: texteNombre(m.K_m),
+    a_K: texteNombre(m.a_K),
+    mu_D1: texteNombre(m.mu_m.D1),
+    mu_D2: texteNombre(m.mu_m.D2),
+    mu_D3: texteNombre(m.mu_m.D3),
+    a_mu: texteNombre(m.a_mu),
+    C_op: texteNombre(m.C_op),
+  };
+}
+
 /** Un booleen tel qu'il se relit dans une case : `oui` ou `non`. */
 function texteCase(valeur: boolean): string {
   return valeur ? 'oui' : 'non';
