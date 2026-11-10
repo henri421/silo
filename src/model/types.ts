@@ -296,3 +296,68 @@ export interface ValeursLocalisees {
   /** Frottement du cas, majoration de paroi mince comprise. */
   p_w_total: number;
 }
+
+// ---------------------------------------------------------------------------
+// Fond et tremie (lot 4, SPEC §6)
+// ---------------------------------------------------------------------------
+
+export type CasFond = 'remplissage' | 'vidange';
+
+export interface CoefficientCb {
+  C_b: number;
+  motif: string;
+}
+
+export interface PressionTransition {
+  /** p_vft = C_b p_vf(hc) (kPa), 6.1.2. */
+  p_vft: number;
+  C_b: number;
+  /** Combinaison de proprietes employee pour p_vf(hc). */
+  combinaison: IdCombinaison;
+}
+
+export interface FondPlat {
+  /** `6.2.1` (silo elance) ou `6.2.2` (peu elance ou intermediaire). */
+  methode: '6.2.1' | '6.2.2';
+  /** Pression verticale de calcul (kPa) : uniforme en 6.2.1, p_vsq au voisinage du centre en 6.2.2. */
+  p_v: number;
+  /** Termes de 6.13 a 6.15 (kPa) ; null en 6.2.1. */
+  p_vb: number | null;
+  p_vtp: number | null;
+  p_vho: number | null;
+  /** Facteur d'interpolation (2 - hc/dc)/(2 - h_tp/dc) de 6.13 ; null en 6.2.1. */
+  facteur: number | null;
+  C_b: number;
+  /** Phrase affichee : clause, et rappel qu'elle vaut au remplissage comme a la vidange. */
+  motif: string;
+}
+
+export type ProfondeurTremie = 'profonde' | 'peu-profonde';
+
+export interface ParametresTremie {
+  cas: CasFond;
+  profondeur: ProfondeurTremie;
+  /** Combinaison des proprietes de paroi de tremie : T1 au remplissage, T2 a la vidange. */
+  combinaison: 'T1' | 'T2';
+  /** Hauteur de la pointe virtuelle a la transition (m). */
+  h_h: number;
+  gamma: number;
+  S: number;
+  /** mu_h (profonde) ou mu_heff (peu profonde). */
+  mu_heff: number;
+  /** F_f ou F_e. */
+  F: number;
+  n: number;
+  p_vft: number;
+  /** Angle epsilon de Walker (deg), vidange d'une tremie profonde ; null sinon. */
+  epsilon: number | null;
+  motif: string;
+}
+
+/** Pressions a la cote x de la tremie (kPa). */
+export interface PressionsTremie {
+  x: number;
+  p_v: number;
+  p_n: number;
+  p_t: number;
+}
