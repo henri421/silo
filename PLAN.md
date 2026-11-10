@@ -242,6 +242,37 @@ Un seul fichier : `src/parois/localisee.ts`.
 - [ ] `src/fond/tremie.ts` : classement profond ou peu profond, S, p_v(x) avec le cas limite n = 1, F_f, F_e de Walker, p_n et p_t (SPEC §6.3).
 - [ ] Tests : V1 (fond plat, C_b = 1,0 et 1,2), V3 (p_vsq), V4 (remplissage et vidange en trois points), cas n = 1, erreur φ_wh > φ_i.
 
+### Consignes d'exécution du lot 4 (séance `claude-ds`)
+
+Branche : `lot-4-fond`. Types **déjà écrits** dans `src/model/types.ts` (section « Fond et trémie ») : `CasFond`, `CoefficientCb`, `PressionTransition`, `FondPlat`, `ProfondeurTremie`, `ParametresTremie`, `PressionsTremie`. Nouveau cas : `docs/validation/V6-tremie-peu-profonde.md` (`v6()` dans `tests/fixtures.ts`).
+
+Test d'acceptation, **à ne jamais modifier** : `tests/fond/fond.test.ts` (16 tests), et tous ceux des lots précédents.
+
+**T4.1 Transition** : `src/fond/transition.ts`.
+* `coefficientCb(d: DonneesSilo, p: ProfilSilos): CoefficientCb` : `C_b_majore` si `!faiblementCohesif || engrainementMecanique`, sinon `C_b` ; motif citant `6.1.2(4)` ou `6.1.2(5) et (6)`.
+* `pressionTransition(d, cl, p, cas: CasFond): PressionTransition` : `p_vft = C_b × p_v(hc)`, avec `p_v(hc)` par `janssen` (silo élancé) ou `janssenModifie` (sinon). Combinaison : `C3` au remplissage ; à la vidange, `C3` pour un fond plat (6.2.1(2) et 6.2.2(3) : identique au remplissage) ou pour une trémie peu profonde (6.4.3), et `T2` pour une trémie profonde (P2 : K sup, μ inf de la paroi verticale).
+* Test : `npx vitest run tests/fond/fond.test.ts -t "C_b|V1"`.
+
+**T4.2 Fond plat** : `src/fond/fond-plat.ts`, `fondPlat(d, cl, p): FondPlat`. Erreur dont le message contient `plat` si le fond n'est pas plat.
+* Silo élancé (6.2.1) : `p_v = p_vft` (remplissage), champs de 6.13 à `null`.
+* Sinon (6.2.2) : `p_vb = p_vft` (remplissage, C_b compris), `p_vtp = γ h_tp`, `p_vho = γ h_o` (avec γ = `gamma_u`), `facteur = (2 − hc/dc) / (2 − h_tp/dc)`, `p_v = p_vsq = p_vb + (p_vtp − p_vho) × facteur`. Motif citant `6.2.2(4)` (valeur au voisinage du centre) et `6.2.2(3)` (identique à la vidange).
+* Test : `npx vitest run tests/fond/fond.test.ts -t "V3"`.
+
+**T4.3 Trémie** : `src/fond/tremie.ts`.
+* `classerTremie(d, v: ValeursCaracteristiques): ProfondeurTremie` : profonde si `tanβ < (1 − K_inf) / (2 μ_h,inf)` (éq. 6.1).
+* `coefficientS(silo): number` : 2 (conique, pyramidale carrée), 1 (biseau), `1 + b/a` (pyramidale rectangulaire) (6.9 à 6.11). Erreur pour un fond plat.
+* `pvTremie(x, h_h, gamma, n, p_vft): number` (éq. 6.7) ; si `|n − 1| < 1e−9`, terme `γ h_h (−(x/h_h) ln(x/h_h))`. Erreur qui nomme `x` (m) si `x ≤ 0` ou `x > h_h` (tolérance 1e−9 sur `h_h`).
+* `facteurWalker(beta_deg, mu_h, phi_i_deg): { F_e, epsilon }` (éq. 6.21 à 6.23, `epsilon` en degrés). Si `φ_wh > φ_i` : erreur `phi_wh = 40,8 deg depasse phi_i = 39,2 deg : contact paroi impossible (EN 1991-4, note 1 sous 6.23).` (une décimale, virgule).
+* `parametresTremie(d, cl, p, cas): ParametresTremie` selon SPEC §6.3 et le tableau qui y figure, avec `b = b_tremie` du profil, `S = coefficientS`, `h_h = cl.h_h`, `gamma = gamma_u`, `p_vft = pressionTransition(...)`. Profonde : remplissage `combinaison 'T1'`, μ_heff = μ_h,inf, F = F_f (6.17), n (6.18) ; vidange `'T2'`, F = F_e de Walker avec μ_h,inf et φ_i,sup, n par la forme générale 6.8, `epsilon` renseigné. Peu profonde : μ_heff = (1 − K_inf)/(2 tanβ) (6.26), F_f (6.27), n (6.28) ; la vidange rend les mêmes paramètres que le remplissage avec `cas: 'vidange'`, `combinaison: 'T1'` et un motif citant `6.4.3`. `epsilon = null` hors vidange profonde. Motifs citant les clauses.
+* `pressionsTremie(t: ParametresTremie, x: number): PressionsTremie` : `p_v = pvTremie(...)`, `p_n = F p_v`, `p_t = μ_heff F p_v`.
+* Test : `npx vitest run tests/fond/fond.test.ts` (16 tests).
+
+**T4.4 Exports et fin de lot.** Réexporter les types et les neuf fonctions. `typecheck`, `test`, `build` passent. Cocher le lot 4 ; ligne « Lot 4 » du README, sous forme d'un paragraphe séparé des autres par une ligne vide.
+
+**Interdit** : modifier les tests, `docs/validation/`, `src/model/types.ts`, `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md` ; ajouter une dépendance ; commencer le lot 5 ; pousser.
+
+**Fin du lot** : section « Lot 4 » dans `HANDOFF.md`, commit, arrêt.
+
 ## Lot 5 : vidange à grand excentrement
 
 - [ ] **Avant de coder** : faire confirmer le point ouvert P4 par l'utilisateur.
