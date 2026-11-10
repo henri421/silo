@@ -396,9 +396,9 @@ Toutes les chaînes affichées passent par `app/src/textes.ts`, en français seu
 
 ## Lot 8 : exports
 
-- [ ] Les cinq CSV de SPEC §8.2, avec bloc d'en-tête et aucune ligne omise.
-- [ ] JSON versionné, note HTML imprimable, SVG et PNG des graphiques.
-- [ ] Tests : en-têtes, nombre de lignes, valeurs de V1 dans `bandes.csv`, présence des motifs des cas non applicables.
+- [x] Les cinq CSV de SPEC §8.2, avec bloc d'en-tête et aucune ligne omise.
+- [x] JSON versionné, note HTML imprimable, SVG et PNG des graphiques.
+- [x] Tests : en-têtes, nombre de lignes, valeurs de V1 dans `bandes.csv`, présence des motifs des cas non applicables.
 
 ### Consignes d'exécution du lot 8 (séance `claude-ds`)
 

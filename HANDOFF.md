@@ -675,3 +675,90 @@ Branche `lot-7-interface`, 2026-11-10. Aucun test d'acceptation ni fichier de `d
 ## État final du lot 7
 
 Les trois commandes du lot passent. Quatre commits de code ont été faits (`1c642aa` pour T7.1, `51cac20` pour T7.2, `687fcd1` pour T7.3, `cc7c874` pour T7.4), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 8 n'a pas été commencé.
+
+# Compte rendu du lot 8, séance `claude-ds`
+
+Branche `lot-8-exports`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs/validation/` n'a été modifié ; `src/` (noyau et types), `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md`, `app/en/`, `package.json` et `package-lock.json` sont intacts (vérifié par `git diff ae303e4 --stat -- tests docs/validation src SPEC.md CLAUDE.md CONVENTIONS.md app/en package.json package-lock.json`, sortie vide). Aucune dépendance ajoutée, rien n'a été poussé.
+
+## T8.1 CSV et JSON
+
+**Fichiers modifiés** : `app/src/export.ts` (création), `app/src/dessins.ts` (constante `STYLE_DESSIN` extraite et exportée), `app/src/note.ts` (squelette seulement, pour permettre le chargement du fichier de test).
+
+**Décisions**
+- Tout CSV passe par `csv()` d'aedificium-ui : BOM, point-virgule, virgule décimale et CRLF. Les valeurs numériques sortent à 4 décimales fixes (`10,0000`).
+- Bloc d'en-tête commun de huit lignes non vides, puis une ligne vide, puis la ligne d'en-tête de colonnes : outil `silo` et version lue dans `package.json` par un import JSON, date ISO du calcul, norme et profil normatif, forme, dimensions, `hc`, fond, matériau, `Z_transition`, combinaisons C1 à X avec leur rôle, mention exacte `valeurs caractéristiques, coefficients partiels non appliqués`, et phrase d'exclusivité `REMP, VID et VID_EXC sont exclusifs les uns des autres.`
+- Un cas non calculé sort en une ligne : identifiant en première colonne, `non applicable : motif` ou `hors périmètre : motif` en deuxième. Aucune ligne n'est omise.
+- `bandes.csv` ajoute en pied, après une ligne vide, une ligne par contrôle : somme des trapèzes et intégrale en kN/m à 3 décimales, écart relatif en pourcentage à 3 décimales suivi de ` %` (`-0,097 %`). Les lignes de pied commencent par `contrôle`.
+- `localisee.csv` lit `p_p`, `p_pi` et `p_nc` à la profondeur `z_p` par `valeursLocalisees` du noyau, à partir du point de profil le plus proche : aucune formule n'est recopiée. Quand `z_p` vaut `null` (paroi non circulaire, classe 3), les valeurs sont lues à mi-hauteur, hauteur où la définition s'applique de toute façon. `p_pi` est écrit avec un signe négatif, et une ligne contenant « vers l'intérieur » explique cette succion. Les angles des zones excentrées sortent en degrés sans décimales inutiles.
+- `jsonResultat` rend exactement les clés demandées (`format`, `version`, `norme`, `mention`, `profil`, `date`, `donnees`, `classement`, `cas`, `bandes`, `controles`, `pointsOuverts`), indentées de deux espaces.
+- `STYLE_DESSIN` est la feuille de peinture du SVG extraite de `dessins.ts` ; `export.ts` la préfixe des `JETONS` pour l'export autonome. Une seule source de styles, donc pas de dérive entre l'écran et les fichiers.
+
+**Points douteux**
+- Le test des zones excentrées exige `contrainte-elevee;35;70` : `35,0000;70,0000` ne correspond pas à son motif. Les angles sont donc affichés par `nombreAffiche`, sans décimales inutiles, alors que les autres colonnes de `localisee.csv` sont à 4 décimales fixes. Aucune valeur n'est modifiée.
+- Pour un silo non circulaire, `z_p` est nul et `localisee.csv` lit `p_p` à mi-hauteur. Aucun test d'acceptation ne fixe cette profondeur pour ce cas ; le choix est commenté dans le module.
+- Le fichier de test importe `app/src/note` dès sa collecte : un squelette levant une erreur a été posé à T8.1 pour que les tests CSV puissent se charger. Il a été remplacé intégralement à T8.2, comme aux lots précédents.
+
+**Statut des tests**
+- Avant implémentation : `npx vitest run tests/app/export.test.ts` : échec de chargement, module `app/src/export` absent, 0 test.
+- Après implémentation : `npx vitest run tests/app/export.test.ts -t "csv|JSON|en-tete"` : 14 tests passent, 2 ignorés.
+- `npm run typecheck` : passe.
+
+## T8.2 Note de calcul
+
+**Fichiers modifiés** : `app/src/note.ts`.
+
+**Décisions**
+- `noteDuCalcul` compose un `NoteDeCalcul` pour `noteDeCalculHtml` ; aucun calcul de la norme n'y est refait.
+- La section des hypothèses vient en tête de la note (ordre fixe d'aedificium-ui) : norme et profil normatif, mention exacte, exclusivité de REMP, VID et VID_EXC, et choix enveloppe de SPEC §7 (p_h en C1 et p_w en C2 dans le même cas).
+- La section des charges porte un bloc par cas avec son statut et ses combinaisons ou son motif, puis le tableau de `lignesCas`.
+- La section des calculs reprend les six blocs de `blocsSynthese`, puis six figures : élévation de REMP, élévation de VID, profils `p_h` et `p_w` avec REMP et VID superposés, vue en plan, et trémie quand le fond en a une. Le tableau des points ouverts appliqués vient ensuite.
+- `verifications` reste vide : l'outil constate les actions et ne vérifie rien. Le cartouche porte la norme `EN 1991-4:2006` et l'outil `silo`.
+
+**Points douteux** : aucun. La note n'a ni conclusion ni verdict, conformément à la doctrine.
+
+**Statut des tests**
+- Avant implémentation : `npx vitest run tests/app/export.test.ts -t "note"` : 1 test échoue (squelette), 15 ignorés.
+- Après implémentation : `npx vitest run tests/app/export.test.ts -t "note"` : 1 test passe, 15 ignorés.
+- `npm run typecheck` : passe.
+
+## T8.3 Boutons et affichage
+
+**Fichiers modifiés** : `app/index.html`, `app/src/main.ts`, `app/src/style.css`, `app/src/textes.ts`, `.gitignore`.
+
+**Décisions**
+- La page porte une section « Exports » avec sept boutons `data-action="exporter-profils"`, `-bandes`, `-tremie`, `-localisee`, `-synthese`, `-json` et `-note`. Les fichiers téléchargés s'appellent `silo-profils.csv`, `silo-bandes.csv`, `silo-tremie.csv`, `silo-localisee.csv`, `silo-synthese.csv`, `silo-resultat.json` et `silo-note.html`.
+- La note s'ouvre par `ouvrirOuTelecharger` ; son cartouche prend un projet fixe `Silo`, l'élément lu sur le `h1` de la page et la date du jour, faute de champs de cartouche dans le formulaire du lot 7.
+- Sous chaque dessin, deux boutons `data-action="exporter-dessin"` (un SVG, un PNG) portent `data-dessin` et `data-format` ; ils ne sont pas des `data-champ`. Le SVG part en `svgAutonome(svg, STYLES_DESSIN)`. Le PNG est le rendu du SVG autonome dans un `canvas` (dimensions doubles de son `viewBox`), puis `toBlob`.
+- `main.ts` garde les SVG du dernier rendu dans `dessinsCourants` ; une erreur de saisie les efface avec les zones de résultat, pour qu'aucun bouton ne télécharge un dessin périmé.
+- Le débordement du bloc « Cas de charge » est corrigé en ajoutant en `main.ts` la classe `bloc-cas` au bloc dont le titre est celui des cas, puis en autorisant le retour à la ligne dans `style.css` (`.bloc-cas .valeur`). `vue.ts` n'est pas modifié.
+- Les libellés des boutons passent par `textes.ts` (section `exports`).
+- `app/dev-dist/` est ajouté à `.gitignore`.
+
+**Points douteux**
+- Le chemin PNG n'est pas exécuté par les tests d'acceptation, qui ne lisent que les chaînes de `index.html` et de `main.ts`. Il dépend du rendu du SVG autonome par le navigateur ; si ce rendu échoue, le bouton PNG ne produit rien, mais l'export SVG reste disponible. Aucun test de fumée sous jsdom n'a été conservé.
+- Le cartouche de la note n'a pas de champs de saisie dédiés : le projet est fixe et l'élément vient du titre de la page. Le lot 9 pourra ajouter des champs si la version anglaise en a besoin.
+
+**Statut des tests**
+- Avant implémentation : `npx vitest run tests/app/export.test.ts -t "boutons"` : 1 test échoue, l'attribut `data-action` absent de la page, 15 ignorés.
+- Après implémentation : `npx vitest run tests/app/export.test.ts -t "boutons"` : 1 test passe ; `npx vitest run tests/app/export.test.ts` : 16 tests passent.
+- `npx vitest run tests/app/export.test.ts tests/app/interface.test.ts tests/app/pages.test.ts` : 31 tests passent.
+- `npm run typecheck` : passe.
+
+## T8.4 Fin de lot
+
+**Fichiers modifiés** : `PLAN.md` (cases du lot 8 cochées), `README.md` (paragraphe du lot 8), `HANDOFF.md`.
+
+**Décisions**
+- `README.md` : paragraphe « Lot 8 » séparé par une ligne vide, qui décrit les cinq CSV, le JSON versionné, la note imprimable et les dessins en SVG autonome et PNG.
+
+**Points douteux** : aucun.
+
+**Statut des tests**
+- `npm run typecheck` : passe, aucune erreur.
+- `npm test` : 217 tests passent sur 21 fichiers.
+- `npm run build` : passe ; `git status` ne montre aucun fichier construit, `app/dev-dist/` est ignoré.
+- `git diff ae303e4 --stat -- tests docs/validation src SPEC.md CLAUDE.md CONVENTIONS.md app/en package.json package-lock.json` : sortie vide, tests, cas de validation, noyau, page anglaise et dépendances intacts.
+
+## État final du lot 8
+
+Les trois commandes du lot passent. Trois commits de code ont été faits (`db20288` pour T8.1, `d0011be` pour T8.2, `351e5e8` pour T8.3), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 9 n'a pas été commencé.
