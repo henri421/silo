@@ -19,7 +19,7 @@ import {
   dessinProfils,
   dessinTremie,
 } from './dessins';
-import { MENTION } from './export';
+import { mention } from './export';
 import { phrase, textes } from './textes';
 import { blocsSynthese, lignesCas, lignesPointsOuverts } from './vue';
 
@@ -97,7 +97,7 @@ export function noteDuCalcul(
     sections: {
       hypotheses: [
         { type: 'texte', texte: norme },
-        { type: 'texte', texte: `${phrase(MENTION)}.` },
+        { type: 'texte', texte: `${mention()}.` },
         { type: 'liste', items },
       ],
       charges: [

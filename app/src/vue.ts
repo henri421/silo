@@ -84,7 +84,7 @@ export function blocsSynthese(r: ResultatSilo): BlocResultat[] {
         ligne(t.symboles.capacite, t.libelles.capacite, `${aff(cl.capacite, 1)} t`),
         ligne(t.symboles.classe, t.libelles.classe, String(cl.classeDeCalcul)),
       ],
-      note: phrase(cl.motifsClasse.join(' ')),
+      note: cl.motifsClasse.map(phrase).join(' '),
     },
     { titre: t.blocs.proprietes, lignes: proprietes, note: null },
     {
@@ -106,7 +106,7 @@ export function blocsSynthese(r: ResultatSilo): BlocResultat[] {
         ligne(t.symboles.forme, t.libelles.formeRemplissage, formeLisible(a.remplissage)),
         ligne(t.symboles.forme, t.libelles.formeVidange, formeLisible(a.vidange)),
       ],
-      note: phrase(`${a.remplissage.motif} ${a.vidange.motif}`),
+      note: `${phrase(a.remplissage.motif)} ${phrase(a.vidange.motif)}`,
     },
     { titre: t.blocs.fond, lignes: fond, note: phrase(r.C_b.motif) },
     {
