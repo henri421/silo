@@ -58,12 +58,12 @@ Fichiers : `app/index.html`, `app/en/index.html`, `app/src/main.ts`, `app/src/pw
 
 ## Lot 1 : géométrie, matériau, classement
 
-- [ ] `src/model/` : types `Silo`, `Materiau`, `Exploitation`, `Discretisation` (SPEC §2), avec validation et erreurs nommées (SPEC §11).
-- [ ] `src/materiaux/bibliotheque.json`, son chargeur et `LISEZMOI.md` (SPEC §3.3). Une valeur sans source bloque.
-- [ ] `src/norms/en1991-4-recommande.ts` : profil des valeurs recommandées (tableau 2.1, C_h, C_w, b = 0,2, C_b, θ_c, seuils d'excentrement), chacune avec sa clause.
-- [ ] `src/classement/` : A, U, d_c ; élancement ; classe (avec P5) ; paroi mince ou épaisse ; h_o et h_tp ; limites de 1.1(3).
-- [ ] `src/proprietes/` : valeurs caractéristiques (4.1 à 4.6) et combinaisons C1, C2, C3, T1, T2, X (SPEC §3.2).
-- [ ] Tests sur les données de V1 à V4 : A, U, d_c, hc/dc, capacité, classe, K et μ caractéristiques, h_o, h_tp.
+- [x] `src/model/` : types `Silo`, `Materiau`, `Exploitation`, `Discretisation` (SPEC §2), avec validation et erreurs nommées (SPEC §11).
+- [x] `src/materiaux/bibliotheque.json`, son chargeur et `LISEZMOI.md` (SPEC §3.3). Une valeur sans source bloque.
+- [x] `src/norms/en1991-4-recommande.ts` : profil des valeurs recommandées (tableau 2.1, C_h, C_w, b = 0,2, C_b, θ_c, seuils d'excentrement), chacune avec sa clause.
+- [x] `src/classement/` : A, U, d_c ; élancement ; classe (avec P5) ; paroi mince ou épaisse ; h_o et h_tp ; limites de 1.1(3).
+- [x] `src/proprietes/` : valeurs caractéristiques (4.1 à 4.6) et combinaisons C1, C2, C3, T1, T2, X (SPEC §3.2).
+- [x] Tests sur les données de V1 à V4 : A, U, d_c, hc/dc, capacité, classe, K et μ caractéristiques, h_o, h_tp.
 
 ### Consignes d'exécution du lot 1 (séance `claude-ds`)
 

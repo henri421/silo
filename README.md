@@ -14,6 +14,7 @@ En construction. Le périmètre visé est décrit dans [`SPEC.md`](SPEC.md) et l
 ## Ce que l'outil rend
 
 Lot 0 : squelette publiable, sans calcul.
+Lot 1 : géométrie, bibliothèque de matériaux, classement et combinaisons de propriétés, sans pressions encore.
 
 ## Choix de modélisation déclarés
 
