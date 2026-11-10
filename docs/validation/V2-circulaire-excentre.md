@@ -19,6 +19,8 @@ Cas reproduit par les tests des lots 1, 3 et 5. Valeurs établies par `reference
 
 * A = 28,2743 m², U = 18,8496 m, A/U = 1,5 m, d_c = 6 m, hc/dc = 3,0 : **élancé**.
 * d_c/t = 30 ≤ 200 : **paroi épaisse**.
+* Trémie conique β = 30° : h_h = 3 / tan 30° = **5,1962 m**, volume π × 3² × h_h / 3 = **48,9726 m³**.
+* Talus (cône, éq. 5.77) : h_o = 3 tan 39° / 3 = **0,809784 m** ; h_tp = 3 tan 39° = **2,429352 m**.
 * Capacité de la partie verticale : 830,1 t. Avec la trémie de V4 (volume 48,9726 m³, soit 79,8737 t), la capacité totale retenue selon P5 vaut **909,9 t** < 1 000 t. Avec e_o/d_c = 0,3333 > 0,25, le silo reste donc en **classe 2**, puisque le critère d'excentrement du tableau 2.1 ne vaut qu'au dessus de 1 000 t.
 * e_o > 0,25 d_c = 1,5 m : **vidange à grand excentrement déclenchée** (5.2.4.1(1)).
 

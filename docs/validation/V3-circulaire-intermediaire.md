@@ -6,7 +6,7 @@ Cas reproduit par les tests des lots 1, 2, 3 et 4. Valeurs établies par `refere
 
 | Grandeur | Valeur |
 |-|-|
-| Section | circulaire, d = 10 m (r = 5 m) |
+| Section | circulaire, d = 10 m (r = 5 m), paroi t = 0,30 m (d_c/t = 33, épaisse) |
 | hc | 15 m |
 | Fond | plat |
 | Matériau | sable (comme V1), paroi D2 |

@@ -65,6 +65,92 @@ Fichiers : `app/index.html`, `app/en/index.html`, `app/src/main.ts`, `app/src/pw
 - [ ] `src/proprietes/` : valeurs caractéristiques (4.1 à 4.6) et combinaisons C1, C2, C3, T1, T2, X (SPEC §3.2).
 - [ ] Tests sur les données de V1 à V4 : A, U, d_c, hc/dc, capacité, classe, K et μ caractéristiques, h_o, h_tp.
 
+### Consignes d'exécution du lot 1 (séance `claude-ds`)
+
+Branche : `lot-1-geometrie`, déjà créée. Les interfaces sont **déjà écrites** par la séance de conception : `src/model/types.ts` (données et résultats) et `src/norms/profil.ts` (type `ProfilSilos`). Les implémenter sans changer leurs signatures ; un manque doit être signalé dans `HANDOFF.md`, pas contourné.
+
+Tests d'acceptation, **à ne jamais modifier** : `tests/fixtures.ts`, `tests/model/valider.test.ts`, `tests/materiaux/bibliotheque.test.ts`, `tests/norms/profil.test.ts`, `tests/classement/geometrie.test.ts`, `tests/classement/classement.test.ts`, `tests/proprietes/proprietes.test.ts`, et ceux du lot 0.
+
+Règles communes : chaque fonction exportée porte un commentaire qui dit ce qu'elle calcule et sa clause ; unités en tête de module ; aucun accent dans le code ; angles en degrés dans les données, convertis en radians à l'usage. Les messages d'erreur sont **en français sans accents**, nomment la grandeur, son unité et, s'il y a lieu, la clause.
+
+**T1.1 Validation** : `src/model/valider.ts`, `export function validerDonnees(d: DonneesSilo): void`.
+* Messages imposés (les autres sur le même modèle) :
+  * `Le diametre interieur d doit etre un nombre strictement positif (m).`
+  * `L epaisseur de paroi t doit etre un nombre strictement positif (m).` (obligatoire pour un silo circulaire)
+  * `Le grand cote a doit etre ...`, `Le petit cote b doit etre ...`, `La hauteur de paroi verticale hc doit etre ...` (m) ; `Le silo rectangulaire exige a >= b (m).`
+  * Trémie : `L angle de tremie beta doit etre un nombre strictement compris entre 0 et 90 (deg).` ; `Une tremie conique exige un silo circulaire.` ; `Une tremie pyramidale ou en biseau exige un silo rectangulaire.` ; `Une tremie pyramidale carree exige a = b (m).`
+  * Excentrements `e_f`, `e_t`, `e_o` : nombres finis positifs ou nuls (m), au plus égaux à d/2 pour un cercle et à a/2 pour un rectangle (le message nomme la grandeur et la limite).
+  * Matériau : `gamma_l`, `gamma_u`, `K_m`, `mu_m` de chaque catégorie, `C_op` strictement positifs ; `phi_r` et `phi_im` strictement entre 0 et 90 (deg) ; `a_phi`, `a_K`, `a_mu` au moins égaux à 1. Le message nomme la grandeur.
+  * Discrétisation : `dz` strictement positif (m) ; `pointsProfil` entier au moins égal à 101.
+* Test : `npx vitest run tests/model/valider.test.ts` (11 tests).
+
+**T1.2 Bibliothèque** : `src/materiaux/bibliotheque.json`, `src/materiaux/bibliotheque.ts`, `src/materiaux/LISEZMOI.md`.
+* Format du JSON : `{ "format": "silo-materiaux", "version": 1, "materiaux": [ { "id", "nom", "valeurs": { "<champ>": { "valeur": <nombre>, "source": "<texte>" } } } ] }`, avec les douze champs `gamma_l, gamma_u, phi_r, phi_im, a_phi, K_m, a_K, mu_m_D1, mu_m_D2, mu_m_D3, a_mu, C_op`. Les deux matériaux sont ceux de SPEC §3.3, identifiants `defaut` (nom « Matériau par défaut ») et `sable` (« Sable »), chaque source valant exactement `EN 1991-4:2006, tableau E.1`.
+* `materiauxDepuisJson(json: unknown): Materiau[]` : vérifie `format` et `version` (message qui contient `format` ou `version`), chaque champ présent, chaque valeur finie, chaque source non vide après `trim()`. Le message d'erreur nomme le matériau et le champ. `Materiau.sources` reprend les sources par nom de champ.
+* `bibliotheque(): Materiau[]` lit le JSON livré (import JSON de TypeScript, `resolveJsonModule` à activer dans `tsconfig.json` si nécessaire) ; `materiauParId(id: string): Materiau` lève une erreur qui nomme l'identifiant inconnu.
+* `LISEZMOI.md` : comment ajouter un matériau en relisant le tableau E.1 de son propre exemplaire (une valeur par champ, avec sa source), sans recopier le tableau.
+* Test : `npx vitest run tests/materiaux/bibliotheque.test.ts` (10 tests).
+
+**T1.3 Profil recommandé** : `src/norms/profil.ts` (ajouter `verifierProfil`), `src/norms/en1991-4-recommande.ts`.
+* `en1991_4Recommande(): ProfilSilos` rend un objet neuf à chaque appel. `nom: 'EN 1991-4, valeurs recommandées'`, `date: '2026-11-10'`, un `perimetre` en une phrase. Valeurs et sources (préfixe `EN 1991-4:2006, ` puis la clause) :
+
+  | Clé | Valeur | Clause |
+  |-|-|-|
+  | capaciteClasse1 | 100 | tableau 2.1 |
+  | capaciteClasse3 | 10000 | tableau 2.1 |
+  | capaciteExcentrement | 1000 | tableau 2.1 |
+  | excentrementClasse3 | 0.25 | tableau 2.1 |
+  | C_h_elance | 1.15 | éq. 5.21 |
+  | C_w_elance | 1.1 | éq. 5.22 |
+  | C_h_pente | 0.15 | éq. 5.85 |
+  | C_w_pente | 0.1 | éq. 5.86 |
+  | b_tremie | 0.2 | éq. 6.17 |
+  | C_b | 1.0 | 6.1.2(4) |
+  | C_b_majore | 1.2 | 6.1.2(5) et (6) |
+  | theta_c | 35 | 5.2.4.2 |
+  | excentrementGrand | 0.25 | 5.2.4.1(2) |
+  | elancementExcentrementRemplissage | 4.0 | 5.2.4.1(2) |
+  | minceurParoi | 200 | 5.2.1.4(1) |
+  | excentrementPeuElance | 0.1 | 5.3.2.2(4) |
+
+* `verifierProfil(p: ProfilSilos): void` lève une erreur qui nomme la clé si une valeur n'est pas finie ou si une source est vide après `trim()`.
+* Test : `npx vitest run tests/norms/profil.test.ts` (6 tests).
+
+**T1.4 Géométrie** : `src/classement/geometrie.ts`.
+* `grandeursGeometriques(silo): Geometrie` (SPEC §4.1, `r = d_c / 2`).
+* `hauteurTremie(silo): number | null` : `null` pour un fond plat, sinon `(d_c / 2) / tan(beta)` jusqu'à la pointe virtuelle, pour toutes les formes (la pente donnée est la plus forte, 6.1.2(7)).
+* `volumeTremie(silo): number` : 0 pour un fond plat ; cône `π r² h_h / 3` ; pyramide `a b h_h / 3` ; biseau `a b h_h / 2`.
+* `talus(silo, phi_r_deg): { h_o, h_tp }` : cercle `h_o = r tanφ_r / 3`, `h_tp = r tanφ_r` (éq. 5.77) ; rectangle `h_o = d_c tanφ_r / 4`, `h_tp = d_c tanφ_r / 2` (éq. 5.78).
+* Test : `npx vitest run tests/classement/geometrie.test.ts` (7 tests).
+
+**T1.5 Classement** : `src/classement/classement.ts`, `export function classer(d: DonneesSilo, p: ProfilSilos): Classement`.
+* Appelle d'abord `validerDonnees(d)` et `verifierProfil(p)`.
+* Élancement selon SPEC §4.2. Erreurs, avec `hc/dc` écrit avec deux décimales et une virgule :
+  * fond plat et `hc/dc ≤ 0,4` : `hc/dc = 0,35 avec fond plat : magasin de stockage, hors perimetre (EN 1991-4, 5.4).` ;
+  * trémie et `hc/dc ≤ 0,4` : `hc/dc = 0,33 avec tremie : cas non tranche par 5.1(2), hors perimetre (point ouvert P6).`
+* Limites de 1.1(3), avec `h_b = hc + h_h` (`hc` pour un fond plat), testées dans cet ordre : `d_c < 60 m`, `h_b < 100 m`, `h_b/d_c < 10`. Messages sur le modèle : `d_c = 70,00 m atteint la limite de 60 m (EN 1991-4, 1.1(3)).`, `h_b = 101,00 m atteint la limite de 100 m (EN 1991-4, 1.1(3)).`, `h_b/d_c = 12,50 atteint la limite de 10 (EN 1991-4, 1.1(3)).`
+* Capacité `gamma_u (A hc + volumeTremie) / 9,81` en tonnes (P5), avec `const G = 9.81` nommée.
+* Classe du tableau 2.1 avec les seuils du profil : 3 si capacité > capaciteClasse3 ; ou capacité > capaciteExcentrement et `e_o/d_c > excentrementClasse3` ; ou capacité > capaciteExcentrement, silo peu élancé et `e_t/d_c > excentrementClasse3` (`e_t` vaut `e_f` s'il est absent). Sinon 1 si capacité < capaciteClasse1, sinon 2. Les comparaisons sont strictes, comme dans SPEC §4.3.
+* `classeDeCalcul = max(classeCalculee, classeImposee)` ; `procedures = classeDeCalcul === 3 ? 3 : 2`. `motifsClasse` : au moins une phrase en français accentué qui dit pourquoi ; pour une classe 1, une phrase qui cite `2.5(3)` (« calculée avec les procédures de la classe 2 »).
+* `paroi` : `null` pour un rectangle ; `mince` si `d_c / t > minceurParoi`, `epaisse` sinon.
+* `h_o`, `h_tp` par `talus(silo, materiau.phi_r)`.
+* Test : `npx vitest run tests/classement/classement.test.ts` (22 tests).
+
+**T1.6 Propriétés** : `src/proprietes/caracteristiques.ts` et `src/proprietes/combinaisons.ts`.
+* `valeursCaracteristiques(m: Materiau, parois: Parois): ValeursCaracteristiques` selon SPEC §3.1 ; `mu_*` sur `parois.verticale`, `mu_h_*` sur `parois.tremie`.
+* `combinaison(id: IdCombinaison, v: ValeursCaracteristiques, m: Materiau): Combinaison`, `gamma = m.gamma_u`, selon SPEC §3.2. Libellés exacts : `C1 pression normale max`, `C2 frottement max`, `C3 charge verticale max`, `T1 trémie remplissage`, `T2 trémie vidange`, `X vidange excentrée`. `mu_h` vaut `mu_h_inf` pour toutes les combinaisons. Valeurs : C1 (K sup, μ inf, φ inf) ; C2 (K sup, μ sup, φ inf) ; C3 (K inf, μ inf, φ sup) ; T1 (K inf, μ inf, φ inf) ; T2 (K sup, μ inf, φ sup ; P2) ; X (K sup, μ inf, φ sup ; P1). Le commentaire de T2 et de X cite le point ouvert appliqué.
+* Test : `npx vitest run tests/proprietes/proprietes.test.ts` (8 tests).
+
+**T1.7 Exports et fin de lot.**
+* `src/index.ts` réexporte les types de `src/model/types.ts` et `src/norms/profil.ts`, et `validerDonnees`, `bibliotheque`, `materiauParId`, `materiauxDepuisJson`, `en1991_4Recommande`, `verifierProfil`, `grandeursGeometriques`, `hauteurTremie`, `volumeTremie`, `talus`, `classer`, `valeursCaracteristiques`, `combinaison`, en gardant `NORME`.
+* `npm run typecheck`, `npm test`, `npm run build` passent. Cocher les cases du lot 1. Section « Ce que l'outil rend » du README : une ligne pour le lot 1 (classement et propriétés, sans pressions encore).
+
+**Décisions laissées à l'exécutant** : le découpage interne en fonctions privées, la formulation des messages non imposés (même modèle), la phrase des motifs de classe.
+
+**Interdit** : modifier les tests, `docs/validation/`, `src/model/types.ts`, les types de `src/norms/profil.ts`, `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md` ; ajouter une dépendance ; commencer le lot 2 ; pousser.
+
+**Fin du lot** : ajouter à `HANDOFF.md` une section « Lot 1 » (mêmes rubriques que le lot 0), commiter, s'arrêter.
+
 ## Lot 2 : parois verticales, cas symétriques
 
 - [ ] `src/parois/janssen.ts` (élancés, SPEC §5.1) et `src/parois/janssen-modifie.ts` (SPEC §5.2), avec n_zSk.
