@@ -64,9 +64,29 @@ export function v4(): DonneesSilo {
   return { ...base(), silo: { forme: 'circulaire', d: 6, t: 0.2, hc: 18, fond: 'conique', beta: 30, Z_transition: 0 } };
 }
 
-/** Verifie une egalite a une tolerance relative (1e-4 par defaut, PLAN.md), ou absolue si l'attendu est nul. */
+/** V5 : circulaire peu elance d = 12 m, t = 0,25 m, hc = 10 m, fond plat, e_o = 2,0 m. */
+export function v5(): DonneesSilo {
+  const d = base();
+  return {
+    ...d,
+    silo: { forme: 'circulaire', d: 12, t: 0.25, hc: 10, fond: 'plat', Z_transition: 0 },
+    exploitation: { ...d.exploitation, e_o: 2 },
+  };
+}
+
+/** V6 : silo de V3 sur une tremie conique peu profonde, beta = 60 deg. */
+export function v6(): DonneesSilo {
+  return { ...base(), silo: { forme: 'circulaire', d: 10, t: 0.3, hc: 15, fond: 'conique', beta: 60, Z_transition: 0 } };
+}
+
+/**
+ * Verifie une egalite a une tolerance relative (1e-4 par defaut, PLAN.md). Les valeurs de
+ * docs/validation/ sont arrondies a 4 decimales : un ecart absolu d'au plus une demi-unite
+ * de la 4e decimale (5e-5) est donc toujours accepte.
+ */
 export function proche(obtenu: number, attendu: number, tol = 1e-4): void {
   expect(Number.isFinite(obtenu), `valeur non finie : ${obtenu}`).toBe(true);
-  const ecart = attendu === 0 ? Math.abs(obtenu) : Math.abs(obtenu / attendu - 1);
-  expect(ecart, `obtenu ${obtenu}, attendu ${attendu}`).toBeLessThanOrEqual(tol);
+  const absolu = Math.abs(obtenu - attendu);
+  const relatif = attendu === 0 ? absolu : absolu / Math.abs(attendu);
+  expect(absolu <= 5e-5 || relatif <= tol, `obtenu ${obtenu}, attendu ${attendu}, ecart relatif ${relatif}`).toBe(true);
 }

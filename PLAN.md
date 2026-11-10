@@ -6,7 +6,7 @@
 
 **Pile.** TypeScript strict, Vite, Vitest (+ jsdom pour `tests/app/`), vite-plugin-pwa. Aucune autre dépendance sans accord.
 
-**Règle de chaque lot.** Les tests s'écrivent d'abord, avec les valeurs de `docs/validation/` en dur (tolérance relative 1e−4 sauf mention). Un lot se termine quand `npm run typecheck`, `npm test` et `npm run build` passent. Ensuite on s'arrête (voir `CLAUDE.md`).
+**Règle de chaque lot.** Les tests s'écrivent d'abord, avec les valeurs de `docs/validation/` en dur (tolérance relative 1e−4 sauf mention, ou écart absolu d'au plus 5e−5 puisque les valeurs sont arrondies à 4 décimales). Un lot se termine quand `npm run typecheck`, `npm test` et `npm run build` passent. Ensuite on s'arrête (voir `CLAUDE.md`).
 
 ## Lot 0 : squelette
 
@@ -192,9 +192,48 @@ Tests d'acceptation, **à ne jamais modifier** : `tests/parois/janssen.test.ts`,
 
 ## Lot 3 : action localisée
 
-- [ ] `src/parois/localisee.ts` : C_pf et C_pe avec leurs branches (SPEC §5.4) et la matrice d'applicabilité.
-- [ ] Formes : non circulaire (0,36), circulaire épaisse (carrés, p/7, z_p), circulaire mince (cosθ, F_pf, z_p), majorations uniformes 5.38 à 5.45 avec leurs conditions.
-- [ ] Tests : V1 (C_pf, C_pe, majorations), V2 (C_pf, C_pe avec E = 0,667, p_pf et p_pfi, ζ, p_hf,u et p_he,u), V3 (C_pf, C_pe intermédiaire), un cas peu élancé où l'action est nulle avec son motif.
+- [x] `src/parois/localisee.ts` : C_pf et C_pe avec leurs branches (SPEC §5.4) et la matrice d'applicabilité.
+- [x] Formes : non circulaire (0,36), circulaire épaisse (carrés, p/7, z_p), circulaire mince (cosθ, F_pf, z_p), majorations uniformes 5.38 à 5.45 avec leurs conditions.
+- [x] Tests : V1 (C_pf, C_pe, majorations), V2 (C_pf, C_pe avec E = 0,667, p_pf et p_pfi, ζ, p_hf,u et p_he,u), V3 (C_pf, C_pe intermédiaire), un cas peu élancé où l'action est nulle avec son motif.
+
+### Consignes d'exécution du lot 3 (séance `claude-ds`)
+
+Branche : `lot-3-localisee`. Types **déjà écrits** dans `src/model/types.ts` (section « Action localisée ») : `FormeLocalisee`, `DefinitionLocalisee`, `ActionLocalisee`, `ValeursLocalisees`. Nouveaux cas de validation : `docs/validation/V5-circulaire-peu-elance.md` (et `v5()` dans `tests/fixtures.ts`). Nouveau point ouvert P7 dans `SPEC.md` §9.
+
+Test d'acceptation, **à ne jamais modifier** : `tests/parois/localisee.test.ts` (20 tests), et tous ceux des lots précédents.
+
+Un seul fichier : `src/parois/localisee.ts`.
+
+**T3.1 Coefficients.**
+* `coefficientCpf(d: DonneesSilo, cl: Classement): number` : éq. 5.9 avec `E_f = 2 e_f / d_c`, ramené à 0 s'il est négatif.
+* `coefficientCpe(d, cl): number` : `E = 2 max(e_f, e_o) / d_c` ; si `hc/dc ≥ 1,2`, éq. 5.28 ramenée à 0 si négative ; sinon `max(5.28 ; 0,272 C_op (hc/dc − 1 + E) ; 0)` (5.29, 5.30).
+* Test : `npx vitest run tests/parois/localisee.test.ts -t "coefficients"` (5 tests).
+
+**T3.2 Définition par cas** : `actionLocalisee(d, cl, p: ProfilSilos): ActionLocalisee`, avec `s = π d_c / 16` (5.12). Règles, à appliquer dans cet ordre, pour le remplissage (coefficient C_pf) puis la vidange (C_pe). Les motifs sont en français accentué et citent les clauses entre parenthèses.
+1. **Nulle.** Remplissage d'un silo peu élancé : motif citant `5.3.1.2(3)`. Vidange avec `ecoulementEnCheminee` : motif citant `5.1(8)`. Vidange d'un silo peu élancé avec `e_o < excentrementPeuElance × d_c` : motif citant `5.3.2.2(4)`. Coefficient calculé égal à 0 : motif « coefficient nul (5.9) » ou « (5.28) ». Dans tous ces cas `C = 0`.
+2. **Rectangulaire** : `non-circulaire`, motif citant `5.2.1.5` (remplissage) ou `5.2.2.5` (vidange).
+3. **Circulaire.** On note `procedures = cl.procedures`, `mince = cl.paroi === 'mince'`, `maintenue = formeMaintenueEnTeteEtEnPied`, `methode = methodeLocalisee ?? 'action-localisee'`.
+   * Vidange d'un silo intermédiaire ou peu élancé avec `procedures === 2` (point ouvert **P7**, `pointOuvert: 'P7'`) : `majoration-uniforme` si `maintenue` (motif citant `5.3.2.3` et `5.2.3`), sinon forme localisée selon la paroi (motif citant `5.3.2.3` et `5.2.3(3)`).
+   * Sinon, si `procedures === 2` et `methode === 'majoration-uniforme'` : `majoration-uniforme` si `maintenue` (motif citant `5.2.3`), sinon forme localisée selon la paroi avec un motif citant `5.2.3(3)` (« forme non maintenue en tête et en pied »).
+   * Forme localisée selon la paroi : `circulaire-epaisse` (motif `5.2.1.3` ou `5.2.2.3`) ; `circulaire-mince` (motif `5.2.1.4` ou `5.2.2.4`), sauf paroi mince **boulonnée** avec `procedures === 2` : `hors-perimetre`, `C = 0`, `pointOuvert: 'P3'`, motif citant `5.2.1.4(4)`.
+4. **Position `z_p`** (seulement pour `circulaire-epaisse` et `circulaire-mince`, sinon `null`) : `null` si `procedures === 3` (toute hauteur) ; paroi épaisse `hc / 2` (5.2.1.3(4)) ; paroi mince soudée `min(z_o en C1 ; hc / 2)` (5.16).
+5. **`zeta`** pour `majoration-uniforme` sur paroi épaisse : `max(1,0 ; 0,5 + 0,01 d_c / t)` (5.40, 5.41) ; `null` dans tous les autres cas.
+* Test : `npx vitest run tests/parois/localisee.test.ts -t "V1|V2|mince|V3|V5|cheminee"`.
+
+**T3.3 Valeurs** : `valeursLocalisees(def: DefinitionLocalisee, a: ActionLocalisee, d: DonneesSilo, v: ValeursParoi): ValeursLocalisees`, où `v` est le résultat symétrique du même cas (`etatParoi(...).remplissage` ou `.vidange`).
+* `nulle` ou `hors-perimetre` : tout à 0, `F_p = null`, `p_h_total = v.p_h`, `p_w_total = v.p_w`.
+* `non-circulaire` : `p_p = C p_h`, `p_nc = 0,36 p_p`, `p_h_total = p_h + p_nc`.
+* `circulaire-epaisse` : `p_p = C p_h`, `p_pi = p_p / 7`, `p_h_total = p_h + p_p` (enveloppe de la zone).
+* `circulaire-mince` : `p_p = C p_h`, `F_p = (π/2) s d_c p_p`, `p_h_total = p_h + p_p`.
+* `majoration-uniforme` : `p_p = C p_h` (pour information). Paroi épaisse : `p_h_total = p_h (1 + ζ C)`, `p_w_total = p_w`. Paroi mince : `p_h_total = p_h (1 + 0,5 C)`, `p_w_total = p_w (1 + C)` (5.42 à 5.45).
+* Dans les autres formes, `p_w_total = p_w`.
+* Test : `npx vitest run tests/parois/localisee.test.ts` (20 tests).
+
+**T3.4 Exports et fin de lot.** Réexporter les types et les quatre fonctions depuis `src/index.ts`. `npm run typecheck`, `npm test`, `npm run build` passent. Cocher les cases du lot 3, ligne « Lot 3 » du README.
+
+**Interdit** : modifier les tests, `docs/validation/`, `src/model/types.ts`, `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md` ; ajouter une dépendance ; commencer le lot 4 ; pousser.
+
+**Fin du lot** : section « Lot 3 » dans `HANDOFF.md`, commit, arrêt.
 
 ## Lot 4 : fond et trémie
 

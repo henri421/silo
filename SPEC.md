@@ -336,6 +336,7 @@ Chacun est codé selon le choix déclaré ici, affiché dans l'interface et la n
 | P4 | Étendue de la zone à `2 p_hf` en vidange excentrée : lue comme un arc θ_c de chaque côté de la zone d'écoulement (figure 5.5c). | À confirmer par l'utilisateur sur la figure avant le lot 5. Si la lecture est infirmée, le cas de validation V2 sera complété. |
 | P5 | Capacité pour le tableau 2.1 : γ_u ou γ_l, volume de trémie compris ou non. | γ_u, trémie comprise (la classe la plus haute). |
 | P6 | Silo à trémie avec `hc/dc ≤ 0,4` : 5.1(2) ne le range pas clairement parmi les silos peu élancés. | Non traité : erreur explicite qui cite P6 et 5.1(2), à confirmer par l'utilisateur. |
+| P7 | Vidange d'un silo circulaire intermédiaire ou peu élancé de classe 2 : 5.3.2.3 renvoie à une majoration uniforme sans que la spécification en donne la forme. | Lue comme la majoration uniforme de 5.2.3 avec C_pe, seulement si `formeMaintenueEnTeteEtEnPied` est vrai ; sinon l'action localisée de 5.2.2.2 à 5.2.2.4. Le cas V5 l'utilise. À confirmer par l'utilisateur. |
 
 ## 10. Hors périmètre en v1
 

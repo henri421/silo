@@ -280,3 +280,82 @@ Branche `lot-2-parois`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs
 ## État final du lot 2
 
 Les trois commandes du lot passent. Quatre commits de code ont été faits (`aa3c8be`, `376d980`, `52f532f`, `a7af3c8`), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 3 n'a pas été commencé.
+
+# Compte rendu du lot 3, séance `claude-ds`
+
+Branche `lot-3-localisee`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs/validation/` n'a été modifié ; `src/model/types.ts`, `src/norms/profil.ts`, `SPEC.md`, `CLAUDE.md` et `CONVENTIONS.md` sont intacts (vérifié par `git diff 5034bdd -- tests docs/validation src/model/types.ts src/norms/profil.ts SPEC.md CLAUDE.md CONVENTIONS.md`, sortie vide). Aucune dépendance ajoutée, rien n'a été poussé.
+
+## T3.1 Coefficients
+
+**Fichiers modifiés** : `src/parois/localisee.ts` (création).
+
+**Décisions**
+- `coefficientCpf` applique l'éq. 5.9 à 5.11 : `0,21 C_op (1 + 2 E_f^2)(1 - exp(-1,5 (hc/dc - 1)))`, avec `E_f = 2 e_f / d_c`, ramené à 0 s'il est négatif.
+- `coefficientCpe` applique l'éq. 5.28 pour `hc/dc >= 1,2`, sinon le maximum des éq. 5.28, 5.30 et 0 (éq. 5.29), avec `E = 2 max(e_f, e_o) / d_c`.
+- Les coefficients sont calculés avec les données d'entrée et le classement, sans valeur codée en dur hors les constantes des équations.
+- Le fichier de test appelle `actionLocalisee` dès la collecte (constantes de `describe`), donc un squelette neutre a été posé pour T3.1 : sans lui, même les tests de coefficients ne se chargent pas. Ce squelette a été remplacé à T3.2.
+
+**Points douteux** : aucun sur les coefficients ; les cinq valeurs attendues (V1, V2, V3, V5 et C_pf nul) passent.
+
+**Statut des tests**
+- `npx vitest run tests/parois/localisee.test.ts -t "coefficients"` : 5 tests passent, 15 ignorés.
+
+## T3.2 Définition par cas
+
+**Fichiers modifiés** : `src/parois/localisee.ts`.
+
+**Décisions**
+- Les règles sont appliquées dans l'ordre de T3.2 : nulle, non circulaire, circulaire (point ouvert P7, puis méthode de classe 2, puis forme selon la paroi), position `z_p`, `zeta`.
+- Les motifs sont en français accentué et citent les clauses entre parenthèses. P7 est porté par `pointOuvert` sur les deux branches de la vidange d'un silo intermédiaire ou peu élancé de classe 2.
+- `z_p` vaut null en classe 3, `hc/2` sur paroi épaisse, `min(z_o en C1 ; hc/2)` sur paroi mince soudée ; `z_o` vient de `parametresJanssen` avec la combinaison C1 du lot 1.
+- `zeta` vaut `max(1 ; 0,5 + 0,01 d_c/t)` sur paroi épaisse et null partout ailleurs.
+- Le cas de la paroi mince boulonnée de classe 2 rend `hors-perimetre`, `C = 0`, le point ouvert P3 et un motif citant 5.2.1.4(4).
+
+**Points douteux**
+- La commande de T3.2 (`-t "V1|V2|mince|V3|V5|cheminee"`) sélectionne aussi des tests qui appellent `valeursLocalisees`, fonction de T3.3, parce que les noms des tests contiennent V1, V2, etc. Elle ne peut donc pas être entièrement verte avant T3.3. Après implémentation de T3.3, elle donne 18 tests passants, 1 ignoré et l'échec d'arrondi décrit à T3.3.
+
+**Statut des tests**
+- Après T3.2 seul : `npx vitest run tests/parois/localisee.test.ts -t "V1|V2|mince|V3|V5|cheminee"` : 12 tests passent, 7 échouent (tous sur `valeursLocalisees` non encore implémentée), 1 ignoré.
+- Après T3.3 : 18 passent, 1 ignoré, 1 échoue (V1 z = 1, voir T3.3).
+
+## T3.3 Valeurs
+
+**Fichiers modifiés** : `src/parois/localisee.ts`.
+
+**Décisions**
+- `valeursLocalisees` applique T3.3 : nulle ou hors périmètre sans valeur ; non circulaire `p_nc = 0,36 p_p` ; paroi épaisse `p_pi = p_p / 7` ; paroi mince `F_p = (pi/2) s d_c p_p` ; majoration uniforme selon la paroi.
+- La distinction paroi épaisse ou mince d'une majoration uniforme se fait par `zeta` : il n'est renseigné que sur paroi épaisse (5.40, 5.41), et la branche mince (5.42 à 5.45) n'a pas d'autre marqueur dans les types. La donnée `d` de la signature n'est pas utilisée, la signature étant imposée par le PLAN.
+
+**Point bloquant : test V1, z = 1, p_pf,nc**
+
+- Clause et chaîne de calcul : éq. 5.9 à 5.11 (C_pf), puis 5.2.1.5 (`p_pf,nc = 0,36 p_pf`).
+- `C_pf = 0,21 × 0,4 × (1 − e^(−6)) = 0,0837917848`.
+- `p_hf(z = 1) = 46,4 × (1 − e^(−1/5,805805)) = 7,341595394 kPa`.
+- `p_pf,nc = 0,36 × 0,0837917848 × 7,341595394 = 0,221459537 kPa`.
+- Le cas de validation V1 donne `0,2215` : c'est la valeur exacte ci-dessus arrondie à 4 décimales par `reference.py` (`f(x, 4)`), et non une valeur différente.
+- Le test compare `0,221459537` à `0,2215` avec `proche` et la tolérance relative 1e−4 : écart `1,83e−4 > 1e−4`. L'arrondi à 4 décimales d'une valeur proche de 0,22 implique une demi-étape relative de `0,00005 / 0,2215 = 2,26e−4` : la tolérance 1e−4 est plus fine que la précision du nombre attendu.
+- L'implémentation ne diverge donc pas du cas de validation ; c'est la tolérance du test qui est incompatible avec l'arrondi du cas. Le test et la valeur attendue n'ont pas été modifiés. Les autres valeurs de la même ligne (`p_h_total = 7,5631`, `p_pe,nc = 0,5094`, `p_h_total` à la vidange `= 8,9522`) passent.
+- Aucune correction n'a été appliquée, conformément aux consignes. À trancher par la séance de conception : tolérance absolue pour cette valeur, tolérance relative plus large, ou valeur attendue écrite avec plus de décimales.
+
+**Points douteux**
+- Le critère de distinction épaisse/mince par `zeta` est un choix d'implémentation commenté dans le module ; il n'est pas imposé par le PLAN.
+- Les branches de majoration uniforme sur paroi mince (5.42 à 5.45) ne sont exercées par aucun test d'acceptation ; elles sont implémentées comme le demande T3.3.
+
+**Statut des tests**
+- `npx vitest run tests/parois/localisee.test.ts` : 19 tests passent, 1 échoue (V1 z = 1, point bloquant ci-dessus).
+
+## T3.4 Exports et fin de lot
+
+**Non commencée** : arrêt imposé sur T3.3 par le point bloquant ci-dessus. `src/index.ts` ne réexporte pas encore les types et les quatre fonctions du lot 3, les cases du lot 3 de `PLAN.md` ne sont pas cochées et la ligne « Lot 3 » n'est pas ajoutée au `README.md`.
+
+## État final du lot 3
+
+- `npm run typecheck` : passe, aucune erreur.
+- `npm test` : 127 tests passent, 1 échoue sur 128 (V1 z = 1, tolérance d'arrondi).
+- `npm run build` : passe ; `git status` ne montre aucun fichier construit.
+- Tests d'acceptation et cas de validation intacts.
+- Le lot 3 est arrêté à T3.3 ; le lot 4 n'a pas été commencé.
+
+### Reprise du lot 3 par la séance de conception
+
+Le test bloquant de T3.3 était faux, non le calcul : la valeur 0,2215 arrondie à 4 décimales ne tenait pas une tolérance relative de 1e−4. `proche()` de `tests/fixtures.ts` accepte désormais un écart absolu de 5e−5 (une demi-unité de la 4ᵉ décimale), règle reportée dans `PLAN.md`. T3.3 passe sans changement de code. T3.4 (réexports, cases, README) a été fait par la séance de conception. `npm test` : 128 tests passent.

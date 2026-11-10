@@ -26,3 +26,4 @@ export { parametresJanssen, janssen } from './parois/janssen';
 export { exposantN, janssenModifie } from './parois/janssen-modifie';
 export { coefficientsVidange } from './parois/vidange';
 export { etatParoi } from './parois/symetrique';
+export { actionLocalisee, coefficientCpe, coefficientCpf, valeursLocalisees } from './parois/localisee';

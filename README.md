@@ -17,6 +17,8 @@ Lot 0 : squelette publiable, sans calcul.
 Lot 1 : géométrie, bibliothèque de matériaux, classement et combinaisons de propriétés, sans pressions encore.
 Lot 2 : pressions des parois verticales aux cas symétriques, remplissage et vidange, par Janssen et Janssen modifié.
 
+Lot 3 : action localisée (C_pf, C_pe) et ses formes : majoration 0,36 des parois non circulaires, zones des parois circulaires épaisses ou minces, majoration uniforme de 5.2.3, avec les cas nuls et hors périmètre motivés.
+
 ## Choix de modélisation déclarés
 
 * Les pressions normales sont calculées avec la combinaison « pression normale maximale » (K supérieur, μ inférieur) et le frottement avec la combinaison « frottement maximal » (K et μ supérieurs). Les associer dans un même cas de charge est un choix enveloppe.
