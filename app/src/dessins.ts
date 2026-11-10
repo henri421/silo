@@ -30,8 +30,7 @@ function c(valeur: number): string {
  * suite, jamais par une valeur en dur. Les cas se distinguent par le trait
  * autant que par la couleur.
  */
-const STYLE = `<style>
-.dessin{background:var(--surface);color:var(--texte);font-family:var(--sans)}
+export const STYLE_DESSIN = `.dessin{background:var(--surface);color:var(--texte);font-family:var(--sans)}
 .titre{fill:var(--texte);font-size:13px;font-weight:600}
 .texte{fill:var(--texte);font-size:11px;font-family:var(--mono)}
 .texte-doux{fill:var(--texte-doux);font-size:11px}
@@ -55,8 +54,10 @@ const STYLE = `<style>
 .zone-ecoulement{fill:var(--accent-doux);stroke:var(--accent);stroke-width:1}
 .zone-contrainte-elevee{fill:var(--alerte-fond);stroke:var(--alerte);stroke-width:1}
 .zone-immobile{fill:var(--surface-appui);stroke:var(--bordure);stroke-width:1}
-.zone-majoration{fill:var(--accent-doux);stroke:var(--accent);stroke-width:1.2}
-</style>`;
+.zone-majoration{fill:var(--accent-doux);stroke:var(--accent);stroke-width:1.2}`;
+
+/** Feuille de style interne du SVG : memes regles de peinture que l'export. */
+const STYLE = `<style>${STYLE_DESSIN}</style>`;
 
 /** Enveloppe SVG commune : le dessin commence par `<svg` et finit par `</svg>`. */
 function enveloppe(classe: string, largeur: number, hauteur: number, contenu: string): string {
