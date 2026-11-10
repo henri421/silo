@@ -10,9 +10,9 @@
  * Unites affichees : m, t, kPa, kN/m, degres.
  */
 
-import { nombreAffiche, type BlocResultat, type LigneResultat } from 'aedificium-ui';
+import { nombreAffiche, notationHtml, type BlocResultat, type LigneResultat } from 'aedificium-ui';
 import type { CasDeCharge, DefinitionLocalisee, ResultatSilo } from '../../src/index';
-import { textes } from './textes';
+import { phrase, textes } from './textes';
 
 /** Nombre affiche : trois decimales au plus, sans zeros inutiles. */
 function aff(valeur: number, decimales = 3): string {
@@ -30,8 +30,8 @@ function statutAffiche(cas: CasDeCharge): string {
 
 /** Motif ou combinaisons d'un cas, tel qu'il s'affiche dans sa ligne. */
 function detailCas(cas: CasDeCharge): string {
-  if (cas.statut === 'calcule') return textes().libelles.casCalcul(cas.combinaisons);
-  return textes().libelles.casArrete(statutAffiche(cas), cas.motif ?? '');
+  if (cas.statut === 'calcule') return textes().libelles.casCalcul(phrase(cas.combinaisons));
+  return textes().libelles.casArrete(statutAffiche(cas), phrase(cas.motif ?? ''));
 }
 
 /** Forme localisee lisible, ou un repli neutre si le cas n'en porte pas. */
@@ -84,7 +84,7 @@ export function blocsSynthese(r: ResultatSilo): BlocResultat[] {
         ligne(t.symboles.capacite, t.libelles.capacite, `${aff(cl.capacite, 1)} t`),
         ligne(t.symboles.classe, t.libelles.classe, String(cl.classeDeCalcul)),
       ],
-      note: cl.motifsClasse.join(' '),
+      note: phrase(cl.motifsClasse.join(' ')),
     },
     { titre: t.blocs.proprietes, lignes: proprietes, note: null },
     {
@@ -95,7 +95,7 @@ export function blocsSynthese(r: ResultatSilo): BlocResultat[] {
         ligne(t.symboles.Ch, t.libelles.Ch, aff(r.vidange.C_h, 3)),
         ligne(t.symboles.Cw, t.libelles.Cw, aff(r.vidange.C_w, 3)),
       ],
-      note: r.vidange.motif,
+      note: phrase(r.vidange.motif),
     },
     {
       titre: t.blocs.actionLocalisee,
@@ -106,9 +106,9 @@ export function blocsSynthese(r: ResultatSilo): BlocResultat[] {
         ligne(t.symboles.forme, t.libelles.formeRemplissage, formeLisible(a.remplissage)),
         ligne(t.symboles.forme, t.libelles.formeVidange, formeLisible(a.vidange)),
       ],
-      note: `${a.remplissage.motif} ${a.vidange.motif}`,
+      note: phrase(`${a.remplissage.motif} ${a.vidange.motif}`),
     },
-    { titre: t.blocs.fond, lignes: fond, note: r.C_b.motif },
+    { titre: t.blocs.fond, lignes: fond, note: phrase(r.C_b.motif) },
     {
       titre: t.blocs.cas,
       lignes: r.cas.map((c) =>
@@ -125,7 +125,7 @@ export function lignesCas(r: ResultatSilo): string[][] {
     c.id,
     textes().cas.libelles[c.id],
     statutAffiche(c),
-    c.statut === 'calcule' ? c.combinaisons : (c.motif ?? ''),
+    c.statut === 'calcule' ? phrase(c.combinaisons) : phrase(c.motif ?? ''),
   ]);
 }
 
@@ -145,8 +145,42 @@ export function lignesPointsOuverts(r: ResultatSilo): string[][] {
   });
 }
 
-/** Message d'une erreur du noyau, pour la zone d'erreur de la page. */
+/** Message d'une erreur du noyau, mis en forme pour la zone d'erreur. */
 export function messageDErreur(e: unknown): string {
   const texte = e instanceof Error ? e.message : String(e);
-  return texte.trim() === '' ? textes().messages.erreurInconnue : texte;
+  return texte.trim() === '' ? textes().messages.erreurInconnue : phrase(texte);
+}
+
+/**
+ * Tableau HTML d'un bloc de resultats : symbole, libelle, valeur. Les
+ * notations (`p_h`, `z_o`…) passent par `notationHtml`, donc s'affichent en
+ * indice, jamais avec un souligne.
+ */
+export function rendreBlocs(blocs: readonly BlocResultat[]): string {
+  return blocs
+    .map((bloc) => {
+      const lignes = bloc.lignes
+        .map(
+          (l) =>
+            `<tr><th>${notationHtml(l.symbole)}</th><td class="libelle">${notationHtml(l.libelle)}</td><td class="valeur">${notationHtml(
+              l.valeur
+            )}</td></tr>`
+        )
+        .join('');
+      const note = bloc.note === null ? '' : `<p class="note">${notationHtml(bloc.note)}</p>`;
+      // Le bloc des cas porte des valeurs longues : il autorise le retour a la
+      // ligne, la ou les autres blocs tiennent sur une ligne (style.css).
+      const classe = bloc.titre === textes().blocs.cas ? ' bloc-cas' : '';
+      return `<div class="bloc${classe}"><h3>${notationHtml(bloc.titre)}</h3><table class="grandeurs"><tbody>${lignes}</tbody></table>${note}</div>`;
+    })
+    .join('');
+}
+
+/** Tableau HTML a colonnes libres, en-tetes compris. */
+export function rendreTableau(lignes: readonly string[][], entetes: readonly string[]): string {
+  const tete = entetes.map((e) => `<th>${notationHtml(e)}</th>`).join('');
+  const corps = lignes
+    .map((ligne) => `<tr>${ligne.map((v) => `<td>${notationHtml(v)}</td>`).join('')}</tr>`)
+    .join('');
+  return `<div class="defilement"><table class="zones"><thead><tr>${tete}</tr></thead><tbody>${corps}</tbody></table></div>`;
 }

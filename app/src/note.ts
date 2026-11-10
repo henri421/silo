@@ -20,22 +20,24 @@ import {
   dessinTremie,
 } from './dessins';
 import { MENTION } from './export';
+import { phrase, textes } from './textes';
 import { blocsSynthese, lignesCas, lignesPointsOuverts } from './vue';
 
 /** Statut et motif (ou combinaisons) d'un cas, en une phrase affichee. */
 function etatDuCas(c: CasDeCharge): string {
-  if (c.statut === 'calcule') return `calculé ; ${c.combinaisons}`;
-  const statut = c.statut === 'non-applicable' ? 'non applicable' : 'hors périmètre';
-  return `${statut} : ${c.motif ?? ''}`;
+  const t = textes();
+  if (c.statut === 'calcule') return t.libelles.casCalcul(phrase(c.combinaisons));
+  return t.libelles.casArrete(t.statuts[c.statut], phrase(c.motif ?? ''));
 }
 
 /** Un bloc par cas, avec son statut et son motif. */
 function blocDuCas(c: CasDeCharge): ElementNote {
+  const t = textes();
   return {
     type: 'bloc',
     bloc: {
-      titre: `${c.id}, ${c.libelle}`,
-      lignes: [{ symbole: '', libelle: 'statut', valeur: etatDuCas(c) }],
+      titre: `${c.id}, ${t.cas.libelles[c.id]}`,
+      lignes: [{ symbole: '', libelle: t.note.statut, valeur: etatDuCas(c) }],
       note: null,
     },
   };
@@ -43,32 +45,33 @@ function blocDuCas(c: CasDeCharge): ElementNote {
 
 /** Les figures de la note : elevations, profils, plan et tremie. */
 function figures(r: ResultatSilo): ElementNote[] {
+  const t = textes();
   const liste: ElementNote[] = [
     {
       type: 'figure',
       svg: dessinElevation(r, 'REMP', false),
-      legende: 'Élévation, remplissage (REMP)',
+      legende: t.note.legendes.elevationRemp,
     },
     {
       type: 'figure',
       svg: dessinElevation(r, 'VID', false),
-      legende: 'Élévation, vidange (VID)',
+      legende: t.note.legendes.elevationVid,
     },
     {
       type: 'figure',
       svg: dessinProfils(r, 'p_h', ['REMP', 'VID']),
-      legende: 'Profils de p_h, remplissage et vidange superposés',
+      legende: t.note.legendes.profilsPh,
     },
     {
       type: 'figure',
       svg: dessinProfils(r, 'p_w', ['REMP', 'VID']),
-      legende: 'Profils de p_w, remplissage et vidange superposés',
+      legende: t.note.legendes.profilsPw,
     },
-    { type: 'figure', svg: dessinPlan(r), legende: 'Vue en plan' },
+    { type: 'figure', svg: dessinPlan(r), legende: t.note.legendes.plan },
   ];
   const tremie = dessinTremie(r);
   if (tremie !== null) {
-    liste.push({ type: 'figure', svg: tremie, legende: 'Trémie, p_n et p_t' });
+    liste.push({ type: 'figure', svg: tremie, legende: t.note.legendes.tremie });
   }
   return liste;
 }
@@ -81,6 +84,8 @@ export function noteDuCalcul(
   r: ResultatSilo,
   cartouche: { projet: string; element: string; date: string }
 ): NoteDeCalcul {
+  const t = textes();
+  const [norme, ...items] = t.note.hypotheses(phrase(r.profil));
   return {
     cartouche: {
       projet: cartouche.projet,
@@ -91,25 +96,16 @@ export function noteDuCalcul(
     },
     sections: {
       hypotheses: [
-        {
-          type: 'texte',
-          texte: `Norme appliquée : EN 1991-4:2006. Profil normatif : ${r.profil}.`,
-        },
-        { type: 'texte', texte: `${MENTION}.` },
-        {
-          type: 'liste',
-          items: [
-            'REMP, VID et VID_EXC sont des cas exclusifs les uns des autres : ils ne se cumulent pas dans le modèle aux éléments finis.',
-            "Choix enveloppe de SPEC §7 : la pression normale p_h suit la combinaison C1 et le frottement p_w la combinaison C2 dans le même cas de charge.",
-          ],
-        },
+        { type: 'texte', texte: norme },
+        { type: 'texte', texte: `${phrase(MENTION)}.` },
+        { type: 'liste', items },
       ],
       charges: [
         ...r.cas.map(blocDuCas),
         {
           type: 'tableau',
-          titre: 'Cas de charge, statut et motif',
-          entetes: ['Cas', 'Libellé', 'Statut', 'Motif ou combinaisons'],
+          titre: t.note.titreCas,
+          entetes: [...t.note.entetesCas],
           lignes: lignesCas(r),
         },
       ],
@@ -118,8 +114,8 @@ export function noteDuCalcul(
         ...figures(r),
         {
           type: 'tableau',
-          titre: 'Points ouverts appliqués',
-          entetes: ['Point', 'Question', 'Choix appliqué'],
+          titre: t.note.titrePoints,
+          entetes: [...t.note.entetesPoints],
           lignes: lignesPointsOuverts(r),
         },
       ],
