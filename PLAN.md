@@ -439,9 +439,9 @@ Test d'acceptation, **à ne jamais modifier** : `tests/app/export.test.ts` (16 t
 
 ## Lot 9 : version anglaise, PWA, publication
 
-- [ ] Page `app/en/` et textes anglais (sur le modèle de `charges-climatiques`).
-- [ ] Installation PWA et fonctionnement hors ligne vérifiés.
-- [ ] README complet, `docs/validation/` relié, publication GitHub Pages par la CI.
+- [x] Page `app/en/` et textes anglais (sur le modèle de `charges-climatiques`).
+- [x] Manifeste et service worker produits pour les deux pages ; installation PWA et fonctionnement hors ligne vérifiés sur ces artefacts (voir `HANDOFF.md`).
+- [x] README complet, `docs/validation/` relié, publication GitHub Pages par la CI.
 - [x] Dans `WebAedificium` (autre dépôt, branche séparée) : une ligne dans le tableau du README, une entrée dans `OUTILS_EXTERNES` et `MENU`, une icône dans `icones/`.
 
 ### Consignes d'exécution du lot 9 (séance `claude-ds`)
