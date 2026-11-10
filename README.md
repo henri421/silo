@@ -23,6 +23,7 @@ L'outil couvre le périmètre v1 décrit dans [`SPEC.md`](SPEC.md). La version f
 - Lot 7 : interface de saisie par blocs, avec recalcul continu et sans bouton de calcul, synthèse des grandeurs, liste des cas avec leur statut et points ouverts appliqués, dessins SVG de l'élévation, des profils, de la vue en plan et de la trémie, et enregistrement de la saisie comme feuille de projet par `aedificium-ui`.
 - Lot 8 : exports du calcul, avec les cinq fichiers CSV et leur bloc d'en-tête, le JSON versionné, la note de calcul HTML imprimable, et les dessins téléchargeables en SVG autonome et en PNG.
 - Lot 9 : version anglaise de l'interface et des exports, application installable et fonctionnement hors ligne par le manifeste et le service worker communs aux deux pages.
+- Lot 10 : carte p(z, θ) des parois verticales d'un silo circulaire pour les modèles en coque, avec le développé de la paroi en SVG et l'export `silo-carte.csv`. La zone localisée est centrée sur θ = 0 ; en classe 3, sa profondeur z_p est choisie par l'utilisateur et le motif le rappelle.
 
 ### Fichiers exportés
 
@@ -30,10 +31,11 @@ L'outil couvre le périmètre v1 décrit dans [`SPEC.md`](SPEC.md). La version f
 - `silo-bandes.csv` : une ligne par cas et par bande de hauteur, avec le contrôle par la somme des trapèzes et l'intégrale.
 - `silo-tremie.csv` : les pressions p_n et p_t le long de la paroi de trémie, ou la pression du fond plat.
 - `silo-localisee.csv` : la définition de l'action localisée et les zones en angle de la vidange excentrée.
+- `silo-carte.csv` : une ligne par cas, profondeur et angle, avec p_h et p_w, pour un silo circulaire.
 - `silo-synthese.csv` : les blocs de la synthèse.
 - `silo-resultat.json` : le résultat structuré et versionné, avec les données d'entrée, les cas, les bandes et les points ouverts appliqués.
 - `silo-note.html` : la note de calcul imprimable, avec ses figures.
-- Les dessins s'exportent aussi en `silo-elevation.svg`, `silo-profils.svg`, `silo-plan.svg`, `silo-tremie.svg` et leurs PNG.
+- Les dessins s'exportent aussi en `silo-elevation.svg`, `silo-profils.svg`, `silo-plan.svg`, `silo-tremie.svg`, `silo-carte.svg` et leurs PNG.
 
 ## Points ouverts
 

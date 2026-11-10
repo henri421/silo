@@ -187,6 +187,24 @@
           <div data-role="profils"></div>
           <div data-role="plan"></div>
           <div data-role="tremie"></div>
+          <div class="carte">
+            <h3>Carte p(z, θ)</h3>
+            <div class="commandes" id="commandes-carte">
+              <label><span>Cas de la carte</span>
+                <select data-role="carte-cas"></select>
+              </label>
+              <label><span>Pas angulaire (°)</span>
+                <select data-role="carte-pas">
+                  <option value="5">5</option>
+                  <option value="10" selected>10</option>
+                  <option value="15">15</option>
+                  <option value="30">30</option>
+                </select>
+              </label>
+              <label><span>Position z<sub>p</sub> (m)</span><input type="text" inputmode="decimal" data-role="carte-zp" /></label>
+            </div>
+            <div data-role="developpe"></div>
+          </div>
         </section>
 
         <section id="exports" aria-label="exports">
@@ -196,6 +214,7 @@
             <button type="button" data-action="exporter-bandes">Bandes, CSV</button>
             <button type="button" data-action="exporter-tremie">Trémie, CSV</button>
             <button type="button" data-action="exporter-localisee">Action localisée, CSV</button>
+            <button type="button" data-action="exporter-carte">Carte, CSV</button>
             <button type="button" data-action="exporter-synthese">Synthèse, CSV</button>
             <button type="button" data-action="exporter-json">Résultat, JSON</button>
             <button type="button" data-action="exporter-note">Note de calcul</button>

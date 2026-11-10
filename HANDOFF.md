@@ -854,3 +854,87 @@ Branche `lot-9-anglais`, 2026-11-10. Aucun test d'acceptation ni fichier de `doc
 ## État final du lot 9
 
 Les trois commandes du lot passent. Trois commits de code ont été faits (`3810072` pour T9.1, `6ddcc12` pour T9.2, `5130641` pour T9.3), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 9 est le dernier lot de la v1 ; l'outil couvre le périmètre de `SPEC.md` et les points ouverts P4 et P7 restent à confirmer par l'utilisateur.
+
+# Compte rendu du lot 10, séance `claude-ds`
+
+Branche `lot-10-carte`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs/validation/` n'a été modifié ; `src/model/types.ts`, `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md`, `package.json` et `package-lock.json` sont intacts (vérifié par `git diff f9b9b5c --stat -- tests docs/validation src/model/types.ts SPEC.md CLAUDE.md CONVENTIONS.md package.json package-lock.json`, sortie vide). Aucune dépendance ajoutée, rien n'a été poussé.
+
+## T10.1 Noyau
+
+**Fichiers modifiés** : `src/discretisation/carte.ts` (création), `src/index.ts` (réexport de `cartePressions`).
+
+**Décisions**
+- `cartePressions` applique l'ordre de T10.1 : contrôle de `pasTheta` (10 par défaut, entier strictement positif diviseur de 360), puis de `z_p` dans [0 ; hc] ; ensuite fond (`FOND_REMP`, `FOND_VID` non applicables), silo rectangulaire (non applicable, renvoi à `profils.csv`), cas non calculé (même statut et même motif que le cas) et définition localisée hors périmètre P3, avant de traiter REMP, VID ou VID_EXC.
+- Grille en z : multiples de `dz` dans [0 ; hc], plus 0 et hc, et pour une zone localisée `z_p`, `z_p - s/2` et `z_p + s/2` ramenés dans [0 ; hc]. Grille en θ : multiples du pas, plus les quatre bords des carrés d'une paroi épaisse ou les quatre bords des zones de VID_EXC. Tri et doublons à moins de 1e-9 retirés.
+- `p_p = C p_h,sym(z_p)` est constant sur la bande. Paroi épaisse : `p_h + p_p` dans les carrés centrés sur 0 et 180° (bords compris), `p_h - p_p/7` ailleurs dans la bande. Paroi mince : `p_h + p_p cos θ`. Majoration uniforme : `valeursLocalisees` à chaque nœud. Forme nulle : pression symétrique.
+- En classe 3, `z_p` vient de l'option ou vaut `hc/2`, `z_pChoisi` est vrai et le motif dit que la norme laisse la zone à toute hauteur et que les autres positions restent à vérifier.
+- VID_EXC : `valeursExcentrees` à chaque profondeur, puis `pressionsEnTheta` à chaque angle ; `z_p`, `s` et `demiAngle` sont nuls.
+- `Z = Z_transition + hc - z` ; points triés par z puis par θ. Le module assemble les fonctions existantes et ne recalcule aucune formule.
+
+**Points douteux**
+- La formulation des motifs n'est fixée par aucun test au-delà de l'expression « toute hauteur ». Les messages d'erreur sont en français sans accents et nomment `hc` ou `360`.
+- Une carte `nulle` ou `majoration-uniforme` est de statut `calcule`, sans bande ni position, comme le demande T10.1.
+- Le contrôle de `z_p` précède celui du cas : une option hors plage lève même pour un silo rectangulaire ou un fond, conformément à l'ordre imposé.
+
+**Statut des tests**
+- Avant implémentation : `npx vitest run tests/discretisation/carte.test.ts` échoue (`cartePressions is not a function`).
+- Après implémentation : `npx vitest run tests/discretisation/carte.test.ts` : 14 tests passent.
+
+## T10.2 Export et dessin
+
+**Fichiers modifiés** : `app/src/textes.ts`, `app/src/export.ts`, `app/src/dessins.ts`.
+
+**Décisions**
+- `ENTETES.carte` est un accesseur bilingue, comme les autres en-têtes.
+- `csvCarte` reprend le bloc d'en-tête commun, ajoute une ligne de repère des angles et une ligne par carte avec `z_p`, `s` et le demi-angle par `nombreAffiche` (d'où `11,25`), puis la ligne de colonnes, les nœuds à 4 décimales fixes et une ligne motivée par carte non calculée.
+- `dessinDeveloppe` dessine θ de 0 à 360° en abscisse et z vers le bas, une cellule `rect.cellule` par maille, peinte par `var(--compression)` avec une `fill-opacity` proportionnelle à p_h. Les axes sont légendés par `textes()`, les notations passent par `notationSvg`. Une carte non calculée affiche son cadre, son statut et son motif.
+- Les textes nouveaux (titre de la carte, axe θ, en-têtes et rappels de `carte.csv`) existent en français et en anglais.
+
+**Points douteux**
+- La teinte d'une maille suit le maximum de ses quatre coins, choix non imposé par le PLAN, qui demande seulement une intensité proportionnelle à p_h.
+- La dernière maille angulaire va du dernier angle de la grille à 360°.
+- Le motif d'une carte calculée n'est pas écrit dans `carte.csv` : l'en-tête rappelle le repère, `z_p`, `s` et le demi-angle, comme demandé.
+- Le développé n'affiche qu'une valeur maximale en kPa comme repère d'échelle, pas une légende graduée.
+
+**Statut des tests**
+- Avant implémentation : `npx vitest run tests/app/carte.test.ts -t "carte.csv|developpe"` échoue sur les exports absents.
+- Après implémentation : `npx vitest run tests/app/carte.test.ts -t "carte.csv"` : 3 tests passent ; `npx vitest run tests/app/carte.test.ts -t "cellules teintees|carte non calculee|anglais, aucun reste"` : 3 tests passent.
+
+## T10.3 Page
+
+**Fichiers modifiés** : `app/index.html`, `app/en/index.html`, `app/src/main.ts`.
+
+**Décisions**
+- Un bloc « Carte p(z, θ) » est ajouté dans la zone des dessins des deux pages, avec `data-role="carte-cas"`, `data-role="carte-pas"` (5, 10, 15, 30, 10 par défaut), `data-role="carte-zp"` et `data-role="developpe"`. Les attributs `id`, `data-*`, `type` et `value` restent identiques d'une page à l'autre, ce que vérifie le test du lot 9.
+- `main.ts` calcule d'abord la carte sans option de position. Si elle rend `z_pChoisi`, il lit le champ et recalcule ; sinon il désactive le champ. Une position refusée s'affiche dans la zone du dessin, sans effacer les autres résultats, et l'export retombe sur le pas seul.
+- Un bouton `data-action="exporter-carte"` exporte `silo-carte.csv` avec les cartes REMP, VID et VID_EXC au pas et à la position retenus. Sous le dessin, les boutons SVG et PNG sont ceux de `poserDessin`.
+- Le libellé de position est écrit `z<sub>p</sub>` pour ne laisser aucun souligné visible, sur les deux pages.
+
+**Points douteux**
+- Le champ de position n'a pas d'attribut `disabled` statique : son état est posé au premier rendu.
+- L'erreur de position est affichée dans la zone du développé, et non dans la zone d'erreur générale, pour ne pas effacer les autres résultats.
+- L'export utilise la dernière position acceptée ; si l'utilisateur tape une position invalide puis exporte, la carte exportée reste celle du pas seul.
+
+**Statut des tests**
+- `npx vitest run tests/app/carte.test.ts` : 7 tests passent.
+- `npx vitest run tests/app/anglais.test.ts tests/app/carte.test.ts` : 14 tests passent, après correction du libellé `z_p` en indice.
+- `npx vitest run tests/app/anglais.test.ts tests/app/interface.test.ts tests/app/pages.test.ts tests/app/export.test.ts tests/app/dessins.test.ts tests/app/finitions.test.ts` : 49 tests passent.
+
+## T10.4 Fin de lot
+
+**Fichiers modifiés** : `PLAN.md` (cases du lot 10 cochées), `README.md` (puce du lot 10, `silo-carte.csv` et `silo-carte.svg` dans les fichiers exportés), `HANDOFF.md`.
+
+**Décisions**
+- La puce du lot 10 décrit la carte, le développé et la position choisie en classe 3.
+
+**Points douteux** : aucun.
+
+**Statut des tests**
+- `npm run typecheck` : passe, aucune erreur.
+- `npm test` : 248 tests passent sur 25 fichiers.
+- `npm run build` : passe ; `docs/` est reconstruit et `git status` ne montre aucun fichier construit.
+- `git diff f9b9b5c --stat -- tests docs/validation src/model/types.ts SPEC.md CLAUDE.md CONVENTIONS.md package.json package-lock.json` : sortie vide, tests, cas de validation, types protégés et dépendances intacts.
+
+## État final du lot 10
+
+Les trois commandes du lot passent. Trois commits de code ont été faits (`f8c7e92` pour T10.1, `fb25fd8` pour T10.2, `8954f1d` pour T10.3), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 10 est le dernier lot de la v1.

@@ -16,6 +16,7 @@ import {
   definirLangue,
   echapper,
   langueDuDocument,
+  lireNombre,
   noteDeCalculHtml,
   notationHtml,
   ouvrirOuTelecharger,
@@ -26,8 +27,11 @@ import {
 } from 'aedificium-ui';
 import {
   calculer,
+  cartePressions,
   en1991_4Recommande,
+  type CarteCas,
   type IdCas,
+  type OptionsCarte,
   type ResultatSilo,
 } from '../../src/index';
 import {
@@ -47,10 +51,17 @@ import {
   rendreBlocs,
   rendreTableau,
 } from './vue';
-import { dessinElevation, dessinPlan, dessinProfils, dessinTremie } from './dessins';
+import {
+  dessinDeveloppe,
+  dessinElevation,
+  dessinPlan,
+  dessinProfils,
+  dessinTremie,
+} from './dessins';
 import {
   STYLES_DESSIN,
   csvBandes,
+  csvCarte,
   csvLocalisee,
   csvProfils,
   csvSynthese,
@@ -67,6 +78,12 @@ const PROFIL = en1991_4Recommande();
 
 /** Identifiants de cas, dans l'ordre de la synthese. */
 const CAS: readonly IdCas[] = ['REMP', 'VID', 'VID_EXC', 'FOND_REMP', 'FOND_VID'];
+
+/** Cas de paroi offerts par la carte p(z, θ). */
+const CAS_CARTE: readonly IdCas[] = ['REMP', 'VID', 'VID_EXC'];
+
+/** Pas angulaires offerts par la carte, en degres (diviseurs de 360). */
+const PAS_CARTE: readonly number[] = [5, 10, 15, 30];
 
 type Grandeur = 'p_h' | 'p_w' | 'p_v' | 'n_zSk';
 const GRANDEURS: readonly Grandeur[] = ['p_h', 'p_w', 'p_v', 'n_zSk'];
@@ -121,6 +138,21 @@ function ajusterGroupes(forme: string, fond: string): void {
   }
 }
 
+/**
+ * Choix lus dans les commandes de la carte : cas, pas angulaire et position
+ * z_p. La position n'est transmise que si le champ est actif (classe 3).
+ */
+function choixCarte(): { cas: IdCas; pas: number; z_p: number | null } {
+  const casEl = exige<HTMLSelectElement>('[data-role="carte-cas"]');
+  const pasEl = exige<HTMLSelectElement>('[data-role="carte-pas"]');
+  const zpEl = exige<HTMLInputElement>('[data-role="carte-zp"]');
+  const cas = (CAS_CARTE as readonly string[]).includes(casEl.value)
+    ? (casEl.value as IdCas)
+    : 'REMP';
+  const pas = PAS_CARTE.includes(Number(pasEl.value)) ? Number(pasEl.value) : 10;
+  return { cas, pas, z_p: zpEl.disabled ? null : lireNombre(zpEl.value) };
+}
+
 /** Choix lus dans les commandes de dessin, avec leurs valeurs par defaut. */
 function choixAffichage(): { cas: IdCas; grandeur: Grandeur } {
   const cas = exige<HTMLSelectElement>('[data-role="cas-elevation"]').value;
@@ -131,7 +163,7 @@ function choixAffichage(): { cas: IdCas; grandeur: Grandeur } {
   };
 }
 
-/** Options des deux selecteurs de dessin : identifiants et libelles de textes.ts. */
+/** Options des selecteurs de dessin : identifiants et libelles de textes.ts. */
 function initialiserCommandes(): void {
   exige<HTMLSelectElement>('[data-role="cas-elevation"]').innerHTML = CAS.map(
     (id) => `<option value="${id}">${echapper(textes().cas.libelles[id])}</option>`
@@ -139,12 +171,18 @@ function initialiserCommandes(): void {
   exige<HTMLSelectElement>('[data-role="grandeur-profils"]').innerHTML = GRANDEURS.map(
     (g) => `<option value="${g}">${echapper(textes().interface.grandeurs[g])}</option>`
   ).join('');
+  exige<HTMLSelectElement>('[data-role="carte-cas"]').innerHTML = CAS_CARTE.map(
+    (id) => `<option value="${id}">${echapper(textes().cas.libelles[id])}</option>`
+  ).join('');
 }
 
 // La barre des feuilles est branchee sur les deux pages, qui portent le meme
 // formulaire et le meme script.
 let barre: BarreFeuilles | null = null;
 let resultat: ResultatSilo | null = null;
+
+/** Options de la carte courante, pour l'export : pas et position acceptee. */
+let optionsCarte: OptionsCarte = { pasTheta: 10 };
 
 /** Elements de resultat de la page francaise. */
 interface Zones {
@@ -155,6 +193,7 @@ interface Zones {
   profils: HTMLElement;
   plan: HTMLElement;
   tremie: HTMLElement;
+  developpe: HTMLElement;
   erreur: HTMLElement;
 }
 
@@ -168,13 +207,22 @@ function afficherErreur(message: string): void {
   if (zones === null) return;
   zones.erreur.innerHTML = notationHtml(message);
   zones.erreur.hidden = false;
-  for (const zone of [zones.synthese, zones.cas, zones.pointsOuverts, zones.elevation, zones.profils, zones.plan, zones.tremie]) {
+  for (const zone of [
+    zones.synthese,
+    zones.cas,
+    zones.pointsOuverts,
+    zones.elevation,
+    zones.profils,
+    zones.plan,
+    zones.tremie,
+    zones.developpe,
+  ]) {
     zone.innerHTML = '';
   }
 }
 
 /** Nom court d'un dessin exportable. */
-type NomDessin = 'elevation' | 'profils' | 'plan' | 'tremie';
+type NomDessin = 'elevation' | 'profils' | 'plan' | 'tremie' | 'carte';
 
 /** Les SVG du dernier rendu, pour les boutons d'export des dessins. */
 const dessinsCourants: Partial<Record<NomDessin, string>> = {};
@@ -200,7 +248,7 @@ function poserDessin(zone: HTMLElement, nom: NomDessin, svg: string | null): voi
   zone.innerHTML = svg + boutonsDessin(nom);
 }
 
-/** Redessine les quatre dessins pour le resultat courant. */
+/** Redessine les dessins pour le resultat courant, carte comprise. */
 function redessiner(): void {
   if (resultat === null || zones === null) return;
   const r = resultat;
@@ -210,6 +258,29 @@ function redessiner(): void {
   poserDessin(zones.profils, 'profils', dessinProfils(r, grandeur, ['REMP', 'VID', 'VID_EXC']));
   poserDessin(zones.plan, 'plan', dessinPlan(r));
   poserDessin(zones.tremie, 'tremie', dessinTremie(r));
+
+  // Carte p(z, θ) : le champ de position n'est actif que si la norme laisse
+  // la zone a toute hauteur (classe 3). Une position refusee s'affiche dans
+  // la zone du dessin, sans effacer les autres resultats.
+  const choix = choixCarte();
+  const zpEl = exige<HTMLInputElement>('[data-role="carte-zp"]');
+  try {
+    let carte = cartePressions(r, PROFIL, choix.cas, { pasTheta: choix.pas });
+    if (carte.z_pChoisi && choix.z_p !== null) {
+      carte = cartePressions(r, PROFIL, choix.cas, { pasTheta: choix.pas, z_p: choix.z_p });
+    }
+    zpEl.disabled = !carte.z_pChoisi;
+    optionsCarte =
+      carte.z_pChoisi && choix.z_p !== null
+        ? { pasTheta: choix.pas, z_p: choix.z_p }
+        : { pasTheta: choix.pas };
+    poserDessin(zones.developpe, 'carte', dessinDeveloppe(carte));
+  } catch (e) {
+    delete dessinsCourants.carte;
+    zpEl.disabled = false;
+    optionsCarte = { pasTheta: choix.pas };
+    zones.developpe.innerHTML = `<p class="erreur">${notationHtml(messageDErreur(e))}</p>`;
+  }
 }
 
 /** Peint un resultat complet : synthese, cas, points ouverts et dessins. */
@@ -235,6 +306,7 @@ if (formulaire !== null) {
     profils: exige<HTMLElement>('[data-role="profils"]'),
     plan: exige<HTMLElement>('[data-role="plan"]'),
     tremie: exige<HTMLElement>('[data-role="tremie"]'),
+    developpe: exige<HTMLElement>('[data-role="developpe"]'),
     erreur: exige<HTMLElement>('[data-role="erreur"]'),
   };
 
@@ -287,6 +359,9 @@ if (formulaire !== null) {
   const commandes = exige<HTMLElement>('#commandes-dessins');
   commandes.addEventListener('input', redessiner);
   commandes.addEventListener('change', redessiner);
+  const commandesCarte = exige<HTMLElement>('#commandes-carte');
+  commandesCarte.addEventListener('input', redessiner);
+  commandesCarte.addEventListener('change', redessiner);
   rafraichir();
 }
 
@@ -374,7 +449,12 @@ document.addEventListener('click', (evenement) => {
   else if (action === 'exporter-bandes') telechargerCsv('bandes', csvBandes(r));
   else if (action === 'exporter-tremie') telechargerCsv('tremie', csvTremie(r));
   else if (action === 'exporter-localisee') telechargerCsv('localisee', csvLocalisee(r));
-  else if (action === 'exporter-synthese') telechargerCsv('synthese', csvSynthese(r));
+  else if (action === 'exporter-carte') {
+    const cartes: CarteCas[] = CAS_CARTE.map((id) =>
+      cartePressions(r, PROFIL, id, optionsCarte)
+    );
+    telechargerCsv('carte', csvCarte(r, cartes));
+  } else if (action === 'exporter-synthese') telechargerCsv('synthese', csvSynthese(r));
   else if (action === 'exporter-json') {
     telecharger('silo-resultat.json', jsonResultat(r), 'application/json;charset=utf-8');
   } else if (action === 'exporter-note') {

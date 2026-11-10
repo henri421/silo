@@ -239,3 +239,25 @@ print("vidange (6.4.3) : identique au remplissage")
 
 titre("Cas limite n = 1 (6.7) : h_h = 4, gamma = 10, pvft = 50, x = 2")
 print("pv =", f(pv_tremie(2.0, 4.0, 10.0, 1.0, 50.0)), " ; n = 1,5 :", f(pv_tremie(2.0, 4.0, 10.0, 1.5, 50.0)))
+
+
+titre("Carte p(z, theta) des silos circulaires (lot 10), V2")
+g = geom_circ(6.0); hc = 18.0; c = carac(SABLE); gam = SABLE["gamma"]
+E = 2 * 2.0 / 6.0
+Cpf = C_patch(0.21, 0.4, hc / 6.0, 0.0); Cpe = C_patch(0.42, 0.4, hc / 6.0, E)
+s = math.pi * 6.0 / 16
+print("s =", f(s, 6), " s/2 =", f(s / 2, 6), " demi-angle des carres (s / d_c, en degres) =", f(math.degrees(s / 6.0), 4))
+# Paroi epaisse, classe 2 : z_p = hc/2 ; p_pf evalue a z_p, constant sur la hauteur s.
+j = janssen(9.0, g, gam, c["K_sup"], c["mu_inf"])
+phf, phe = j["ph"], 1.15 * j["ph"]
+ppf, ppe = Cpf * phf, Cpe * phe
+print("epaisse z = 9 : REMP theta 0 =", f(phf + ppf), " theta 90 =", f(phf - ppf / 7),
+      " ; VID theta 0 =", f(phe + ppe), " theta 90 =", f(phe - ppe / 7))
+# Paroi mince soudee (t = 0,02 m, dc/t = 300), classe 2 : z_p = min(z_o ; hc/2) (5.16).
+z0 = janssen(1, g, gam, c["K_sup"], c["mu_inf"])["z0"]
+zp = min(z0, hc / 2)
+j = janssen(zp, g, gam, c["K_sup"], c["mu_inf"])
+phf = j["ph"]; ppf = Cpf * phf
+print("mince z_p =", f(zp), " phf(z_p) =", f(phf), " ppf =", f(ppf))
+for th in (0, 60, 90, 180):
+    print(f"  mince REMP theta {th} : {f(phf + ppf * math.cos(math.radians(th)))}")

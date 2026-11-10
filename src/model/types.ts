@@ -511,3 +511,44 @@ export interface ResultatSilo {
   /** Points ouverts de SPEC §9 appliques a ce calcul, tries (`P1`...). */
   pointsOuverts: string[];
 }
+
+// ---------------------------------------------------------------------------
+// Carte p(z, theta) d'un silo circulaire (lot 10, SPEC §5.7)
+// ---------------------------------------------------------------------------
+
+/** Un noeud de la carte. theta en degres dans [0 ; 360[ ; pressions en kPa. */
+export interface PointCarte {
+  z: number;
+  /** Cote globale Z = Z_transition + hc - z (m). */
+  Z: number;
+  theta: number;
+  p_h: number;
+  p_w: number;
+}
+
+export interface OptionsCarte {
+  /** Pas angulaire en degres, diviseur de 360 ; 10 par defaut. */
+  pasTheta?: number;
+  /** Profondeur du centre de la zone quand la norme la laisse libre (classe 3) ; hc/2 par defaut. */
+  z_p?: number;
+}
+
+export interface CarteCas {
+  cas: IdCas;
+  statut: StatutCas;
+  /** Motif d'une carte non calculee, ou rappel des conventions et des choix d'une carte calculee. */
+  motif: string | null;
+  /** Profondeur du centre de la zone localisee (m) ; null sans zone localisee. */
+  z_p: number | null;
+  /** Vrai quand z_p vient de l'option ou du defaut hc/2, la norme laissant la zone a toute hauteur. */
+  z_pChoisi: boolean;
+  /** Hauteur s de la zone (m) ; null sans zone localisee. */
+  s: number | null;
+  /** Demi-angle des carres d'une paroi epaisse (degres) ; null sinon. */
+  demiAngle: number | null;
+  /** Profondeurs et angles de la grille, croissants. */
+  zs: number[];
+  thetas: number[];
+  /** Noeuds, tries par z puis par theta ; vide si la carte n'est pas calculee. */
+  points: PointCarte[];
+}
