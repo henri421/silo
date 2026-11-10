@@ -32,6 +32,7 @@ import {
 } from '../../src/index';
 import {
   champsDepuisModele,
+  champsDuMateriau,
   donneesDepuisModele,
   modeleDepuisChamps,
   modeleParDefaut,
@@ -107,13 +108,12 @@ function ecrireModele(modele: ModeleSaisie): void {
   }
 }
 
-/** Masque les champs qui ne s'appliquent pas a la forme, au fond ou au materiau. */
-function ajusterGroupes(forme: string, fond: string, materiau: string): void {
+/** Masque les champs qui ne s'appliquent pas a la forme ou au fond. */
+function ajusterGroupes(forme: string, fond: string): void {
   const visibilites: Record<string, boolean> = {
     circulaire: forme === 'circulaire',
     rectangulaire: forme === 'rectangulaire',
     tremie: fond !== 'plat',
-    'materiau-saisi': materiau === 'saisi',
   };
   for (const [nom, visible] of Object.entries(visibilites)) {
     const groupe = document.querySelector<HTMLElement>(`[data-groupe="${nom}"]`);
@@ -246,13 +246,13 @@ if (formulaire !== null) {
     // Les groupes suivent la saisie brute, meme quand un nombre est encore
     // illisible : un champ masque ne doit pas rester affiche par accident.
     if (!lecture.ok) {
-      ajusterGroupes(valeurs.forme ?? 'rectangulaire', valeurs.fond ?? 'plat', valeurs.materiau ?? 'sable');
+      ajusterGroupes(valeurs.forme ?? 'rectangulaire', valeurs.fond ?? 'plat');
       afficherErreur(lecture.message);
       return;
     }
 
     const modele = lecture.modele;
-    ajusterGroupes(modele.forme, modele.fond, modele.materiau);
+    ajusterGroupes(modele.forme, modele.fond);
     let r: ResultatSilo;
     try {
       r = calculer(donneesDepuisModele(modele), PROFIL);
@@ -266,6 +266,22 @@ if (formulaire !== null) {
 
   initialiserCommandes();
   ecrireModele(modeleParDefaut());
+  // Les valeurs du materiau restent visibles : choisir un materiau de la
+  // bibliotheque les remplit, modifier l'une d'elles passe en materiau saisi.
+  const choixMateriau = exige<HTMLSelectElement>('[data-champ="materiau"]');
+  choixMateriau.addEventListener('change', () => {
+    const id = choixMateriau.value;
+    if (id !== 'sable' && id !== 'defaut') return;
+    const valeurs = champsDuMateriau(id);
+    for (const [cle, valeur] of Object.entries(valeurs)) {
+      exige<HTMLInputElement>(`[data-champ="${cle}"]`).value = valeur;
+    }
+  });
+  for (const cle of Object.keys(champsDuMateriau('sable'))) {
+    exige<HTMLInputElement>(`[data-champ="${cle}"]`).addEventListener('input', () => {
+      choixMateriau.value = 'saisi';
+    });
+  }
   formulaire.addEventListener('input', rafraichir);
   formulaire.addEventListener('change', rafraichir);
   const commandes = exige<HTMLElement>('#commandes-dessins');
