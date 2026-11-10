@@ -43,3 +43,5 @@ export {
   pressionsTremie,
   pvTremie,
 } from './fond/tremie';
+export { calculer } from './calcul';
+export { bandes, controleBandes } from './discretisation/bandes';
