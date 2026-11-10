@@ -11,3 +11,6 @@ docs/superpowers/
 # Construction : produite et publiee par la CI, jamais suivie
 docs/*
 !docs/validation/
+
+# Le PDF de la norme est sous licence : il ne doit jamais entrer dans le depot
+*.pdf

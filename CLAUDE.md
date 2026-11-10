@@ -1,4 +1,4 @@
-# Instructions pour Claude Code : dépôt `pressions-silos`
+# Instructions pour Claude Code : dépôt `silo`
 
 Ce dépôt doit devenir l'outil de la suite [Aedificium web](https://henri421.github.io/WebAedificium/) qui calcule les **actions des matériaux ensilés sur les parois et les fonds des silos selon l'EN 1991-4:2006**. Il produit des profils de pression en fonction de la profondeur, des graphiques et des fichiers CSV prêts à charger un modèle aux éléments finis (SCIA Engineer ou autre).
 

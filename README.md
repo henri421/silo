@@ -1,9 +1,9 @@
-# pressions-silos
+# silo
 
 Actions des matériaux ensilés sur les parois et les fonds des silos selon l'**EN 1991-4:2006** : silos circulaires et rectangulaires, élancés, d'élancement intermédiaire ou peu élancés, à fond plat ou à trémie. Les pressions sont rendues **cas par cas et niveau par niveau**, en graphiques et en fichiers CSV prêts pour un modèle aux éléments finis.
 
 Fait partie de la suite [Aedificium web](https://henri421.github.io/WebAedificium/).
-Page publiée : <https://henri421.github.io/pressions-silos/> (à la fin du lot 9).
+Page publiée : <https://henri421.github.io/silo/> (à la fin du lot 9).
 
 > **Aide au calcul. Cet outil constate, il ne prescrit pas.** Toutes les valeurs sont caractéristiques : les coefficients partiels et les combinaisons de l'EN 1990 restent à appliquer dans le logiciel de calcul. Les propriétés des matériaux viennent du tableau E.1 ou d'essais ; un matériau qui n'y est pas clairement assimilable relève d'essais (4.2.3(2)). Le domaine de la norme est limité aux matériaux à écoulement libre (1.1(4)).
 
@@ -13,7 +13,7 @@ En construction. Le périmètre visé est décrit dans [`SPEC.md`](SPEC.md) et l
 
 ## Ce que l'outil rend
 
-*À compléter lot par lot.*
+Lot 0 : squelette publiable, sans calcul.
 
 ## Choix de modélisation déclarés
 
