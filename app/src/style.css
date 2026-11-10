@@ -176,3 +176,201 @@ footer {
 .feuilles:empty {
   display: none;
 }
+
+/* --- Mise en page de l'interface -------------------------------------- */
+
+main {
+  display: grid;
+  grid-template-columns: minmax(20rem, 26rem) 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+h2 {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+h3 {
+  margin: 0.8rem 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.colonne {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  align-content: start;
+}
+
+@media (max-width: 60rem) {
+  main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --- Formulaire -------------------------------------------------------- */
+
+fieldset {
+  /* Un `fieldset` vaut par defaut `min-inline-size: min-content` : sans cette
+     neutralisation, les cadres n'ont pas tous la meme largeur. */
+  min-inline-size: 0;
+  margin: 0 0 0.9rem;
+  padding: 0.7rem 0.8rem 0.8rem;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: var(--surface);
+}
+
+legend {
+  padding: 0 0.35rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--texte-faible);
+}
+
+label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 0.35rem 0;
+  min-width: 0;
+}
+
+label > span {
+  font-size: 0.85rem;
+}
+
+label.case {
+  justify-content: flex-start;
+}
+
+input[type='text'],
+select {
+  padding: 0.28rem 0.4rem;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-petit);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+}
+
+input[type='text'] {
+  width: 8.5rem;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+input[type='text']:focus-visible,
+input[type='checkbox']:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+input[type='text']:focus {
+  background: var(--accent-doux);
+}
+
+.groupe[hidden] {
+  display: none;
+}
+
+.commandes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: baseline;
+  margin: 0 0 0.8rem;
+}
+
+.erreur {
+  margin: 0.8rem 0 0;
+  padding: 0.65rem 0.8rem;
+  border-left: 3px solid var(--refus);
+  border-radius: var(--rayon);
+  background: var(--refus-fond);
+  color: var(--refus);
+  font-size: 0.85rem;
+}
+
+.erreur[hidden] {
+  display: none;
+}
+
+.note {
+  margin: 0.7rem 0 0;
+  color: var(--texte-doux);
+  font-size: 0.8rem;
+}
+
+/* --- Tableaux de resultats --------------------------------------------- */
+
+.bloc {
+  margin: 0 0 0.6rem;
+}
+
+.defilement {
+  overflow-x: auto;
+  margin: 0.6rem 0;
+}
+
+.grandeurs,
+.zones {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.grandeurs th,
+.grandeurs td,
+.zones th,
+.zones td {
+  padding: 0.26rem 0.5rem;
+  border-bottom: 1px solid var(--bordure-douce);
+  text-align: left;
+  vertical-align: baseline;
+}
+
+.grandeurs th {
+  width: 7rem;
+  background: var(--surface-appui);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+.grandeurs .libelle,
+.zones td {
+  color: var(--texte-doux);
+  font-size: 0.82rem;
+}
+
+.grandeurs .valeur {
+  width: 9rem;
+  font-family: var(--mono);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.zones th {
+  background: var(--surface-appui);
+  font-weight: 600;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+/* --- Dessins ------------------------------------------------------------ */
+
+svg.dessin {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0.4rem 0 0.8rem;
+}

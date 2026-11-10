@@ -38,8 +38,157 @@
 
     <main>
       <section id="saisie" aria-label="saisie">
-        <p>Interface en construction.</p>
+        <form id="formulaire" autocomplete="off">
+          <fieldset>
+            <legend>Géométrie</legend>
+            <label><span>Forme du silo</span>
+              <select data-champ="forme">
+                <option value="rectangulaire">rectangulaire</option>
+                <option value="circulaire">circulaire</option>
+              </select>
+            </label>
+            <div class="groupe" data-groupe="circulaire">
+              <label><span>Diamètre intérieur d (m)</span><input type="text" inputmode="decimal" data-champ="d" /></label>
+              <label><span>Épaisseur de paroi t (m)</span><input type="text" inputmode="decimal" data-champ="t" /></label>
+            </div>
+            <div class="groupe" data-groupe="rectangulaire">
+              <label><span>Grand côté intérieur a (m)</span><input type="text" inputmode="decimal" data-champ="a" /></label>
+              <label><span>Petit côté intérieur b (m)</span><input type="text" inputmode="decimal" data-champ="b" /></label>
+            </div>
+            <label><span>Hauteur de paroi verticale h<sub>c</sub> (m)</span><input type="text" inputmode="decimal" data-champ="hc" /></label>
+            <label><span>Cote de la transition Z (m)</span><input type="text" inputmode="decimal" data-champ="Z_transition" /></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Fond</legend>
+            <label><span>Type de fond</span>
+              <select data-champ="fond">
+                <option value="plat">plat</option>
+                <option value="conique">trémie conique</option>
+                <option value="pyramidale-carree">trémie pyramidale carrée</option>
+                <option value="pyramidale-rectangulaire">trémie pyramidale rectangulaire</option>
+                <option value="biseau">trémie en biseau</option>
+              </select>
+            </label>
+            <div class="groupe" data-groupe="tremie">
+              <label><span>Demi-angle d'ouverture &beta; (&deg;)</span><input type="text" inputmode="decimal" data-champ="beta" /></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Matériau</legend>
+            <label><span>Matériau</span>
+              <select data-champ="materiau">
+                <option value="sable">Sable, tableau E.1</option>
+                <option value="defaut">Matériau par défaut, tableau E.1</option>
+                <option value="saisi">matériau saisi</option>
+              </select>
+            </label>
+            <div class="groupe" data-groupe="materiau-saisi">
+              <label><span>Poids volumique inférieur &gamma;<sub>l</sub> (kN/m&sup3;)</span><input type="text" inputmode="decimal" data-champ="gamma_l" /></label>
+              <label><span>Poids volumique supérieur &gamma;<sub>u</sub> (kN/m&sup3;)</span><input type="text" inputmode="decimal" data-champ="gamma_u" /></label>
+              <label><span>Angle de talus naturel &phi;<sub>r</sub> (&deg;)</span><input type="text" inputmode="decimal" data-champ="phi_r" /></label>
+              <label><span>Angle de frottement interne moyen &phi;<sub>im</sub> (&deg;)</span><input type="text" inputmode="decimal" data-champ="phi_im" /></label>
+              <label><span>Coefficient a<sub>&phi;</sub> (-)</span><input type="text" inputmode="decimal" data-champ="a_phi" /></label>
+              <label><span>Rapport de pression latéral moyen K<sub>m</sub> (-)</span><input type="text" inputmode="decimal" data-champ="K_m" /></label>
+              <label><span>Coefficient a<sub>K</sub> (-)</span><input type="text" inputmode="decimal" data-champ="a_K" /></label>
+              <label><span>Frottement moyen &mu;<sub>m</sub>, paroi D1 (-)</span><input type="text" inputmode="decimal" data-champ="mu_D1" /></label>
+              <label><span>Frottement moyen &mu;<sub>m</sub>, paroi D2 (-)</span><input type="text" inputmode="decimal" data-champ="mu_D2" /></label>
+              <label><span>Frottement moyen &mu;<sub>m</sub>, paroi D3 (-)</span><input type="text" inputmode="decimal" data-champ="mu_D3" /></label>
+              <label><span>Coefficient a<sub>&mu;</sub> (-)</span><input type="text" inputmode="decimal" data-champ="a_mu" /></label>
+              <label><span>Coefficient C<sub>op</sub> (-)</span><input type="text" inputmode="decimal" data-champ="C_op" /></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Parois</legend>
+            <label><span>Catégorie de paroi verticale</span>
+              <select data-champ="paroi_verticale">
+                <option value="D1">D1</option>
+                <option value="D2">D2</option>
+                <option value="D3">D3</option>
+              </select>
+            </label>
+            <label><span>Catégorie de paroi de trémie</span>
+              <select data-champ="paroi_tremie">
+                <option value="D1">D1</option>
+                <option value="D2">D2</option>
+                <option value="D3">D3</option>
+              </select>
+            </label>
+            <label class="case"><input type="checkbox" data-champ="faiblement_cohesif" /><span>matériau faiblement cohésif (sable sec)</span></label>
+            <label class="case"><input type="checkbox" data-champ="engrainement" /><span>engrènement mécanique du matériau</span></label>
+            <label><span>Assemblage d'une paroi mince</span>
+              <select data-champ="assemblage">
+                <option value="soude">soudé</option>
+                <option value="boulonne">boulonné</option>
+              </select>
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Exploitation</legend>
+            <label><span>Excentrement au remplissage e<sub>f</sub> (m)</span><input type="text" inputmode="decimal" data-champ="e_f" /></label>
+            <label><span>Excentrement silo plein e<sub>t</sub> (m), vide = e<sub>f</sub></span><input type="text" inputmode="decimal" data-champ="e_t" placeholder="vide = ef" /></label>
+            <label><span>Excentrement de l'orifice e<sub>o</sub> (m)</span><input type="text" inputmode="decimal" data-champ="e_o" /></label>
+            <label class="case"><input type="checkbox" data-champ="vidange_haut" /><span>vidange par le haut</span></label>
+            <label class="case"><input type="checkbox" data-champ="cheminee" /><span>écoulement en cheminée interne garanti</span></label>
+            <label class="case"><input type="checkbox" data-champ="forme_maintenue" /><span>forme maintenue en tête et en pied</span></label>
+            <label><span>Classe imposée, vide = aucune</span>
+              <select data-champ="classe_imposee">
+                <option value="">aucune</option>
+                <option value="1">classe 1</option>
+                <option value="2">classe 2</option>
+                <option value="3">classe 3</option>
+              </select>
+            </label>
+            <label><span>Méthode localisée, silo circulaire de classe 2</span>
+              <select data-champ="methode_localisee">
+                <option value="action-localisee">action localisée</option>
+                <option value="majoration-uniforme">majoration uniforme</option>
+              </select>
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Discrétisation</legend>
+            <label><span>Hauteur des bandes &Delta;z (m)</span><input type="text" inputmode="decimal" data-champ="dz" /></label>
+            <label><span>Points des profils, au moins 101</span><input type="text" inputmode="decimal" data-champ="points" /></label>
+          </fieldset>
+        </form>
+        <p data-role="erreur" class="erreur" role="alert" hidden></p>
       </section>
+
+      <div class="colonne">
+        <section id="synthese" aria-label="synthèse">
+          <h2>Synthèse</h2>
+          <div data-role="synthese"></div>
+        </section>
+
+        <section id="cas" aria-label="cas de charge">
+          <h2>Cas de charge</h2>
+          <div data-role="cas"></div>
+          <h2>Points ouverts appliqués</h2>
+          <div data-role="points-ouverts"></div>
+        </section>
+
+        <section id="dessins" aria-label="dessins">
+          <h2>Dessins</h2>
+          <div class="commandes" id="commandes-dessins">
+            <label><span>Cas de l'élévation</span>
+              <select data-role="cas-elevation"></select>
+            </label>
+            <label class="case"><input type="checkbox" data-role="bandes-elevation" /><span>tracer les bandes &Delta;z</span></label>
+            <label><span>Grandeur des profils</span>
+              <select data-role="grandeur-profils"></select>
+            </label>
+          </div>
+          <div data-role="elevation"></div>
+          <div data-role="profils"></div>
+          <div data-role="plan"></div>
+          <div data-role="tremie"></div>
+        </section>
+      </div>
     </main>
 
     <footer>

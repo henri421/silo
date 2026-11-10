@@ -346,10 +346,53 @@ Fichiers : `src/discretisation/bandes.ts`, `src/cas/` (un ou plusieurs modules, 
 
 ## Lot 7 : interface
 
-- [ ] Formulaire par blocs (géométrie, fond, matériau, parois, exploitation, discrétisation), au style de `DESIGN.md`. Recalcul en continu, pas de bouton « calculer ».
-- [ ] Synthèse, liste des cas avec statut, points ouverts appliqués.
-- [ ] Dessins SVG : élévation avec diagrammes, profils, vue en plan, trémie (SPEC §8.1). Les dessins sont des fonctions pures testées sous jsdom.
-- [ ] Enregistrement de projet par `aedificium-ui`.
+- [x] Formulaire par blocs (géométrie, fond, matériau, parois, exploitation, discrétisation), au style de `DESIGN.md`. Recalcul en continu, pas de bouton « calculer ».
+- [x] Synthèse, liste des cas avec statut, points ouverts appliqués.
+- [x] Dessins SVG : élévation avec diagrammes, profils, vue en plan, trémie (SPEC §8.1). Les dessins sont des fonctions pures testées sous jsdom.
+- [x] Enregistrement de projet par `aedificium-ui`.
+
+### Consignes d'exécution du lot 7 (séance `claude-ds`)
+
+Branche : `lot-7-interface`. Modèle à suivre, en lecture seule : `../charges-climatiques/app/src/` (`form.ts`, `vue.ts`, `dessin-*.ts`, `main.ts`, `textes.ts`, `style.css`) et son `app/index.html`. On reprend sa structure, ses classes et son usage d'`aedificium-ui` (`brancherFeuilles`, `BlocResultat`, `nombreFr` ou `nombreAffiche`, `lireNombre`, `JETONS`). Le noyau (`src/`) ne change pas : l'interface appelle `calculer`.
+
+Tests d'acceptation, **à ne jamais modifier** : `tests/app/form.test.ts`, `tests/app/vue.test.ts`, `tests/app/dessins.test.ts`, `tests/app/interface.test.ts`, et tous ceux des lots précédents (dont `tests/app/pages.test.ts` et `tests/app/jetons.test.ts`).
+
+Toutes les chaînes affichées passent par `app/src/textes.ts`, en français seulement dans ce lot ; le lot 9 ajoute l'anglais avec les mêmes clés. Pas de tiret cadratin.
+
+**T7.1 Formulaire** : `app/src/form.ts`.
+* `CHAMPS` : tableau `as const` des clés, exactement : `forme, d, a, b, t, hc, Z_transition, fond, beta, materiau, gamma_l, gamma_u, phi_r, phi_im, a_phi, K_m, a_K, mu_D1, mu_D2, mu_D3, a_mu, C_op, paroi_verticale, paroi_tremie, faiblement_cohesif, engrainement, e_f, e_t, e_o, vidange_haut, cheminee, forme_maintenue, assemblage, classe_imposee, methode_localisee, dz, points`.
+* `ModeleSaisie` : une propriété par clé, mêmes noms. Nombres en `number | null` (`null` pour un champ vide), choix en unions de chaînes, cases à cocher en `boolean`. Le modèle garde toutes les valeurs, même celles des champs masqués, pour qu'un changement de forme ou de fond ne perde pas la saisie.
+* `modeleParDefaut()` : V1 (rectangulaire 6 × 4 m, `hc` 20, fond plat, `Z_transition` 0, sable, parois D2 et D2, faiblement cohésif oui, engrènement non, `e_f` 0, `e_t` vide, `e_o` 0, cases décochées, assemblage `soude`, classe imposée vide, méthode `action-localisee`, `dz` 1, 101 points). Champs masqués : `d` 6, `t` 0,2, `beta` 30 ; champs du matériau saisi pré-remplis avec les valeurs du sable.
+* `champsDepuisModele(m): Record<string, string>` : nombres à la française (`nombreFr` ou équivalent, sans perte : l'aller-retour champs, modèle, champs est exact), `null` en chaîne vide, booléens en `oui` ou `non`.
+* `modeleDepuisChamps(v): { ok: true; modele } | { ok: false; message }` : virgule ou point décimal (`lireNombre`). Un texte illisible ou un champ exigé vide donne un refus dont le message nomme la clé du champ. Exigés selon la saisie : `d` et `t` si circulaire ; `a` et `b` si rectangulaire ; `beta` si le fond n'est pas plat ; les douze valeurs du matériau seulement si `materiau = saisi`. Un champ non exigé illisible ou vide vaut `null` sans refus.
+* `donneesDepuisModele(m): DonneesSilo` : ne transmet que les grandeurs pertinentes (`d` et `t` pour un circulaire, `a` et `b` pour un rectangulaire, `beta` pour une trémie ; les autres absentes). `e_t` vide et classe imposée vide sont absents (`undefined`). Matériau : `materiauParId('sable' | 'defaut')` pour la bibliothèque ; pour `saisi`, `id: 'saisi'`, nom « Matériau saisi », et chaque entrée de `sources` vaut `saisie utilisateur`.
+* Test : `npx vitest run tests/app/form.test.ts`.
+
+**T7.2 Synthèse** : `app/src/vue.ts`.
+* `blocsSynthese(r: ResultatSilo): BlocResultat[]`, six blocs dans l'ordre : Classement (`hc/dc`, élancement, `capacité`, `classe` avec ses motifs), Propriétés caractéristiques (`K`, `μ`, `φ_i`, valeurs inférieure et supérieure), Parois verticales (`z_o`, `p_ho` en C1, `C_h`, `C_w`), Action localisée (`C_pf`, `C_pe`, `s`, forme et motif), Fond (`C_b`, méthode du fond plat ou paramètres de trémie), Cas de charge (une ligne par cas, symbole = identifiant, valeur = « calculé » et ses combinaisons, ou « non applicable : motif », ou « hors périmètre : motif »). Nombres à la française, unités dans la valeur.
+* `lignesCas(r): string[][]` : `[identifiant, libellé, statut affiché (calculé, non applicable, hors périmètre), motif ou combinaisons]`.
+* `lignesPointsOuverts(r): string[][]` : pour chaque identifiant de `r.pointsOuverts`, `[identifiant, question en une phrase, choix appliqué]`, reformulés depuis SPEC §9 et rangés dans `textes.ts`.
+* `messageDErreur(e: unknown): string`, comme dans `charges-climatiques`.
+* Test : `npx vitest run tests/app/vue.test.ts`.
+
+**T7.3 Dessins** : `app/src/dessins.ts`, fonctions pures qui rendent une chaîne SVG. Aucune couleur en dur : uniquement des classes et des `var(--…)` des jetons. `NaN` et `undefined` interdits dans la sortie.
+* `dessinElevation(r, id: IdCas, avecBandes: boolean)` : silo à l'échelle, talus et `h_o` (texte `h_o`), diagramme de `p_h_total` à gauche et de `p_w` à droite pour le cas ; avec `avecBandes`, un `<rect class="bande">` par bande du cas. Un cas non calculé dessine le silo et affiche « non applicable » ou « hors périmètre » avec le motif.
+* `dessinProfils(r, grandeur: 'p_h' | 'p_w' | 'p_v' | 'n_zSk', ids: IdCas[])` : axe `z (m)` vers le bas, un tracé `class="trace trace-<ID>"` par cas calculé (`p_h` = `p_h_total`). REMP en trait plein ; VID et VID_EXC avec `stroke-dasharray` (attribut sur le même élément).
+* `dessinPlan(r)` : circulaire : la zone de l'action localisée (`class="zone-localisee"`) et, si VID_EXC est calculé, les secteurs d'écoulement et de contrainte élevée avec leurs angles (`35°`, `70°` pour V2) ; rectangulaire : la majoration uniforme rappelée par son coefficient (texte `0,36`).
+* `dessinTremie(r): string | null` : `null` pour un fond plat ; sinon `p_n` et `p_t` le long de la paroi de trémie, tracés `trace-FOND_REMP` et `trace-FOND_VID`.
+* Test : `npx vitest run tests/app/dessins.test.ts`.
+
+**T7.4 Page et câblage** : `app/index.html`, `app/src/main.ts`, `app/src/style.css`.
+* `<form id="formulaire">` avec six `fieldset` et leurs `legend` : Géométrie, Fond, Matériau, Parois, Exploitation, Discrétisation. Un élément `data-champ="<clé>"` par clé de `CHAMPS`, et aucun autre `data-champ` (les sélecteurs d'affichage, comme le cas de l'élévation ou la grandeur des profils, portent un `data-role`). Les champs non exigés sont masqués selon la forme, le fond et le matériau.
+* Zones de résultat `data-role` : `synthese`, `cas`, `points-ouverts`, `elevation`, `profils`, `plan`, `tremie`, `erreur`. La barre `data-role="feuilles"` reste entre `</header>` et `<main`.
+* `main.ts` : recalcul à chaque `input` (`addEventListener('input', …)`), sans bouton « calculer ». Une saisie refusée ou une erreur du noyau s'affiche dans la zone `erreur` (`messageDErreur`) et laisse les résultats précédents effacés. `brancherFeuilles` lit `champsDepuisModele` et recharge les champs, comme dans `charges-climatiques`.
+* Test : `npx vitest run tests/app/interface.test.ts`.
+
+**T7.5 Fin de lot.** `typecheck`, `test`, `build` passent. Cocher le lot 7. Ligne « Lot 7 » du README, en paragraphe séparé.
+
+**Interdit** : modifier les tests, `docs/validation/`, `src/` (noyau, types compris), `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md` ; ajouter une dépendance ; commencer le lot 8 ; pousser. Si le noyau semble devoir changer, s'arrêter et le signaler.
+
+**Fin du lot** : section « Lot 7 » dans `HANDOFF.md`, commit, arrêt.
 
 ## Lot 8 : exports
 
