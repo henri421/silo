@@ -167,6 +167,12 @@ const FR = {
     zoneContrainteElevee: 'contrainte élevée',
     zoneImmobile: 'matériau immobile',
     majorationUniforme: 'majoration uniforme',
+    majoration: '0,36 p_p',
+    ph: 'p_h',
+    pw: 'p_w',
+    ho: 'h_o',
+    surfaceEquivalente: 'surface équivalente',
+    axePression: 'p (kPa)',
     axeProfondeur: 'z (m)',
     axeX: 'x (m)',
     pn: 'p_n',
@@ -174,9 +180,17 @@ const FR = {
     angle: (valeur: string): string => `${valeur}°`,
   },
 
+  pointsOuvertsInconnu: {
+    question: (id: string): string => `Point ouvert ${id} de SPEC §9.`,
+    choix: 'Choix déclaré dans SPEC.md.',
+  },
+
   interface: {
     casElevation: 'Cas de l élévation',
     grandeurProfils: 'Grandeur des profils',
+    bandesElevation: 'Tracer les bandes delta z',
+    entetesCas: ['Cas', 'Libellé', 'Statut', 'Motif ou combinaisons'],
+    entetesPointsOuverts: ['Point', 'Question', 'Choix appliqué'],
     grandeurs: {
       p_h: 'p_h totale',
       p_w: 'p_w',

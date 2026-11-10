@@ -138,7 +138,9 @@ export function lignesPointsOuverts(r: ResultatSilo): string[][] {
   const connus = t.pointsOuverts as Record<string, { question: string; choix: string }>;
   return r.pointsOuverts.map((id) => {
     const point = connus[id];
-    if (point === undefined) return [id, `Point ouvert ${id} de SPEC §9.`, 'Choix déclaré dans SPEC.md.'];
+    if (point === undefined) {
+      return [id, t.pointsOuvertsInconnu.question(id), t.pointsOuvertsInconnu.choix];
+    }
     return [id, point.question, point.choix];
   });
 }

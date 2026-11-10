@@ -163,10 +163,12 @@ export function dessinElevation(r: ResultatSilo, id: IdCas, avecBandes: boolean)
     )}"/>`
   );
   morceaux.push(
-    `<text class="texte" x="${c(gauche - 16)}" y="${c(y(cl.h_o / 2) + 4)}" text-anchor="end">h_o</text>`
+    `<text class="texte" x="${c(gauche - 16)}" y="${c(y(cl.h_o / 2) + 4)}" text-anchor="end">${echapper(
+      t.dessins.ho
+    )}</text>`
   );
   morceaux.push(
-    `<text class="texte-doux" x="${c(gauche)}" y="${c(y(0) - 6)}">${echapper('surface équivalente')}</text>`
+    `<text class="texte-doux" x="${c(gauche)}" y="${c(y(0) - 6)}">${echapper(t.dessins.surfaceEquivalente)}</text>`
   );
 
   if (calcule && cas !== undefined) {
@@ -188,10 +190,12 @@ export function dessinElevation(r: ResultatSilo, id: IdCas, avecBandes: boolean)
       )} Z"/>`
     );
     morceaux.push(
-      `<text class="texte" x="${c(gauche - 14)}" y="${c(y(0) - 10)}" text-anchor="end">p_h</text>`
+      `<text class="texte" x="${c(gauche - 14)}" y="${c(y(0) - 10)}" text-anchor="end">${echapper(
+        t.dessins.ph
+      )}</text>`
     );
     morceaux.push(
-      `<text class="texte" x="${c(droite + 14)}" y="${c(y(0) - 10)}">p_w</text>`
+      `<text class="texte" x="${c(droite + 14)}" y="${c(y(0) - 10)}">${echapper(t.dessins.pw)}</text>`
     );
     morceaux.push(
       `<text class="texte-doux" x="${c(gauche - 14)}" y="${c(y(hc) + 16)}" text-anchor="end">${echapper(
@@ -288,7 +292,9 @@ export function dessinProfils(
     );
   }
   morceaux.push(
-    `<text class="texte-doux" x="${c(gauche - 8)}" y="${c(haut - 10)}" text-anchor="end">z (m)</text>`
+    `<text class="texte-doux" x="${c(gauche - 8)}" y="${c(haut - 10)}" text-anchor="end">${echapper(
+      t.dessins.axeProfondeur
+    )}</text>`
   );
   morceaux.push(
     `<text class="texte-doux" x="${c(droite)}" y="${c(bas + 20)}" text-anchor="end">${echapper(
@@ -439,7 +445,7 @@ function planRectangulaire(): string {
         hauteur - 36
       )}"/>`,
       `<text class="texte" x="${c(PLAN_LARGEUR / 2)}" y="${c(y + hauteur / 2)}" text-anchor="middle">${echapper(
-        `0,36 p_p, ${t.dessins.majorationUniforme}`
+        `${t.dessins.majoration}, ${t.dessins.majorationUniforme}`
       )}</text>`,
     ].join('')
   );
@@ -491,7 +497,7 @@ export function dessinTremie(r: ResultatSilo): string | null {
     `<line class="axe" x1="${c(gauche)}" y1="${c(haut)}" x2="${c(gauche)}" y2="${c(bas)}"/>`,
     `<line class="axe" x1="${c(gauche)}" y1="${c(bas)}" x2="${c(droite)}" y2="${c(bas)}"/>`,
     `<text class="texte-doux" x="${c(gauche - 8)}" y="${c(haut - 10)}" text-anchor="end">${echapper(
-      'p (kPa)'
+      t.dessins.axePression
     )}</text>`,
     `<text class="texte-doux" x="${c(droite)}" y="${c(bas + 20)}" text-anchor="end">${echapper(
       t.dessins.axeX
@@ -507,10 +513,10 @@ export function dessinTremie(r: ResultatSilo): string | null {
   }
 
   morceaux.push(
-    `<text class="texte" x="${c(droite)}" y="${c(haut)}">${echapper('p_n')}</text>`
+    `<text class="texte" x="${c(droite)}" y="${c(haut)}">${echapper(t.dessins.pn)}</text>`
   );
   morceaux.push(
-    `<text class="texte" x="${c(droite)}" y="${c(haut + 16)}">${echapper('p_t')}</text>`
+    `<text class="texte" x="${c(droite)}" y="${c(haut + 16)}">${echapper(t.dessins.pt)}</text>`
   );
 
   return enveloppe('tremie', TREM_LARGEUR, TREM_HAUTEUR, morceaux.join(''));
