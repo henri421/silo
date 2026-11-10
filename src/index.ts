@@ -45,3 +45,4 @@ export {
 } from './fond/tremie';
 export { calculer } from './calcul';
 export { bandes, controleBandes } from './discretisation/bandes';
+export { cartePressions } from './discretisation/carte';
