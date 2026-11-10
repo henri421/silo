@@ -23,8 +23,7 @@ export interface ProfilSilos {
   date: string;
   /** Ce que le profil couvre et ne couvre pas. */
   perimetre: string;
-  valeurs: {
-    /** Capacite (t) sous laquelle un silo est de classe 1, tableau 2.1. */
+  valeurs: {    /** Capacite (t) sous laquelle un silo est de classe 1, tableau 2.1. */
     capaciteClasse1: ValeurSourcee;
     /** Capacite (t) au-dessus de laquelle un silo est de classe 3, tableau 2.1. */
     capaciteClasse3: ValeurSourcee;
@@ -58,3 +57,23 @@ export interface ProfilSilos {
     excentrementPeuElance: ValeurSourcee;
   };
 }
+
+/**
+ * Leve si une valeur du profil est inexploitable : nombre non fini, ou source
+ * absente. Une valeur sans provenance ne doit jamais atteindre un resultat.
+ * Le message nomme la cle de la grandeur en cause.
+ */
+export function verifierProfil(p: ProfilSilos): void {
+  for (const [cle, v] of Object.entries(p.valeurs)) {
+    if (v === undefined || v === null || !Number.isFinite(v.valeur)) {
+      throw new Error(`Profil « ${p.nom} » : la grandeur ${cle} n'a pas de valeur numerique.`);
+    }
+    if (typeof v.source !== 'string' || v.source.trim() === '') {
+      throw new Error(
+        `Profil « ${p.nom} » : la grandeur ${cle} n'a pas de source. ` +
+          'Une valeur de provenance inconnue bloque le calcul.',
+      );
+    }
+  }
+}
+
