@@ -27,6 +27,8 @@ Lot 6 : calcul complet des cinq cas de charge (REMP, VID, VID_EXC, FOND_REMP, FO
 
 Lot 7 : interface de saisie par blocs, avec recalcul continu et sans bouton de calcul, synthèse des grandeurs, liste des cas avec leur statut et points ouverts appliqués, dessins SVG de l'élévation, des profils, de la vue en plan et de la trémie, et enregistrement de la saisie comme feuille de projet par `aedificium-ui`. La page anglaise reste à construire au lot 9.
 
+Lot 8 : exports du calcul, avec les cinq fichiers CSV (profils, bandes, trémie, action localisée, synthèse) et leur bloc d'en-tête, le JSON versionné, la note de calcul HTML imprimable, et les dessins téléchargeables en SVG autonome et en PNG.
+
 ## Choix de modélisation déclarés
 
 * Les pressions normales sont calculées avec la combinaison « pression normale maximale » (K supérieur, μ inférieur) et le frottement avec la combinaison « frottement maximal » (K et μ supérieurs). Les associer dans un même cas de charge est un choix enveloppe.

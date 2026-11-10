@@ -374,3 +374,48 @@ svg.dessin {
   height: auto;
   margin: 0.4rem 0 0.8rem;
 }
+
+/* --- Exports ------------------------------------------------------------ */
+
+.exports {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.exports button,
+.boutons-dessin button {
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-petit);
+  padding: 0.3rem 0.7rem;
+  background: var(--surface);
+  color: var(--texte);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.exports button:hover,
+.boutons-dessin button:hover {
+  background: var(--surface-appui);
+}
+
+.boutons-dessin {
+  display: flex;
+  gap: 0.4rem;
+  margin: -0.4rem 0 0.8rem;
+}
+
+.boutons-dessin button {
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+/* Le bloc « Cas de charge » porte des libelles longs : les valeurs reviennent
+   a la ligne au lieu de deborder de la colonne des valeurs. */
+.bloc-cas .valeur {
+  width: auto;
+  white-space: normal;
+  text-align: left;
+  overflow-wrap: anywhere;
+}

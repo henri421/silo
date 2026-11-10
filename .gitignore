@@ -14,3 +14,6 @@ docs/*
 
 # Le PDF de la norme est sous licence : il ne doit jamais entrer dans le depot
 *.pdf
+
+# Sortie de developpement du service worker (vite-plugin-pwa)
+app/dev-dist/
