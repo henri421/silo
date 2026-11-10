@@ -17,6 +17,45 @@
 - [ ] Un test qui vérifie que le `:root` de la feuille de style concorde avec `JETONS`, comme dans `assemblages-ec3`.
 - [ ] La CI passe sur une page vide.
 
+### Consignes d'exécution du lot 0 (séance `claude-ds`)
+
+Branche : `lot-0-squelette`, déjà créée. Modèle : `../charges-climatiques`, déjà cloné à côté de ce dépôt ; ne pas le recloner. L'icône (`app/public/icone.svg` et les trois PNG) est déjà fournie : ne pas la redessiner.
+
+Tests d'acceptation, déjà écrits, **à ne jamais modifier** : `tests/index.test.ts`, `tests/app/configuration.test.ts`, `tests/app/pages.test.ts`, `tests/app/jetons.test.ts`.
+
+**T0.1 Configuration.**
+Fichiers : `package.json`, `package-lock.json`, `tsconfig.json`, `vite.config.ts`, `.gitignore`, `.github/workflows/pages.yml`.
+* Reprendre ceux de `charges-climatiques` : mêmes scripts et mêmes `devDependencies` (versions comprises), avec `"name": "pressions-silos"`, `"version": "0.1.0"`. Aucune autre dépendance.
+* `vite.config.ts` identique, sauf le manifeste : `name: 'pressions-silos, actions dans les silos selon l EN 1991-4'`, `short_name: 'Silos'`, `description: 'Pressions des matériaux ensilés sur les parois et les fonds des silos, profils et fichiers CSV pour un modèle aux éléments finis, selon l EN 1991-4.'`. Les commentaires citant `/charges-climatiques/` deviennent `/pressions-silos/`.
+* `.gitignore` : ajouter une ligne `*.pdf` (le PDF de la norme ne doit jamais entrer dans le dépôt).
+* Puis `npm install`.
+* Test : `npx vitest run tests/app/configuration.test.ts`. Attendu : 7 tests passent.
+
+**T0.2 Noyau vide** (dépend de T0.1).
+Fichier : `src/index.ts`. En-tête de module sur le modèle de `charges-climatiques/src/index.ts` (objet de l'outil, unités du noyau : m, kN/m³, kPa, kN/m, angles en degrés en entrée), et un seul export : `export const NORME = 'EN 1991-4:2006';`.
+* Test : `npx vitest run tests/index.test.ts`. Attendu : 1 test passe.
+
+**T0.3 Pages et interface vide** (dépend de T0.1).
+Fichiers : `app/index.html`, `app/en/index.html`, `app/src/main.ts`, `app/src/pwa.ts`, `app/src/textes.ts`, `app/src/style.css`.
+* Les deux pages reprennent la structure de celles de `charges-climatiques` : `<head>` identique (sauf le titre), barre commune `nav.barre` avec `Aedificium &middot; Actions`, lien vers le hub et lien de langue, `<header>` avec `h1`, `p.sous-titre` et `p.avertissement`, `div.feuilles[data-role="feuilles"]`, un `<main>` qui ne contient qu'une section `#saisie` portant le paragraphe « Interface en construction. » (en anglais : « Interface under construction. »), un `<footer>` qui liste le hors périmètre de `SPEC.md` §10 en une phrase, puis le script.
+* Textes imposés. Titre : `Pressions dans les silos, EN 1991-4` (en anglais : `Pressures in silos, EN 1991-4`). `h1` : `Pressions dans les silos` (en anglais : `Pressures in silos`). Sous-titre : « Actions des matériaux ensilés sur les parois et les fonds des silos circulaires et rectangulaires (EN 1991-4:2006), rendues cas par cas et niveau par niveau. » Avertissement : « Aide au calcul. Toutes les valeurs sont caractéristiques : les coefficients partiels et les combinaisons de l'EN 1990 restent à appliquer. » En anglais, traduire fidèlement ; le mot `characteristic` doit figurer dans l'avertissement.
+* Aucun tiret cadratin dans les pages ni dans `textes.ts`.
+* `style.css` : le bloc `:root` recopié **à l'identique** de celui de `charges-climatiques` (il doit concorder avec `JETONS`), puis seulement les règles de base utiles à cette page vide (corps, barre, en-tête, feuilles, main, footer), sans aucune couleur en dur hors de `:root`.
+* `main.ts` : importe `style.css`, appelle `definirLangue(langueDuDocument())` d'`aedificium-ui`, branche la barre des feuilles par `brancherFeuilles` comme dans `charges-climatiques` si c'est possible sans calcul (sinon, laisser un commentaire et le signaler dans `HANDOFF.md`), puis appelle `enregistrerServiceWorker()`.
+* `pwa.ts` : copie de celui de `charges-climatiques`. `textes.ts` : seulement `messages.nouvelleVersion` en français et en anglais, sur le modèle de `textes()` de `charges-climatiques`.
+* Tests : `npx vitest run tests/app/pages.test.ts tests/app/jetons.test.ts`. Attendu : 10 tests passent.
+
+**T0.4 Vérification d'ensemble** (dépend de T0.1 à T0.3).
+* `npm run typecheck`, `npm test`, `npm run build` passent tous les trois ; `docs/` ne contient alors que la construction et `docs/validation/`, et `git status` ne montre aucun fichier construit.
+* Cocher les cases du lot 0 ci-dessus. Dans `README.md`, section « Ce que l'outil rend », écrire : « Lot 0 : squelette publiable, sans calcul. »
+* Commits petits, en français, avec l'identité locale déjà configurée. Ne pas pousser.
+
+**Décisions laissées à l'exécutant** : le détail des règles CSS de base, le libellé exact de la phrase du pied de page et la traduction anglaise, dans le respect des textes imposés.
+
+**Interdit** : modifier les tests ou `docs/validation/`, ajouter une dépendance, toucher à `SPEC.md`, `CLAUDE.md` ou `CONVENTIONS.md`, commencer le lot 1, pousser.
+
+**Fin du lot** : écrire `HANDOFF.md` (fichiers modifiés, décisions, points douteux, statut des tests avec les commandes lancées), puis s'arrêter.
+
 ## Lot 1 : géométrie, matériau, classement
 
 - [ ] `src/model/` : types `Silo`, `Materiau`, `Exploitation`, `Discretisation` (SPEC §2), avec validation et erreurs nommées (SPEC §11).
