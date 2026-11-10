@@ -237,3 +237,62 @@ export interface EtatParoi {
   motifVidange: string | null;
   combinaisons: { p_h: 'C1'; p_w: 'C2'; n_zSk: 'C2'; p_v: 'C3' };
 }
+
+// ---------------------------------------------------------------------------
+// Action localisee (lot 3, SPEC §5.4)
+// ---------------------------------------------------------------------------
+
+/**
+ * Forme de l'action localisee retenue pour un cas.
+ * `nulle` : coefficient pris egal a 0 avec son motif.
+ * `hors-perimetre` : cas non traite en v1 (P3), avec la clause.
+ */
+export type FormeLocalisee =
+  | 'nulle'
+  | 'non-circulaire'
+  | 'circulaire-epaisse'
+  | 'circulaire-mince'
+  | 'majoration-uniforme'
+  | 'hors-perimetre';
+
+export interface DefinitionLocalisee {
+  forme: FormeLocalisee;
+  /** C_pf (remplissage) ou C_pe (vidange) ; 0 si la forme est `nulle` ou `hors-perimetre`. */
+  C: number;
+  /** Clauses appliquees, en francais accentue, affichees telles quelles. */
+  motif: string;
+  /** Point ouvert de SPEC §9 applique, sinon null. */
+  pointOuvert: 'P3' | 'P7' | null;
+  /** Coefficient zeta d'une majoration uniforme sur paroi epaisse (5.40, 5.41), sinon null. */
+  zeta: number | null;
+  /** Position simplifiee du centre de la zone (m, profondeur z) en classe 2 ; null = toute hauteur. */
+  z_p: number | null;
+}
+
+export interface ActionLocalisee {
+  /** E_f = 2 e_f / d_c (5.10). */
+  E_f: number;
+  /** E = 2 e / d_c avec e = max(e_f, e_o) (5.29). */
+  E: number;
+  /** Hauteur de la zone s = pi d_c / 16 (m), eq. 5.12. */
+  s: number;
+  d_c: number;
+  remplissage: DefinitionLocalisee;
+  vidange: DefinitionLocalisee;
+}
+
+/** Valeurs localisees a une profondeur, pour un cas. Pressions en kPa, effort en kN. */
+export interface ValeursLocalisees {
+  /** p_pf ou p_pe = C p_h, vers l'exterieur (0 si nulle). */
+  p_p: number;
+  /** p_pfi ou p_pei = p_p / 7, vers l'interieur, en valeur absolue (paroi epaisse seulement, sinon 0). */
+  p_pi: number;
+  /** 0,36 p_p pour une paroi non circulaire, sinon 0. */
+  p_nc: number;
+  /** Effort total F_p = (pi/2) s d_c p_p pour une paroi mince (5.15), sinon null. */
+  F_p: number | null;
+  /** Pression normale du cas, action localisee ou majoration comprise (enveloppe). */
+  p_h_total: number;
+  /** Frottement du cas, majoration de paroi mince comprise. */
+  p_w_total: number;
+}

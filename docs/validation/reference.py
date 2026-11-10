@@ -197,3 +197,45 @@ print("VIDANGE : pvft =", f(pvft_e), " phi_i sup =", f(c["phi_sup"]), " eps (deg
 for x in (hh, hh / 2, hh / 4):
     pv = pv_tremie(x, hh, gam, n_e, pvft_e)
     print(f"  x = {f(x)} : pv = {f(pv)}, pne = {f(Fe*pv)}, pte = {f(mu_h*Fe*pv)}")
+
+# ============================================================================
+titre("V5 - circulaire peu elance d = 12 m, t = 0,25 m, hc = 10 m, eo = 2,0 m, AAC 2")
+g = geom_circ(12.0); hc = 10.0; t = 0.25; eo = 2.0; ef = 0.0; r = 6.0
+ho = r / 3 * math.tan(math.radians(m["phi_r"])); htp = r * math.tan(math.radians(m["phi_r"]))
+cap = g["A"] * hc * gam / 9.81
+E = 2 * max(ef, eo) / g["dc"]; hcdc = hc / g["dc"]
+print("hc/dc =", f(hcdc, 6), " capacite (t) =", f(cap, 1), " eo/dc =", f(eo / g["dc"]), " dc/t =", g["dc"] / t)
+print("ho =", f(ho, 6), " htp =", f(htp, 6))
+c528 = 0.42 * m["C_op"] * (1 + 2 * E * E) * (1 - math.exp(-1.5 * (hcdc - 1)))
+c530 = 0.272 * m["C_op"] * (hcdc - 1 + E)
+Cpe = max(c528, c530, 0.0)
+print("E =", f(E, 6), " Cpe(5.28) =", f(c528, 6), " Cpe(5.30) =", f(c530, 6), " Cpe =", f(Cpe, 6))
+print("remplissage : Cpf nul (5.3.1.2(3)) ; vidange : Ch = Cw = 1,0 (5.3.2.1(2))")
+zeta = max(1.0, 0.5 + 0.01 * g["dc"] / t)
+print("zeta =", f(zeta))
+print("z | phf (C1) | ppe = Cpe phe | ppei | phe,u = phe (1 + zeta Cpe)")
+for z in (5.0, 10.0):
+    jm = janssen_modifie(z, g, gam, c["K_sup"], c["mu_inf"], ho, m["phi_r"])
+    ph = jm["ph"]
+    print(f(z), f(ph), f(Cpe * ph), f(Cpe * ph / 7), f(ph * (1 + zeta * Cpe)))
+
+# ============================================================================
+titre("V6 - tremie conique peu profonde sous V3 (d = 10 m, hc = 15 m), beta = 60 deg, paroi D2")
+g = geom_circ(10.0); hc = 15.0; beta = 60.0; r = 5.0
+ho = r / 3 * math.tan(math.radians(m["phi_r"]))
+hh = r / math.tan(math.radians(beta)); mu_h = c["mu_inf"]; S = 2; b = 0.2
+tb = math.tan(math.radians(beta))
+crit = (1 - c["K_inf"]) / (2 * mu_h)
+print("hh =", f(hh), " tan beta =", f(tb), " critere =", f(crit), " -> peu profonde :", not (tb < crit))
+pvft = janssen_modifie(hc, g, gam, c["K_inf"], c["mu_inf"], ho, m["phi_r"])["pv"]
+mu_heff = (1 - c["K_inf"]) / (2 * tb)
+Ff = 1 - b / (1 + tb / mu_heff)
+n = S * (1 - b) * mu_heff / tb
+print("pvft (C3, Cb = 1) =", f(pvft), " mu_heff =", f(mu_heff, 6), " Ff =", f(Ff, 6), " n =", f(n, 6))
+for x in (hh, hh / 2, hh / 4):
+    pv = pv_tremie(x, hh, gam, n, pvft)
+    print(f"  x = {f(x)} : pv = {f(pv)}, pnf = {f(Ff*pv)}, ptf = {f(mu_heff*Ff*pv)}")
+print("vidange (6.4.3) : identique au remplissage")
+
+titre("Cas limite n = 1 (6.7) : h_h = 4, gamma = 10, pvft = 50, x = 2")
+print("pv =", f(pv_tremie(2.0, 4.0, 10.0, 1.0, 50.0)), " ; n = 1,5 :", f(pv_tremie(2.0, 4.0, 10.0, 1.5, 50.0)))
