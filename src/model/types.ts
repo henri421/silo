@@ -361,3 +361,48 @@ export interface PressionsTremie {
   p_n: number;
   p_t: number;
 }
+
+// ---------------------------------------------------------------------------
+// Vidange a grand excentrement (lot 5, SPEC §5.5)
+// ---------------------------------------------------------------------------
+
+export interface DeclenchementExcentree {
+  declenche: boolean;
+  /** Declenche par e_o > 0,25 d_c. */
+  parEo: boolean;
+  /** Declenche par e_f > 0,25 d_c avec hc/dc > 4,0. */
+  parEf: boolean;
+  /** Clause et raison, affichees telles quelles. */
+  motif: string;
+}
+
+export interface ZoneExcentree {
+  nom: 'ecoulement' | 'contrainte-elevee' | 'immobile';
+  /** Bornes en |theta| (deg), theta mesure depuis l'axe de l'excentrement, cote orifice. */
+  thetaMin: number;
+  thetaMax: number;
+}
+
+export interface ZonesExcentrees {
+  /** Angle theta_c (deg), 5.2.4.2. */
+  theta_c: number;
+  zones: ZoneExcentree[];
+  /** Points ouverts appliques : P1 (K superieur) et P4 (etendue de la zone a 2 p_hf). */
+  pointsOuverts: ('P1' | 'P4')[];
+  motif: string;
+}
+
+/** Valeurs de la vidange excentree a une profondeur z (kPa), combinaison X. */
+export interface ValeursExcentrees {
+  z: number;
+  combinaison: 'X';
+  /** Zone d'ecoulement. */
+  p_hce: number;
+  p_wce: number;
+  /** Matériau immobile : p_hf et p_wf. */
+  p_hse: number;
+  p_wse: number;
+  /** Zone de contrainte elevee : 2 p_hf et 2 p_wf. */
+  p_hae: number;
+  p_wae: number;
+}
