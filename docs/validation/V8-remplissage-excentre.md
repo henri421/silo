@@ -1,6 +1,6 @@
 # V8 : V5 en classe 3, remplissage à grand excentrement
 
-Cas reproduit par les tests du lot 11. Valeurs établies par `reference.py`, arrondies à 4 décimales. Applique le point ouvert P8.
+Cas reproduit par les tests du lot 11. Valeurs établies par `reference.py`, arrondies à 4 décimales. Applique le point ouvert P8 : e_t/r est l'exposant de tan φ_r (lecture confirmée par l'utilisateur le 2026-11-11).
 
 ## Données
 
@@ -22,7 +22,7 @@ K supérieur = **0,4995** ; μ supérieur = 0,48 × 1,16 = **0,5568** ; φ_r = 3
 
 | z_s (m) | z = z_s − h_o,e (m) | Z | Δn_zSk |
 |-|-|-|-|
-| 2 | 1,1002 | 0,202288 | 27,4586 |
-| 5 | 4,1002 | 0,505720 | 86,4169 |
-| 10 | 9,1002 | 1,011441 | 224,4511 |
-| 10,8998 | 10 (= hc) | 1,102446 | 253,6689 |
+| 2 | 1,1002 | 0,202288 | 44,1888 |
+| 5 | 4,1002 | 0,505720 | 139,0700 |
+| 10 | 9,1002 | 1,011441 | 361,2074 |
+| 10,8998 | 10 (= hc) | 1,102446 | 408,2273 |

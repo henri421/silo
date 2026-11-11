@@ -296,8 +296,8 @@ B = r / (2 * mu * K) - ho                                                   # 5.
 print("K =", f(K), " mu =", f(mu), " pho =", f(pho), " ho =", f(ho), " B =", f(B))
 for zs in (2.0, 5.0, 10.0):
     Z = zs / B                                                              # 5.94
-    dn = 0.04 * pho * zs * math.tan(phi_r) * (et / r) * (6 + 7 * Z - Z * Z) # 5.92
+    dn = 0.04 * pho * zs * math.tan(phi_r) ** (et / r) * (6 + 7 * Z - Z * Z) # 5.92
     print(f"   z_s = {zs} : Z = {f(Z, 6)}, n_zSk additionnel = {f(dn)}")
 zs = 10.0 + ho; Z = zs / B
 print(f"   au pied de la paroi, z = hc = 10 : z_s = {f(zs)}, Z = {f(Z, 6)}, n_zSk additionnel = "
-      f"{f(0.04 * pho * zs * math.tan(phi_r) * (et / r) * (6 + 7 * Z - Z * Z))}")
+      f"{f(0.04 * pho * zs * math.tan(phi_r) ** (et / r) * (6 + 7 * Z - Z * Z))}")

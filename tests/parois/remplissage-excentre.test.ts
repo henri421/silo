@@ -50,10 +50,10 @@ describe('declenchement (5.3.3(1))', () => {
 describe('force verticale additionnelle (5.92, P8)', () => {
   const re = remplissageExcentre(V8, classer(V8, P), P);
   it('V8 : valeurs a z = z_s - h_o,e', () => {
-    proche(nzSkAdditionnel(1.1002, re), 27.4586, 1e-3);
-    proche(nzSkAdditionnel(4.1002, re), 86.4169, 1e-3);
-    proche(nzSkAdditionnel(9.1002, re), 224.4511, 1e-3);
-    proche(nzSkAdditionnel(10, re), 253.6689);
+    proche(nzSkAdditionnel(1.1002, re), 44.1888, 1e-3);
+    proche(nzSkAdditionnel(4.1002, re), 139.07, 1e-3);
+    proche(nzSkAdditionnel(9.1002, re), 361.2074, 1e-3);
+    proche(nzSkAdditionnel(10, re), 408.2273);
   });
   it('hors declenchement : zero', () => {
     const d = variante(v5(), { classeImposee: 3, e_t: 2 });
@@ -68,7 +68,7 @@ describe('dans le calcul complet', () => {
     expect(avec.remplissageExcentre.declenche).toBe(true);
     expect(sans.remplissageExcentre.declenche).toBe(false);
     const n = (r: typeof avec) => r.cas.find((c) => c.id === 'REMP')!.profil.find((k) => k.z === 10)!;
-    proche(n(avec).n_zSk - n(sans).n_zSk, 253.6689);
+    proche(n(avec).n_zSk - n(sans).n_zSk, 408.2273);
     expect(n(avec).p_h_total).toBe(n(sans).p_h_total);
     expect(avec.pointsOuverts).toContain('P8');
     expect(sans.pointsOuverts).not.toContain('P8');

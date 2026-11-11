@@ -173,8 +173,8 @@ const FR = {
       choix: "La majoration uniforme de 5.2.3 avec C_pe, seulement si la forme est maintenue en tête et en pied ; sinon l'action localisée de 5.2.2.2 à 5.2.2.4. Reste à confirmer par l'utilisateur.",
     },
     P8: {
-      question: "Lecture de 5.92 à 5.96 pour le grand excentrement de remplissage de classe 3 : le rapport e_t/r est-il un facteur, quel angle de frottement employer, et comment relier z_s à la profondeur z ?",
-      choix: "e_t/r est un facteur ; phi_r est l'angle de talus, cohérent avec 5.96 ; z_s = z + h_o,e. Le cas V8 l'utilise. Reste à confirmer par l'utilisateur.",
+      question: "Lecture de 5.92 à 5.96 pour le grand excentrement de remplissage de classe 3 : place du rapport e_t/r, angle φ_r à employer, et lien entre z_s et la profondeur z.",
+      choix: "e_t/r est l'exposant de tan φ_r et φ_r est l'angle de talus du matériau : lectures confirmées par l'utilisateur. z_s = z + h_o,e, reste à confirmer. Le cas V8 l'utilise.",
     },
   },
 
@@ -508,8 +508,8 @@ const EN: Textes = {
       choix: 'The uniform increase of 5.2.3 with C_pe, only if the shape is held at top and bottom; otherwise the localised action of 5.2.2.2 to 5.2.2.4. To be confirmed by the user.',
     },
     P8: {
-      question: 'Reading of 5.92 to 5.96 for the class 3 large eccentric filling: is the eₜ/r ratio a factor, which friction angle applies, and how is z_s related to depth z?',
-      choix: 'eₜ/r is a factor; phi_r is the angle of repose, consistent with 5.96; z_s = z + h_o,e. Case V8 uses it. To be confirmed by the user.',
+      question: 'Reading of 5.92 to 5.96 for the class 3 large eccentric filling: position of the eₜ/r ratio, which angle φ_r applies, and how z_s is related to depth z.',
+      choix: 'eₜ/r is the exponent of tan φ_r and φ_r is the angle of repose of the material: readings confirmed by the user. z_s = z + h_o,e remains to be confirmed. Case V8 uses it.',
     },
   },
 

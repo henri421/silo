@@ -40,7 +40,7 @@ L'outil couvre le périmètre v1 décrit dans [`SPEC.md`](SPEC.md). La version f
 
 ## Points ouverts
 
-Les lectures de la norme non tranchées par son texte sont listées en [`SPEC.md` §9](SPEC.md) et affichées dans l'interface et dans la note quand elles interviennent. Trois attendent encore la confirmation de l'utilisateur : P4, étendue de la zone portée à deux fois la pression de paroi en vidange excentrée ; P7, forme de la majoration uniforme à la vidange d'un silo circulaire intermédiaire ou peu élancé de classe 2 ; et P8, lecture de 5.92 à 5.96 pour le grand excentrement de remplissage de classe 3.
+Les lectures de la norme non tranchées par son texte sont listées en [`SPEC.md` §9](SPEC.md) et affichées dans l'interface et dans la note quand elles interviennent. Trois attendent encore la confirmation de l'utilisateur : P4, étendue de la zone portée à deux fois la pression de paroi en vidange excentrée ; P7, forme de la majoration uniforme à la vidange d'un silo circulaire intermédiaire ou peu élancé de classe 2 ; et P8, dont seul reste à confirmer le lien entre z_s et la profondeur z dans 5.92 (grand excentrement de remplissage de classe 3) ; l'exposant e_t/r de tan φ_r et l'angle de talus φ_r sont confirmés.
 
 ## Choix de modélisation déclarés
 

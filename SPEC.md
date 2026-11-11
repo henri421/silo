@@ -242,7 +242,7 @@ Propriétés : μ inférieur et φ_i supérieur (5.2.4.1(4)) ; pour K, voir P1.
 
   ```
   p_ho = γ r / (2 μ)        h_o,e = r tan φ_r [1 − (e_t/r)²] / 3        B = r / (2 μ K) − h_o,e
-  Z = z_s / B               Δn_zSk = 0,04 p_ho z_s tan φ_r (e_t / r) (6 + 7 Z − Z²)
+  Z = z_s / B               Δn_zSk = 0,04 p_ho z_s (tan φ_r)^(e_t / r) (6 + 7 Z − Z²)
   ```
 
   `z_s` est la profondeur sous le point de contact le plus haut du matériau avec la paroi, soit `z_s = z + h_o,e`, z étant mesuré depuis la surface équivalente.
@@ -379,7 +379,7 @@ Chacun est codé selon le choix déclaré ici, affiché dans l'interface et la n
 | P5 | Capacité pour le tableau 2.1 : γ_u ou γ_l, volume de trémie compris ou non. | γ_u, trémie comprise (la classe la plus haute). |
 | P6 | Silo à trémie avec `hc/dc ≤ 0,4` : 5.1(2) ne le range pas clairement parmi les silos peu élancés. | Non traité : erreur explicite qui cite P6 et 5.1(2), à confirmer par l'utilisateur. |
 | P7 | Vidange d'un silo circulaire intermédiaire ou peu élancé de classe 2 : 5.3.2.3 renvoie à une majoration uniforme sans que la spécification en donne la forme. | Lue comme la majoration uniforme de 5.2.3 avec C_pe, seulement si `formeMaintenueEnTeteEtEnPied` est vrai ; sinon l'action localisée de 5.2.2.2 à 5.2.2.4. Le cas V5 l'utilise. À confirmer par l'utilisateur. |
-| P8 | Lecture de 5.92 à 5.96 (5.3.3) : (a) dans 5.92, `(e_t / r)` est un facteur ; (b) la légende appelle φ_r « angle de frottement interne » alors que le symbole désigne l'angle de talus ; (c) le lien entre z_s et la profondeur z de l'outil. | (a) facteur ; (b) angle de talus φ_r, cohérent avec 5.96 qui décrit la forme du tas ; (c) `z_s = z + h_o,e`, h_o,e de 5.96. Le cas V8 l'utilise. À confirmer par l'utilisateur. |
+| P8 | Lecture de 5.92 à 5.96 (5.3.3) : (a) dans 5.92, la place de `e_t / r` ; (b) la légende appelle φ_r « angle de frottement interne » alors que le symbole désigne l'angle de talus ; (c) le lien entre z_s et la profondeur z de l'outil. | (a) exposant de tan φ_r, soit `(tan φ_r)^(e_t / r)` ; (b) angle de talus φ_r, propre au matériau, saisi par l'utilisateur ou tiré des tableaux de la norme. (a) et (b) confirmés par l'utilisateur le 2026-11-11. (c) `z_s = z + h_o,e`, h_o,e de 5.96, reste à confirmer. Le cas V8 l'utilise. |
 
 ## 10. Hors périmètre en v1
 
