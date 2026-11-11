@@ -31,8 +31,11 @@ export {
   declenchementExcentree,
   pressionsEnTheta,
   valeursExcentrees,
+  valeursSymetriquesExcentree,
   zonesExcentrees,
 } from './parois/excentree';
+export { canalEcoulement, valeursCanal, zonesCanal } from './parois/canal';
+export { nzSkAdditionnel, remplissageExcentre } from './parois/remplissage-excentre';
 export { coefficientCb, pressionTransition } from './fond/transition';
 export { fondPlat } from './fond/fond-plat';
 export {

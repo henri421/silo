@@ -43,9 +43,9 @@ describe('cas de charge produits (SPEC §7)', () => {
     expect(cas(r, 'VID_EXC').excentree?.theta_c).toBe(35);
     expect(r.pointsOuverts).toEqual(['P1', 'P2', 'P4', 'P5']);
   });
-  it('V2 en classe 3 : VID_EXC hors perimetre (5.2.4.3), cas symetriques conserves', () => {
+  it('V2 en classe 3 : VID_EXC non applicable, renvoi a 5.2.4.3 (lot 11), cas symetriques conserves', () => {
     const r = calculer(exploitation(v2(), { classeImposee: 3 }), P);
-    expect(cas(r, 'VID_EXC').statut).toBe('hors-perimetre');
+    expect(cas(r, 'VID_EXC').statut).toBe('non-applicable');
     expect(cas(r, 'VID_EXC').motif).toMatch(/5\.2\.4\.3/);
     expect(cas(r, 'VID_EXC').profil).toEqual([]);
     expect(cas(r, 'REMP').statut).toBe('calcule');

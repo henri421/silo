@@ -31,6 +31,7 @@ export function donneesDAffichage(): [string, DonneesSilo][] {
     ['V1 vidange par le haut', exploitation(v1(), { vidangeParLeHaut: true })],
     ['V1 non cohesif', { ...v1(), parois: { ...v1().parois, faiblementCohesif: false } }],
     ['V2 classe 3', exploitation(v2(), { classeImposee: 3 })],
+    ['V5 classe 3 remplissage excentre (V8)', exploitation(v5(), { classeImposee: 3, e_t: 4 })],
     ['V2 mince boulonne', exploitation(silo(v2(), { t: 0.02 }), { assemblage: 'boulonne' })],
     ['V2 mince soude', exploitation(silo(v2(), { t: 0.02 }), { assemblage: 'soude' })],
     ['V3 majoration', exploitation(v3(), { methodeLocalisee: 'majoration-uniforme', formeMaintenueEnTeteEtEnPied: true })],
@@ -51,7 +52,8 @@ export function essai(d: DonneesSilo): ResultatSilo | Error {
   }
 }
 
-const IDS: IdCas[] = ['REMP', 'VID', 'VID_EXC', 'FOND_REMP', 'FOND_VID'];
+/** Les cas du resultat : cinq, ou huit en classe 3 avec les canaux d'ecoulement (lot 11). */
+const ids = (r: ResultatSilo): IdCas[] => r.cas.map((c) => c.id);
 
 /** Tout ce que l'ecran montre pour un resultat, en HTML. */
 export function ecran(r: ResultatSilo): string[] {
@@ -60,8 +62,8 @@ export function ecran(r: ResultatSilo): string[] {
     rendreTableau(lignesCas(r), ['a', 'b', 'c', 'd']),
     rendreTableau(lignesPointsOuverts(r), ['a', 'b', 'c']),
     dessinPlan(r),
-    ...IDS.map((id) => dessinElevation(r, id, true)),
-    ...(['p_h', 'p_w', 'p_v', 'n_zSk'] as const).map((g) => dessinProfils(r, g, IDS)),
+    ...ids(r).map((id) => dessinElevation(r, id, true)),
+    ...(['p_h', 'p_w', 'p_v', 'n_zSk'] as const).map((g) => dessinProfils(r, g, ids(r))),
   ];
   const t = dessinTremie(r);
   if (t !== null) morceaux.push(t);

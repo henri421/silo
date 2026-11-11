@@ -411,7 +411,15 @@ export interface ValeursExcentrees {
 // Cas de charge, profils et bandes (lot 6, SPEC §7 et §8)
 // ---------------------------------------------------------------------------
 
-export type IdCas = 'REMP' | 'VID' | 'VID_EXC' | 'FOND_REMP' | 'FOND_VID';
+export type IdCas =
+  | 'REMP'
+  | 'VID'
+  | 'VID_EXC'
+  | 'VID_EXC_1'
+  | 'VID_EXC_2'
+  | 'VID_EXC_3'
+  | 'FOND_REMP'
+  | 'FOND_VID';
 export type StatutCas = 'calcule' | 'non-applicable' | 'hors-perimetre';
 
 /** Un niveau d'un profil de paroi verticale. Pressions en kPa, n_zSk en kN/m. */
@@ -460,6 +468,8 @@ export interface CasDeCharge {
   /** Fond plat ou parametres de tremie (FOND_*) ; null sinon. */
   fondPlat: FondPlat | null;
   tremie: ParametresTremie | null;
+  /** Canal d'ecoulement des cas VID_EXC_1 a VID_EXC_3 (classe 3, 5.2.4.3) ; null sinon. */
+  canal: CanalEcoulement | null;
 }
 
 /** Une bande de chargement pour le modele EF. Pressions en kPa. */
@@ -505,6 +515,8 @@ export interface ResultatSilo {
   actionLocalisee: ActionLocalisee;
   C_b: CoefficientCb;
   excentree: DeclenchementExcentree;
+  /** Grand excentrement de remplissage de classe 3 (5.3.3). */
+  remplissageExcentre: RemplissageExcentre;
   cas: CasDeCharge[];
   bandes: Bande[];
   controles: ControleBandes[];
@@ -551,4 +563,41 @@ export interface CarteCas {
   thetas: number[];
   /** Noeuds, tries par z puis par theta ; vide si la carte n'est pas calculee. */
   points: PointCarte[];
+}
+
+// ---------------------------------------------------------------------------
+// Classe 3 : canal d'ecoulement (5.2.4.3) et remplissage excentre (5.3.3), lot 11
+// ---------------------------------------------------------------------------
+
+/** Geometrie d'un canal d'ecoulement en contact avec la paroi (eq. 5.52 a 5.66). Angles en degres. */
+export interface CanalEcoulement {
+  /** 1, 2 ou 3 : rayon k_1 r, k_2 r ou k_3 r. */
+  indice: 1 | 2 | 3;
+  k: number;
+  r_c: number;
+  G: number;
+  eta: number;
+  e_c: number;
+  theta_c: number;
+  psi: number;
+  U_wc: number;
+  U_sc: number;
+  A_c: number;
+  z_oc: number;
+  p_hco: number;
+}
+
+/** Grand excentrement de remplissage d'un silo peu elance ou intermediaire de classe 3 (5.3.3). */
+export interface RemplissageExcentre {
+  declenche: boolean;
+  /** Ce qui declenche, ou la condition qui manque, avec la clause. */
+  motif: string;
+  /** Excentrement du sommet du tas retenu (m) : e_t, ou e_f s'il n'est pas saisi. */
+  e_t: number;
+  /** Grandeurs de 5.93 a 5.96 ; null hors declenchement. */
+  p_ho: number | null;
+  h_o: number | null;
+  B: number | null;
+  K: number | null;
+  mu: number | null;
 }

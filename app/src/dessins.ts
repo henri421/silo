@@ -53,6 +53,7 @@ export const STYLE_DESSIN = `.dessin{background:var(--surface);color:var(--texte
 .trace-REMP{stroke:var(--compression)}
 .trace-VID{stroke:var(--traction)}
 .trace-VID_EXC{stroke:var(--alerte)}
+.trace-VID_EXC_1,.trace-VID_EXC_2,.trace-VID_EXC_3{stroke:var(--alerte)}
 .trace-FOND_REMP{stroke:var(--compression)}
 .trace-FOND_VID{stroke:var(--traction)}
 .zone-localisee{fill:var(--accent-doux);stroke:var(--accent);stroke-width:1.2}

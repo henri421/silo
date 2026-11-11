@@ -11,6 +11,7 @@
  */
 
 import { nombreAffiche, notationHtml, type BlocResultat, type LigneResultat } from 'aedificium-ui';
+import { nzSkAdditionnel } from '../../src/index';
 import type { CasDeCharge, DefinitionLocalisee, ResultatSilo } from '../../src/index';
 import { phrase, textes } from './textes';
 
@@ -75,7 +76,25 @@ export function blocsSynthese(r: ResultatSilo): BlocResultat[] {
     }
   }
 
-  return [
+  const paroisLignes: LigneResultat[] = [
+    ligne(t.symboles.zO, t.libelles.zO, `${aff(r.janssen.C1.z_o, 2)} m`),
+    ligne(t.symboles.pHo, t.libelles.pHo, `${aff(r.janssen.C1.p_ho, 3)} kPa`),
+    ligne(t.symboles.Ch, t.libelles.Ch, aff(r.vidange.C_h, 3)),
+    ligne(t.symboles.Cw, t.libelles.Cw, aff(r.vidange.C_w, 3)),
+  ];
+  let noteParois = phrase(r.vidange.motif);
+  if (r.remplissageExcentre.declenche) {
+    paroisLignes.push(
+      ligne(
+        t.symboles.deltaNzSk,
+        t.libelles.deltaNzSk,
+        `${aff(nzSkAdditionnel(r.donnees.silo.hc, r.remplissageExcentre), 3)} kN/m`
+      )
+    );
+    noteParois = `${noteParois} ${phrase(r.remplissageExcentre.motif)}`;
+  }
+
+  const blocs: BlocResultat[] = [
     {
       titre: t.blocs.classement,
       lignes: [
@@ -89,13 +108,8 @@ export function blocsSynthese(r: ResultatSilo): BlocResultat[] {
     { titre: t.blocs.proprietes, lignes: proprietes, note: null },
     {
       titre: t.blocs.parois,
-      lignes: [
-        ligne(t.symboles.zO, t.libelles.zO, `${aff(r.janssen.C1.z_o, 2)} m`),
-        ligne(t.symboles.pHo, t.libelles.pHo, `${aff(r.janssen.C1.p_ho, 3)} kPa`),
-        ligne(t.symboles.Ch, t.libelles.Ch, aff(r.vidange.C_h, 3)),
-        ligne(t.symboles.Cw, t.libelles.Cw, aff(r.vidange.C_w, 3)),
-      ],
-      note: phrase(r.vidange.motif),
+      lignes: paroisLignes,
+      note: noteParois,
     },
     {
       titre: t.blocs.actionLocalisee,
@@ -117,6 +131,35 @@ export function blocsSynthese(r: ResultatSilo): BlocResultat[] {
       note: null,
     },
   ];
+
+  // Classe 3 d'un silo circulaire : une ligne par canal d'ecoulement, avec ses
+  // rayons, sa position et son angle de contact (5.2.4.3).
+  const canaux = r.cas.filter(
+    (c) => c.id === 'VID_EXC_1' || c.id === 'VID_EXC_2' || c.id === 'VID_EXC_3'
+  );
+  if (canaux.length > 0) {
+    blocs.push({
+      titre: t.blocs.canaux,
+      lignes: canaux.map((c) => {
+        const canal = c.canal;
+        if (canal === null) {
+          return ligne(
+            t.symboles.rC,
+            t.libelles.canal(c.id),
+            `${t.statuts[c.statut]} : ${phrase(c.motif ?? '')}`
+          );
+        }
+        return ligne(
+          t.symboles.rC,
+          t.libelles.canal(c.id),
+          `r_c = ${aff(canal.r_c, 3)} m ; e_c = ${aff(canal.e_c, 3)} m ; θ_c = ${aff(canal.theta_c, 2)}°`
+        );
+      }),
+      note: null,
+    });
+  }
+
+  return blocs;
 }
 
 /** Une ligne par cas : [identifiant, libelle, statut affiche, motif ou combinaisons]. */
@@ -177,12 +220,17 @@ export function rendreBlocs(blocs: readonly BlocResultat[]): string {
 }
 
 /**
- * Les identifiants de cas (`VID_EXC`, `FOND_REMP`, `FOND_VID`) ne sont pas des
- * notations : `notationHtml` mettrait leur suffixe en indice. On retablit le
- * souligne, ecrit en entite, pour qu'ils s'affichent comme dans les CSV.
+ * Les identifiants de cas (`VID_EXC`, `VID_EXC_1`, `FOND_REMP`, `FOND_VID`) ne
+ * sont pas des notations : `notationHtml` mettrait leurs suffixes en indice.
+ * On retablit les soulignes, ecrits en entite, pour qu'ils s'affichent comme
+ * dans les CSV.
  */
 export function identifiantsDeCas(html: string): string {
-  return html.replace(/\b(VID|FOND)<sub>(EXC|REMP|VID)<\/sub>/g, '$1&#95;$2');
+  return html.replace(
+    /\b(VID|FOND)<sub>(EXC|REMP|VID)<\/sub>(?:<sub>(\d)<\/sub>)?/g,
+    (_t, prefixe: string, suffixe: string, chiffre: string | undefined) =>
+      `${prefixe}&#95;${suffixe}${chiffre === undefined ? '' : `&#95;${chiffre}`}`
+  );
 }
 
 /** Tableau HTML a colonnes libres, en-tetes compris. */

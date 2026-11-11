@@ -56,6 +56,10 @@ export interface ProfilSilos {
     minceurParoi: ValeurSourcee;
     /** Excentrement relatif e_o/d_c sous lequel l'action localisee d'un silo peu elance est nulle, 5.3.2.2(4). */
     excentrementPeuElance: ValeurSourcee;
+    /** Rayons relatifs du canal d'ecoulement de classe 3 (5.52 a 5.54). */
+    k1_canal: ValeurSourcee;
+    k2_canal: ValeurSourcee;
+    k3_canal: ValeurSourcee;
   };
 }
 

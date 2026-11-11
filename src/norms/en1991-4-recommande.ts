@@ -37,6 +37,9 @@ export function en1991_4Recommande(): ProfilSilos {
       elancementExcentrementRemplissage: { valeur: 4.0, source: `${EN}5.2.4.1(2)` },
       minceurParoi: { valeur: 200, source: `${EN}5.2.1.4(1)` },
       excentrementPeuElance: { valeur: 0.1, source: `${EN}5.3.2.2(4)` },
+      k1_canal: { valeur: 0.25, source: `${EN}5.52` },
+      k2_canal: { valeur: 0.4, source: `${EN}5.53` },
+      k3_canal: { valeur: 0.6, source: `${EN}5.54` },
     },
   };
 }

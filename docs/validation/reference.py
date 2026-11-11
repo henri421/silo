@@ -261,3 +261,43 @@ phf = j["ph"]; ppf = Cpf * phf
 print("mince z_p =", f(zp), " phf(z_p) =", f(phf), " ppf =", f(ppf))
 for th in (0, 60, 90, 180):
     print(f"  mince REMP theta {th} : {f(phf + ppf * math.cos(math.radians(th)))}")
+
+
+titre("V7 - V2 en classe 3 : vidange excentree par le canal d'ecoulement (5.2.4.3)")
+g = geom_circ(6.0); hc = 18.0; c = carac(SABLE); gam = SABLE["gamma"]; r = 3.0
+mu = c["mu_inf"]; phi_i = math.radians(c["phi_sup"]); K = c["K_sup"]  # 5.2.4.1(4) ; K sup (P1)
+eta = mu / math.tan(phi_i)
+print("mu =", f(mu, 6), " phi_i =", f(c["phi_sup"]), " K =", f(K), " eta =", f(eta, 6))
+for k in (0.25, 0.4, 0.6):
+    rc = k * r; G = rc / r
+    ec = r * (eta * (1 - G) + (1 - eta) * math.sqrt(1 - G))                 # 5.55
+    thc = math.acos((r * r + ec * ec - rc * rc) / (2 * r * ec))            # 5.58
+    psi = math.acos((r * r - ec * ec - rc * rc) / (2 * ec * rc))           # angle de la figure 5.5b, verifie par 5.61
+    assert abs(math.sin(psi) - r / rc * math.sin(thc)) < 1e-9
+    Uwc = 2 * thc * r; Usc = 2 * rc * (math.pi - psi)                       # 5.59, 5.60
+    Ac = (math.pi - psi) * rc ** 2 + thc * r ** 2 - r * rc * math.sin(psi - thc)  # 5.62
+    zoc = Ac / (K * (Uwc * mu + Usc * math.tan(phi_i)))                     # 5.66
+    phco = gam * K * zoc                                                    # 5.65
+    print(f"k = {k} : rc = {f(rc)}, ec = {f(ec)}, theta_c = {f(math.degrees(thc))} deg, psi = {f(math.degrees(psi))} deg, "
+          f"Uwc = {f(Uwc)}, Usc = {f(Usc)}, Ac = {f(Ac)}, zoc = {f(zoc)}, phco = {f(phco)}")
+    for z in (9.0, 18.0):
+        j = janssen(z, g, gam, K, mu)
+        phce = phco * (1 - math.exp(-z / zoc))                              # 5.63
+        phae = 2 * j["ph"] - phce                                           # 5.69
+        print(f"   z = {z} : phce = {f(phce)}, pwce = {f(mu*phce)}, phse = {f(j['ph'])}, pwse = {f(j['pw'])}, "
+              f"phae = {f(phae)}, pwae = {f(mu*phae)}")
+
+titre("V8 - V5 en classe 3, remplissage a grand excentrement e_t = 4 m (5.3.3)")
+d = 12.0; r = 6.0; g = geom_circ(d); c = carac(SABLE); gam = SABLE["gamma"]
+K = c["K_sup"]; mu = c["mu_sup"]; phi_r = math.radians(SABLE["phi_r"]); et = 4.0
+pho = gam * r / (2 * mu)                                                    # 5.93
+ho = r * math.tan(phi_r) * (1 - (et / r) ** 2) / 3                          # 5.96
+B = r / (2 * mu * K) - ho                                                   # 5.95
+print("K =", f(K), " mu =", f(mu), " pho =", f(pho), " ho =", f(ho), " B =", f(B))
+for zs in (2.0, 5.0, 10.0):
+    Z = zs / B                                                              # 5.94
+    dn = 0.04 * pho * zs * math.tan(phi_r) * (et / r) * (6 + 7 * Z - Z * Z) # 5.92
+    print(f"   z_s = {zs} : Z = {f(Z, 6)}, n_zSk additionnel = {f(dn)}")
+zs = 10.0 + ho; Z = zs / B
+print(f"   au pied de la paroi, z = hc = 10 : z_s = {f(zs)}, Z = {f(Z, 6)}, n_zSk additionnel = "
+      f"{f(0.04 * pho * zs * math.tan(phi_r) * (et / r) * (6 + 7 * Z - Z * Z))}")

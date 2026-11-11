@@ -518,10 +518,56 @@ Tests d'acceptation, **à ne jamais modifier** : `tests/discretisation/carte.tes
 
 **Fin du lot** : section « Lot 10 » dans `HANDOFF.md`, commit, arrêt.
 
+## Lot 11 : classe 3, canal d'écoulement et remplissage excentré
+
+- [x] `src/parois/canal.ts` : canal d'écoulement de 5.2.4.3 (SPEC §5.5).
+- [x] `src/parois/remplissage-excentre.ts` : force verticale additionnelle de 5.3.3 (SPEC §5.5 bis, P8).
+- [x] Cas `VID_EXC_1` à `VID_EXC_3` dans le calcul, les exports, la carte et l'interface.
+- [x] Tests : V7, V8, cas de la classe 3.
+
+### Consignes d'exécution du lot 11 (séance `claude-ds`)
+
+Branche : `lot-11-classe3`. Types **déjà écrits** : dans `src/model/types.ts`, `IdCas` étendu, `CanalEcoulement`, `RemplissageExcentre`, le champ `canal` de `CasDeCharge` et le champ `remplissageExcentre` de `ResultatSilo` ; dans `src/norms/profil.ts`, `k1_canal`, `k2_canal`, `k3_canal`.
+
+Tests d'acceptation, **à ne jamais modifier** : `tests/parois/canal.test.ts`, `tests/parois/remplissage-excentre.test.ts`, `tests/cas/classe3.test.ts`, et tous les autres. La séance de conception a mis à jour `tests/parois/excentree.test.ts`, `tests/cas/calcul.test.ts` et `tests/app/cas-affichage.ts` pour la classe 3.
+
+**T11.1 Canal d'écoulement** : `src/parois/canal.ts`, réexporté par `src/index.ts`.
+* Profil `en1991-4-recommande.ts` : `k1_canal` 0,25, `k2_canal` 0,4, `k3_canal` 0,6, sources `EN 1991-4:2006, 5.52`, `5.53`, `5.54` (valeurs recommandées de la note). `verifierProfil` les contrôle comme les autres (strictement entre 0 et 1).
+* `canalEcoulement(d, cl, p, i: 1 | 2 | 3): CanalEcoulement`. Erreurs, dans l'ordre : silo non circulaire (message qui contient `circulaire`) ; `cl.procedures !== 3` (message qui contient `classe 3`) ; `declenchementExcentree` non déclenché (message qui contient `declench`) ; canal qui ne touche pas la paroi (`e_c + r_c ≤ r` ou `|cos θ_c| > 1`, message qui cite 5.2.4.3). Formules et propriétés : SPEC §5.5, combinaison X du lot 1 (μ inférieur, φ_i supérieur, K de P1). ψ par la loi des cosinus, puis contrôle de 5.61 à 1e-9 près (erreur sinon). Angles rendus en degrés, calculs en radians.
+* `valeursCanal(z, d, cl, p, c: CanalEcoulement): ValeursExcentrees` : `p_hce`, `p_wce` du canal (5.63, 5.64), `p_hse`, `p_wse` du remplissage en combinaison X par la même fonction que `valeursExcentrees` (Janssen ou Janssen modifié selon l'élancement), `p_hae = 2 p_hse − p_hce`, `p_wae = μ p_hae`. Erreur qui nomme `hc` si `z > hc`.
+* `zonesCanal(c): ZonesExcentrees` : comme `zonesExcentrees` avec `theta_c = c.theta_c`, `pointsOuverts: ['P1', 'P4']`, motif qui cite 5.2.4.3 et le rayon du canal.
+* `zonesExcentrees` et `valeursExcentrees` en classe 3 : l'erreur devient exactement `Methode simplifiee de 5.2.4.2 reservee a la classe 2 (5.2.4.1(5)) : en classe 3, voir les cas VID_EXC_1 a VID_EXC_3 (5.2.4.3).`
+* `pressionsEnTheta` sert telle quelle (la zone d'écoulement rend `p_hce`, `p_wce`).
+* Test : `npx vitest run tests/parois/canal.test.ts tests/parois/excentree.test.ts`.
+
+**T11.2 Remplissage excentré** : `src/parois/remplissage-excentre.ts`, réexporté.
+* `remplissageExcentre(d, cl, p): RemplissageExcentre` : `e_t = d.exploitation.e_t ?? e_f`. Conditions, chacune nommée dans le motif quand elle manque : silo circulaire (`circulaire`), classe 3 (`classe 3`), `hc/dc < 2,0` (`2,0`), `e_t > 0,25 d_c` (seuil `excentrementGrand` du profil, motif avec `0,25`). Déclenché : K et μ supérieurs (combinaison C2), `p_ho`, `h_o` (= h_o,e de 5.96), `B` (SPEC §5.5 bis), motif qui cite 5.3.3 et P8. Sinon ces cinq grandeurs à `null`.
+* `nzSkAdditionnel(z, re): number` : 0 hors déclenchement ; sinon 5.92 avec `z_s = z + h_o`, `Z = z_s / B`, `γ = γ_u`, φ_r du matériau.
+* Test : `npx vitest run tests/parois/remplissage-excentre.test.ts -t "declenchement|force"`.
+* Correction du 2026-11-11 après le signalement de `claude-ds` : trois jeux de « conditions manquantes » étaient incompatibles avec `classer` (V5 avec e_t = 4 m est de classe 3 par le tableau 2.1 ; e_t = 4 m dépasse d/2 et a/2 pour V2 et V1). Ils utilisent maintenant V2 sans classe imposée et e_t = 2 m, V2 en classe 3 et e_t = 2 m, V1 en classe 3 et e_t = 2 m. Les valeurs attendues ne changent pas. T11.2 est acquis ; reprendre à T11.3.
+
+**T11.3 Calcul** : `src/calcul.ts` (et `src/cas/` si besoin), `src/discretisation/carte.ts`.
+* `ResultatSilo.remplissageExcentre` rempli. Dans `REMP`, `n_zSk` de chaque point augmente de `nzSkAdditionnel(z, …)` ; rien d'autre ne change. `P8` dans `pointsOuverts` quand il est déclenché.
+* Classe 3 (`cl.procedures === 3`) d'un silo circulaire : huit cas, dans l'ordre `REMP, VID, VID_EXC, VID_EXC_1, VID_EXC_2, VID_EXC_3, FOND_REMP, FOND_VID`. `VID_EXC` non applicable avec le message de T11.1. Chaque `VID_EXC_i` : non applicable avec le motif de déclenchement si la vidange excentrée n'est pas déclenchée ; non applicable en écoulement en cheminée (5.1(8)) ; hors périmètre si `canalEcoulement` lève pour une géométrie impossible ; sinon calculé, avec `canal`, `excentree = zonesCanal(...)`, un profil comme VID_EXC (`p_h_sym = p_hse`, `p_h_total = p_hae`, `p_w = p_wae`, `p_v` et `n_zSk` symétriques en X), ses bandes et son contrôle. Libellé « Vidange excentrée, canal d'écoulement r_c = k_i r » (contient « canal »), combinaisons « X ». Silo rectangulaire ou classe 2 : cinq cas, comme avant, et `canal: null` partout.
+* `pointsOuverts` : `P1` et `P4` aussi quand un `VID_EXC_i` est calculé.
+* `cartePressions` accepte `VID_EXC_1` à `VID_EXC_3` : zones et valeurs du canal (bords θ_c et 2 θ_c du canal dans la grille).
+* Test : `npx vitest run tests/cas tests/parois/remplissage-excentre.test.ts tests/discretisation`.
+
+**T11.4 Interface et exports** : `app/src/*`, pages.
+* Toutes les listes de cas de l'interface (sélecteurs d'élévation et de carte, profils, exports, note) suivent `r.cas` au lieu d'une liste fixe. `identifiantsDeCas` (vue.ts) et `idSvg` (dessins.ts) affichent aussi `VID_EXC_1` à `VID_EXC_3` sans indice.
+* Synthèse : en classe 3, une ligne par canal (`r_c`, `e_c`, `θ_c`) dans un bloc « Vidange excentrée, classe 3 » ; quand 5.3.3 est déclenché, une ligne `Δn_zSk` au pied de la paroi avec le motif. Note de calcul : ces mêmes éléments et le point ouvert P8. Textes en français et en anglais (`textes.ts`, `traducteur` pour les nouveaux motifs du noyau).
+* L'en-tête des CSV qui rappelle l'exclusivité des cas cite aussi `VID_EXC_1` à `VID_EXC_3` en classe 3. Le test du lot 8 (`/REMP.*VID.*VID_EXC.*exclusifs/`) doit rester vert.
+* Test : `npm test` en entier, dont `tests/app/finitions.test.ts` et `tests/app/anglais.test.ts` qui parcourent maintenant V8 et les huit cas de la classe 3.
+
+**T11.5 Fin de lot.** `typecheck`, `test`, `build` passent. Cocher le lot 11. README : puce « Lot 11 », retrait de la classe 3 de la liste hors périmètre, P8 dans la section des points ouverts. Footer des deux pages : retirer la vidange excentrée de classe 3 et le grand excentrement de remplissage de la liste hors périmètre, garder la trémie compacte à pente variable (5.2.4.3.1(5)).
+
+**Interdit** : modifier les tests, `docs/validation/`, `src/model/types.ts`, les types de `src/norms/profil.ts`, `SPEC.md`, `CLAUDE.md`, `CONVENTIONS.md` ; changer la signature d'une fonction existante ; ajouter une dépendance ; pousser.
+
+**Fin du lot** : section « Lot 11 » dans `HANDOFF.md`, commit, arrêt.
+
 ## Lots ultérieurs, hors v1
 
 - Voie simplifiée de la classe 1 (valeurs moyennes, éq. 5.23, 5.24, 5.88, 5.89, 6.4, 6.6).
-- Vidange excentrée de classe 3 (5.2.4.3) et grand excentrement de remplissage (5.3.3).
 - Annexe G pour les trémies.
 - Bibliothèque de matériaux étendue, au fil de la lecture du tableau E.1 par l'utilisateur.
 - Export direct vers un format d'échange de logiciel EF, si l'utilisateur en fournit la spécification.

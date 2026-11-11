@@ -94,12 +94,12 @@ describe('V2 : classe 2, methode de 5.2.4.2', () => {
   });
 });
 
-describe('classe 3 : 5.2.4.3 hors perimetre', () => {
-  it('erreur explicite qui nomme 5.2.4.3', () => {
+describe('classe 3 : la methode simplifiee de 5.2.4.2 ne s applique pas', () => {
+  it('erreur explicite qui renvoie a 5.2.4.3 (lot 11)', () => {
     const d: DonneesSilo = { ...v2(), exploitation: { ...v2().exploitation, classeImposee: 3 } };
     const cl = classer(d, P);
     expect(() => zonesExcentrees(d, cl, P)).toThrow(
-      'Vidange excentree en classe 3 : methode de 5.2.4.3 non traitee. Les cas symetriques restent rendus.',
+      'Methode simplifiee de 5.2.4.2 reservee a la classe 2 (5.2.4.1(5)) : en classe 3, voir les cas VID_EXC_1 a VID_EXC_3 (5.2.4.3).',
     );
     expect(() => valeursExcentrees(9, d, cl, P)).toThrow(/5\.2\.4\.3/);
   });

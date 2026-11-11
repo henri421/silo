@@ -76,11 +76,15 @@ definirLangue(langueDuDocument(document));
 
 const PROFIL = en1991_4Recommande();
 
-/** Identifiants de cas, dans l'ordre de la synthese. */
-const CAS: readonly IdCas[] = ['REMP', 'VID', 'VID_EXC', 'FOND_REMP', 'FOND_VID'];
+/** Identifiants de tous les cas du resultat, dans son ordre. */
+function idsCas(r: ResultatSilo): IdCas[] {
+  return r.cas.map((c) => c.id);
+}
 
-/** Cas de paroi offerts par la carte p(z, θ). */
-const CAS_CARTE: readonly IdCas[] = ['REMP', 'VID', 'VID_EXC'];
+/** Identifiants des cas de paroi : tous sauf les cas de fond. */
+function idsParoi(r: ResultatSilo): IdCas[] {
+  return idsCas(r).filter((id) => id !== 'FOND_REMP' && id !== 'FOND_VID');
+}
 
 /** Pas angulaires offerts par la carte, en degres (diviseurs de 360). */
 const PAS_CARTE: readonly number[] = [5, 10, 15, 30];
@@ -142,38 +146,52 @@ function ajusterGroupes(forme: string, fond: string): void {
  * Choix lus dans les commandes de la carte : cas, pas angulaire et position
  * z_p. La position n'est transmise que si le champ est actif (classe 3).
  */
-function choixCarte(): { cas: IdCas; pas: number; z_p: number | null } {
+function choixCarte(r: ResultatSilo): { cas: IdCas; pas: number; z_p: number | null } {
   const casEl = exige<HTMLSelectElement>('[data-role="carte-cas"]');
   const pasEl = exige<HTMLSelectElement>('[data-role="carte-pas"]');
   const zpEl = exige<HTMLInputElement>('[data-role="carte-zp"]');
-  const cas = (CAS_CARTE as readonly string[]).includes(casEl.value)
-    ? (casEl.value as IdCas)
-    : 'REMP';
+  const disponibles = idsParoi(r) as readonly string[];
+  const cas = disponibles.includes(casEl.value) ? (casEl.value as IdCas) : 'REMP';
   const pas = PAS_CARTE.includes(Number(pasEl.value)) ? Number(pasEl.value) : 10;
   return { cas, pas, z_p: zpEl.disabled ? null : lireNombre(zpEl.value) };
 }
 
 /** Choix lus dans les commandes de dessin, avec leurs valeurs par defaut. */
-function choixAffichage(): { cas: IdCas; grandeur: Grandeur } {
+function choixAffichage(r: ResultatSilo): { cas: IdCas; grandeur: Grandeur } {
   const cas = exige<HTMLSelectElement>('[data-role="cas-elevation"]').value;
   const grandeur = exige<HTMLSelectElement>('[data-role="grandeur-profils"]').value;
   return {
-    cas: (CAS as readonly string[]).includes(cas) ? (cas as IdCas) : 'REMP',
+    cas: (idsCas(r) as readonly string[]).includes(cas) ? (cas as IdCas) : 'REMP',
     grandeur: (GRANDEURS as readonly string[]).includes(grandeur) ? (grandeur as Grandeur) : 'p_h',
   };
 }
 
-/** Options des selecteurs de dessin : identifiants et libelles de textes.ts. */
-function initialiserCommandes(): void {
-  exige<HTMLSelectElement>('[data-role="cas-elevation"]').innerHTML = CAS.map(
-    (id) => `<option value="${id}">${echapper(textes().cas.libelles[id])}</option>`
-  ).join('');
-  exige<HTMLSelectElement>('[data-role="grandeur-profils"]').innerHTML = GRANDEURS.map(
-    (g) => `<option value="${g}">${echapper(textes().interface.grandeurs[g])}</option>`
-  ).join('');
-  exige<HTMLSelectElement>('[data-role="carte-cas"]').innerHTML = CAS_CARTE.map(
-    (id) => `<option value="${id}">${echapper(textes().cas.libelles[id])}</option>`
-  ).join('');
+/** Options d'un selecteur, sans perdre la valeur choisie quand elle demeure offerte. */
+function poserOptions(el: HTMLSelectElement, html: string): void {
+  const avant = el.value;
+  if (el.innerHTML !== html) {
+    el.innerHTML = html;
+    el.value = avant;
+  }
+  if (el.value === '' && el.options.length > 0) el.value = el.options[0].value;
+}
+
+/** Options des selecteurs de dessin : identifiants du resultat et libelles de textes.ts. */
+function initialiserCommandes(r: ResultatSilo): void {
+  poserOptions(
+    exige<HTMLSelectElement>('[data-role="cas-elevation"]'),
+    idsCas(r).map((id) => `<option value="${id}">${echapper(textes().cas.libelles[id])}</option>`).join('')
+  );
+  poserOptions(
+    exige<HTMLSelectElement>('[data-role="grandeur-profils"]'),
+    GRANDEURS.map(
+      (g) => `<option value="${g}">${echapper(textes().interface.grandeurs[g])}</option>`
+    ).join('')
+  );
+  poserOptions(
+    exige<HTMLSelectElement>('[data-role="carte-cas"]'),
+    idsParoi(r).map((id) => `<option value="${id}">${echapper(textes().cas.libelles[id])}</option>`).join('')
+  );
 }
 
 // La barre des feuilles est branchee sur les deux pages, qui portent le meme
@@ -252,17 +270,18 @@ function poserDessin(zone: HTMLElement, nom: NomDessin, svg: string | null): voi
 function redessiner(): void {
   if (resultat === null || zones === null) return;
   const r = resultat;
-  const { cas, grandeur } = choixAffichage();
+  initialiserCommandes(r);
+  const { cas, grandeur } = choixAffichage(r);
   const avecBandes = exige<HTMLInputElement>('[data-role="bandes-elevation"]').checked;
   poserDessin(zones.elevation, 'elevation', dessinElevation(r, cas, avecBandes));
-  poserDessin(zones.profils, 'profils', dessinProfils(r, grandeur, ['REMP', 'VID', 'VID_EXC']));
+  poserDessin(zones.profils, 'profils', dessinProfils(r, grandeur, idsParoi(r)));
   poserDessin(zones.plan, 'plan', dessinPlan(r));
   poserDessin(zones.tremie, 'tremie', dessinTremie(r));
 
   // Carte p(z, θ) : le champ de position n'est actif que si la norme laisse
   // la zone a toute hauteur (classe 3). Une position refusee s'affiche dans
   // la zone du dessin, sans effacer les autres resultats.
-  const choix = choixCarte();
+  const choix = choixCarte(r);
   const zpEl = exige<HTMLInputElement>('[data-role="carte-zp"]');
   try {
     let carte = cartePressions(r, PROFIL, choix.cas, { pasTheta: choix.pas });
@@ -336,7 +355,6 @@ if (formulaire !== null) {
     peindre(r);
   };
 
-  initialiserCommandes();
   ecrireModele(modeleParDefaut());
   // Les valeurs du materiau restent visibles : choisir un materiau de la
   // bibliotheque les remplit, modifier l'une d'elles passe en materiau saisi.
@@ -450,7 +468,7 @@ document.addEventListener('click', (evenement) => {
   else if (action === 'exporter-tremie') telechargerCsv('tremie', csvTremie(r));
   else if (action === 'exporter-localisee') telechargerCsv('localisee', csvLocalisee(r));
   else if (action === 'exporter-carte') {
-    const cartes: CarteCas[] = CAS_CARTE.map((id) =>
+    const cartes: CarteCas[] = idsParoi(r).map((id) =>
       cartePressions(r, PROFIL, id, optionsCarte)
     );
     telechargerCsv('carte', csvCarte(r, cartes));
