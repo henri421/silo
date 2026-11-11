@@ -19,9 +19,9 @@ describe('package.json', () => {
     expect(pkg.scripts.build).toMatch(/vite build/);
   });
 
-  it('n a aucune dependance de production et epingle aedificium-ui sur v1.6.3', () => {
+  it('n a aucune dependance de production et epingle aedificium-ui sur v1.7.0', () => {
     expect(pkg.dependencies).toBeUndefined();
-    expect(pkg.devDependencies['aedificium-ui']).toBe('github:henri421/aedificium-ui#v1.6.3');
+    expect(pkg.devDependencies['aedificium-ui']).toBe('github:henri421/aedificium-ui#v1.7.0');
     const permises = new Set([
       '@types/jsdom',
       '@types/node',

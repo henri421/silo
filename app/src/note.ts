@@ -22,6 +22,7 @@ import {
 import { mention } from './export';
 import { phrase, textes } from './textes';
 import { blocsSynthese, lignesCas, lignesPointsOuverts } from './vue';
+import { VERSION_OUTIL } from './version';
 
 /** Statut et motif (ou combinaisons) d'un cas, en une phrase affichee. */
 function etatDuCas(c: CasDeCharge): string {
@@ -88,6 +89,7 @@ export function noteDuCalcul(
   const [norme, ...items] = t.note.hypotheses(phrase(r.profil));
   return {
     cartouche: {
+      version: VERSION_OUTIL,
       projet: cartouche.projet,
       element: cartouche.element,
       date: cartouche.date,
