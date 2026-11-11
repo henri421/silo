@@ -938,3 +938,70 @@ Branche `lot-10-carte`, 2026-11-10. Aucun test d'acceptation ni fichier de `docs
 ## État final du lot 10
 
 Les trois commandes du lot passent. Trois commits de code ont été faits (`f8c7e92` pour T10.1, `fb25fd8` pour T10.2, `8954f1d` pour T10.3), puis le commit de documentation de fin de lot. Rien n'a été poussé. Le lot 10 est le dernier lot de la v1.
+
+# Compte rendu du lot 11, séance `claude-ds`
+
+Branche `lot-11-classe3`, 2026-11-11. Aucun test d'acceptation ni fichier de `docs/validation/` n'a été modifié ; `src/model/types.ts`, les types de `src/norms/profil.ts`, `SPEC.md`, `CLAUDE.md` et `CONVENTIONS.md` sont intacts (vérifié par `git diff a661e09 --stat -- tests docs/validation src/model/types.ts src/norms/profil.ts SPEC.md CLAUDE.md CONVENTIONS.md`, sortie vide). Aucune dépendance ajoutée, rien n'a été poussé.
+
+## T11.1 Canal d'écoulement
+
+**Fichiers modifiés** : `src/norms/en1991-4-recommande.ts` (`k1_canal`, `k2_canal`, `k3_canal`), `src/parois/canal.ts` (création), `src/parois/excentree.ts` (message de classe 3 exact et fonction auxiliaire `valeursSymetriquesExcentree`), `src/index.ts` (réexports).
+
+**Décisions**
+- Le profil porte `k1_canal = 0,25`, `k2_canal = 0,4` et `k3_canal = 0,6`, avec les sources `EN 1991-4:2006, 5.52`, `5.53` et `5.54` ; `verifierProfil` les contrôle par sa boucle générique (valeur finie et source non vide). Aucun contrôle de plage n'a été ajouté à `verifierProfil`, qui n'en a pour aucune grandeur.
+- `canalEcoulement` applique, dans l'ordre exigé, les refus de forme (message contenant `circulaire`), de classe (message contenant `classe 3`), de non-déclenchement (message contenant `declench`), puis les refus de géométrie citant 5.2.4.3 (`e_c + r_c <= r`, `|cos theta_c| > 1`, `|cos psi| > 1`).
+- `eta = mu / tan phi_i`, `e_c`, `theta_c` et `psi` sont calculés en radians (5.55 à 5.62) ; `psi` vient de la loi des cosinus et sa concordance avec `sin psi = (r / r_c) sin theta_c` est contrôlée à 1e-9 près, avec une erreur qui cite 5.61 si elle échoue. Les angles rendus sont en degrés.
+- `p_hce` et `p_wce` sont nuls dans `valeursExcentrees` et portés par `ValeursExcentrees` dans `valeursCanal` ; `zonesCanal` reprend les trois zones avec `theta_c` du canal, `pointsOuverts: ['P1', 'P4']` et un motif qui cite 5.2.4.3 et le rayon `r_c`.
+- `valeursSymetriquesExcentree` est extraite de `valeursExcentrees` pour que `canal.ts` et `calcul.ts` réutilisent la même évaluation en combinaison X, sans changer la signature des fonctions existantes.
+- Le message de `zonesExcentrees` en classe 3 devient exactement celui du test : `Methode simplifiee de 5.2.4.2 reservee a la classe 2 (5.2.4.1(5)) : en classe 3, voir les cas VID_EXC_1 a VID_EXC_3 (5.2.4.3).`
+
+**Points douteux**
+- `valeursCanal` reçoit le profil `p` comme le demande le PLAN, mais n'en a pas besoin : le paramètre est nommé `_p` pour satisfaire `noUnusedParameters`. Sa position et son type sont inchangés.
+- `verifierProfil` ne rejette pas une valeur de `k_i` hors de `]0 ; 1[` ; le PLAN mentionne cette plage, mais la fonction n'a aucun contrôle de plage pour les autres clés. Les trois valeurs recommandées sont dans la plage.
+- Le contrôle `|cos psi| > 1` n'est pas imposé par le PLAN ; il évite un `NaN` si la géométrie du canal n'a pas de solution, avec un message qui cite 5.2.4.3.
+
+**Statut des tests**
+- Avant implémentation : `npx vitest run tests/parois/canal.test.ts tests/parois/excentree.test.ts` : 20 échecs et 1 réussite sur 21, modules `canal` absent et message de classe 3 non conforme.
+- Après implémentation : `npx vitest run tests/parois/canal.test.ts tests/parois/excentree.test.ts` : 25 tests passent (15 dans `canal.test.ts`, 10 dans `excentree.test.ts`).
+
+## T11.2 Remplissage excentré : point bloquant
+
+**Fichiers modifiés** : `src/parois/remplissage-excentre.ts` (création), `src/index.ts` (réexports).
+
+**Décisions**
+- `remplissageExcentre` vérifie dans l'ordre la forme circulaire, la classe 3 (`cl.procedures`), `hc/dc < 2,0`, puis `e_t > excentrementGrand d_c` ; `e_t` vaut `e_f` s'il n'est pas saisi. Hors déclenchement, `p_ho`, `h_o`, `B`, `K` et `mu` sont nuls et le motif nomme la condition qui manque.
+- Déclenché, il applique 5.3.3(4) avec la combinaison C2 (K supérieur, mu supérieur, gamma = gamma_u) et calcule `p_ho`, `h_o` et `B` par 5.93 à 5.96.
+- Le type public `RemplissageExcentre` ne porte ni le rayon, ni l'angle de talus, ni gamma. L'objet rendu porte donc trois propriétés supplémentaires, documentées dans un type local non exporté ; `nzSkAdditionnel` les lit par un transtypage et, à défaut, retrouve `r` et phi_r par les relations de 5.93 à 5.96.
+- `nzSkAdditionnel` applique 5.92 avec `z_s = z + h_o` et `Z = z_s / B`, et rend 0 hors déclenchement.
+
+**Point bloquant : deux cas de `conditions manquantes` sont incompatibles avec le reste du contrat**
+
+Le test `tests/parois/remplissage-excentre.test.ts` (lignes 34 à 47) ne peut pas passer tel qu'il est écrit. Les deux cas en cause sont incompatibles avec `classer`, que le test appelle lui-même avant `remplissageExcentre`.
+
+1. `variante(v5(), { e_t: 4 })`, attendu : `declenche: false` et motif `/classe 3/`.
+   - V5 : d = 12 m, hc = 10 m, fond plat, sable, A = 113,097 m².
+   - Capacité = 16 × 113,097 × 10 / 9,81 = **1 844,6 t**, supérieure au seuil de 1 000 t du tableau 2.1.
+   - hc/dc = **0,8333**, donc silo peu élancé ; e_t/d_c = 4 / 12 = **0,3333**, supérieur à 0,25.
+   - La troisième condition du tableau 2.1 (SPEC §4.3, testée dans `tests/classement/classement.test.ts` ligne 115) donne donc **classe 3**, et `classer` rend `procedures = 3`. La condition « classe 3 » n'est pas manquante ; elle est remplie. Avec e_t = 4 m > 0,25 d_c = 3 m et hc/dc < 2,0, 5.3.3 est déclenché. Attendre le contraire contredirait le tableau 2.1 et le cas V8, qui déclenche avec les mêmes données.
+2. `variante(v2(), { classeImposee: 3, e_t: 4 })`, attendu : motif `/2,0/`.
+   - V2 : d = 6 m, donc e_t est borné par d/2 = 3 m (SPEC §2.2).
+   - `classer(d, P)` lève avant d'atteindre `remplissageExcentre` : `L excentrement e_t doit etre un nombre positif ou nul (m) au plus egal a d/2 = 3 m.` (contrôle de `src/model/valider.ts`, appliqué par `classer`). Le motif `/2,0/` ne peut jamais être produit pour ce cas.
+   - Même si la validation était contournée, hc/dc = 18 / 6 = 3,0, donc la condition `hc/dc < 2,0` serait bien celle qui manque ; le cas ne teste donc pas ce qu'il annonce sans sortir du domaine validé.
+
+Aucune modification du code de production ne peut faire passer ces deux cas sans violer SPEC §2.2 (e_t au plus égal à d/2) ou SPEC §4.3 et le tableau 2.1 (classe 3 par e_t). Les tests n'ont pas été modifiés. Les deux autres cas du même test (e_t = 2 avec classe imposée, et le rectangle) passent, ainsi que tous les cas de V8.
+
+**Statut des tests**
+- Avant implémentation : `npx vitest run tests/parois/remplissage-excentre.test.ts -t "declenchement|force"` : 5 échecs sur 5, fonctions absentes.
+- Après implémentation : `npx vitest run tests/parois/remplissage-excentre.test.ts -t "declenchement|force"` : 4 tests passent, 1 échoue (`conditions manquantes`), 1 ignoré. Les valeurs de V8 passent : `p_ho = 86,2069`, `h_o = 0,8998`, `B = 9,8869`, et les quatre forces additionnelles 27,4586 ; 86,4169 ; 224,4511 ; 253,6689 kN/m.
+
+## T11.3 à T11.5
+
+**Non commencées.** T11.2 est bloquée par les deux cas de test décrits ci-dessus ; T11.3 dépend de `remplissageExcentre` et les trois tâches restantes ne peuvent pas être déclarées terminées tant que la suite complète ne passe pas. Aucun test n'a été modifié, aucune valeur attendue n'a été recalculée.
+
+## État final du lot 11
+
+- `npx vitest run tests/parois/canal.test.ts tests/parois/excentree.test.ts` : 25 tests passent.
+- `npx vitest run tests/parois/remplissage-excentre.test.ts -t "declenchement|force"` : 4 passent, 1 échoue, 1 ignoré (point bloquant ci-dessus).
+- `npm run typecheck` : échoue encore, comme au début du lot, sur `src/calcul.ts` (champ `remplissageExcentre` et champ `canal` non remplis, T11.3), sur `app/src/{vue,note,main}.ts` (libellés des `VID_EXC_1` à `VID_EXC_3`, T11.4) et sur la constante `en1991_4Recommande` avant l'ajout des trois rayons ; ce dernier point est corrigé par T11.1.
+- `npm test` et `npm run build` n'ont pas été lancés en fin de lot : la suite ne peut pas être verte avec le test bloqué.
+- Aucun test d'acceptation, fichier de `docs/validation/`, type protégé ni dépendance modifié ; rien n'a été poussé.
