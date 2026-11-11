@@ -9,7 +9,7 @@
  *
  * Proprietes : K et mu superieurs (5.3.3(4)), soit la combinaison C2, et
  * gamma = gamma_u. Les equations 5.92 a 5.96 sont lues selon le point ouvert
- * P8 : (e_t / r) est un facteur, phi_r est l'angle de talus, et
+ * P8 : e_t / r est l exposant de tan phi_r (confirme par l utilisateur), phi_r est l'angle de talus, et
  * z_s = z + h_o,e.
  *
  * Unites : longueurs en m, pressions en kPa, efforts lineiques en kN/m,
@@ -151,6 +151,6 @@ export function nzSkAdditionnel(z: number, re: RemplissageExcentre): number {
   const z_s = z + re.h_o;
   const Z = z_s / re.B;
   return (
-    0.04 * re.p_ho * z_s * Math.tan(phi) * (re.e_t / r) * (6 + 7 * Z - Z * Z)
+    0.04 * re.p_ho * z_s * Math.pow(Math.tan(phi), re.e_t / r) * (6 + 7 * Z - Z * Z)
   );
 }

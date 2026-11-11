@@ -1050,3 +1050,9 @@ Le premier passage de cette séance avait signalé deux cas de `conditions manqu
 - Commits de code de cette reprise : `bf9e79c` pour T11.3 et `e86831d` pour T11.4, puis le commit de documentation de fin de lot. T11.1 et T11.2 avaient été acquis au commit `1e8d68c`, puis les tests de T11.2 ont été corrigés par la séance de conception au commit `4c3c7cf`.
 - Aucun test d'acceptation, fichier de `docs/validation/`, type protégé ni dépendance modifié par cette séance ; aucune valeur attendue recalculée ; rien n'a été poussé.
 - Le lot 11 est le dernier lot de la v1. P4, P7 et P8 restent à confirmer par l'utilisateur.
+
+## Correction P8 (séance de conception, 2026-11-11)
+
+- L'utilisateur a confirmé deux lectures de 5.92 : e_t/r est l'exposant de tan φ_r, et φ_r est l'angle de talus du matériau. Le lien z_s = z + h_o,e reste à confirmer.
+- Fichiers modifiés : `SPEC.md` (§5.5 bis et P8), `docs/validation/V8-remplissage-excentre.md` et `reference.py` (nouvelles valeurs 44,1888 ; 139,0700 ; 361,2074 ; 408,2273 kN/m), `tests/parois/remplissage-excentre.test.ts`, `src/parois/remplissage-excentre.ts`, `app/src/textes.ts`, `README.md`.
+- Statut des tests : `npm run typecheck`, `npm test` (275 passent) et `npm run build` passent.
