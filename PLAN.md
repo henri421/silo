@@ -544,6 +544,7 @@ Tests d'acceptation, **à ne jamais modifier** : `tests/parois/canal.test.ts`, `
 * `remplissageExcentre(d, cl, p): RemplissageExcentre` : `e_t = d.exploitation.e_t ?? e_f`. Conditions, chacune nommée dans le motif quand elle manque : silo circulaire (`circulaire`), classe 3 (`classe 3`), `hc/dc < 2,0` (`2,0`), `e_t > 0,25 d_c` (seuil `excentrementGrand` du profil, motif avec `0,25`). Déclenché : K et μ supérieurs (combinaison C2), `p_ho`, `h_o` (= h_o,e de 5.96), `B` (SPEC §5.5 bis), motif qui cite 5.3.3 et P8. Sinon ces cinq grandeurs à `null`.
 * `nzSkAdditionnel(z, re): number` : 0 hors déclenchement ; sinon 5.92 avec `z_s = z + h_o`, `Z = z_s / B`, `γ = γ_u`, φ_r du matériau.
 * Test : `npx vitest run tests/parois/remplissage-excentre.test.ts -t "declenchement|force"`.
+* Correction du 2026-11-11 après le signalement de `claude-ds` : trois jeux de « conditions manquantes » étaient incompatibles avec `classer` (V5 avec e_t = 4 m est de classe 3 par le tableau 2.1 ; e_t = 4 m dépasse d/2 et a/2 pour V2 et V1). Ils utilisent maintenant V2 sans classe imposée et e_t = 2 m, V2 en classe 3 et e_t = 2 m, V1 en classe 3 et e_t = 2 m. Les valeurs attendues ne changent pas. T11.2 est acquis ; reprendre à T11.3.
 
 **T11.3 Calcul** : `src/calcul.ts` (et `src/cas/` si besoin), `src/discretisation/carte.ts`.
 * `ResultatSilo.remplissageExcentre` rempli. Dans `REMP`, `n_zSk` de chaque point augmente de `nzSkAdditionnel(z, …)` ; rien d'autre ne change. `P8` dans `pointsOuverts` quand il est déclenché.

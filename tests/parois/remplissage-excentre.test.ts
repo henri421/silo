@@ -34,9 +34,9 @@ describe('declenchement (5.3.3(1))', () => {
   it('conditions manquantes : motif qui les nomme, grandeurs nulles', () => {
     const cas: [DonneesSilo, RegExp][] = [
       [variante(v5(), { classeImposee: 3, e_t: 2 }), /0,25/],
-      [variante(v5(), { e_t: 4 }), /classe 3/],
-      [variante(v2(), { classeImposee: 3, e_t: 4 }), /2,0/],
-      [variante(v1(), { classeImposee: 3, e_t: 4 }), /circulaire/],
+      [variante(v2(), { e_t: 2 }), /classe 3/],
+      [variante(v2(), { classeImposee: 3, e_t: 2 }), /2,0/],
+      [variante(v1(), { classeImposee: 3, e_t: 2 }), /circulaire/],
     ];
     for (const [d, motif] of cas) {
       const re = remplissageExcentre(d, classer(d, P), P);
