@@ -34,6 +34,7 @@ const FR = {
     actionLocalisee: 'Action localisée',
     fond: 'Fond',
     cas: 'Cas de charge',
+    canaux: 'Vidange excentrée, classe 3',
   },
 
   symboles: {
@@ -59,6 +60,8 @@ const FR = {
     n: 'n',
     epsilon: 'ε',
     profondeur: 'profondeur',
+    rC: 'r_c',
+    deltaNzSk: 'Δn_zSk',
   },
 
   libelles: {
@@ -85,6 +88,9 @@ const FR = {
     F: 'coefficient de forme de la trémie',
     n: 'exposant de la trémie',
     epsilon: 'angle epsilon de Walker',
+    deltaNzSk: 'force verticale additionnelle au pied de la paroi (5.3.3, P8)',
+    canal: (id: string): string =>
+      `canal d'écoulement ${id.replace('VID_EXC_', '')} (r_c = k_${id.replace('VID_EXC_', '')} r)`,
     casCalcul: (combinaisons: string): string => `calculé ; ${combinaisons}`,
     casArrete: (statut: string, motif: string): string => `${statut} : ${motif}`,
   },
@@ -125,6 +131,9 @@ const FR = {
       REMP: 'Remplissage symétrique et action localisée',
       VID: 'Vidange symétrique et action localisée',
       VID_EXC: 'Vidange à grand excentrement',
+      VID_EXC_1: "Vidange excentrée, canal d'écoulement r_c = k_1 r",
+      VID_EXC_2: "Vidange excentrée, canal d'écoulement r_c = k_2 r",
+      VID_EXC_3: "Vidange excentrée, canal d'écoulement r_c = k_3 r",
       FOND_REMP: 'Fond au remplissage',
       FOND_VID: 'Fond à la vidange',
     },
@@ -162,6 +171,10 @@ const FR = {
     P7: {
       question: "La vidange d'un silo circulaire intermédiaire ou peu élancé de classe 2 renvoie à une majoration uniforme dont la forme n'est pas donnée. Quelle forme retenir ?",
       choix: "La majoration uniforme de 5.2.3 avec C_pe, seulement si la forme est maintenue en tête et en pied ; sinon l'action localisée de 5.2.2.2 à 5.2.2.4. Reste à confirmer par l'utilisateur.",
+    },
+    P8: {
+      question: "Lecture de 5.92 à 5.96 pour le grand excentrement de remplissage de classe 3 : le rapport e_t/r est-il un facteur, quel angle de frottement employer, et comment relier z_s à la profondeur z ?",
+      choix: "e_t/r est un facteur ; phi_r est l'angle de talus, cohérent avec 5.96 ; z_s = z + h_o,e. Le cas V8 l'utilise. Reste à confirmer par l'utilisateur.",
     },
   },
 
@@ -273,6 +286,8 @@ const FR = {
     ligneExclusifs: 'cas exclusifs',
     mention: 'valeurs caractéristiques, coefficients partiels non appliqués',
     exclusivite: 'REMP, VID et VID_EXC sont exclusifs les uns des autres.',
+    exclusiviteCanaux:
+      'REMP, VID, VID_EXC et VID_EXC_1 à VID_EXC_3 sont exclusifs les uns des autres : en classe 3, les canaux remplacent VID_EXC.',
     entetesProfils: [
       'cas',
       'z [m]',
@@ -358,6 +373,7 @@ const EN: Textes = {
     actionLocalisee: 'Localised action',
     fond: 'Bottom',
     cas: 'Load cases',
+    canaux: 'Large eccentric discharge, class 3',
   },
 
   symboles: {
@@ -383,6 +399,8 @@ const EN: Textes = {
     n: 'n',
     epsilon: 'ε',
     profondeur: 'depth',
+    rC: 'r_c',
+    deltaNzSk: 'Δn_zSk',
   },
 
   libelles: {
@@ -409,6 +427,9 @@ const EN: Textes = {
     F: 'hopper shape coefficient',
     n: 'hopper exponent',
     epsilon: 'Walker epsilon angle',
+    deltaNzSk: 'additional vertical force at the wall foot (5.3.3, P8)',
+    canal: (id: string): string =>
+      `flow channel ${id.replace('VID_EXC_', '')} (r_c = k_${id.replace('VID_EXC_', '')} r)`,
     casCalcul: (combinaisons: string): string => `calculated; ${combinaisons}`,
     casArrete: (statut: string, motif: string): string => `${statut}: ${motif}`,
   },
@@ -449,6 +470,9 @@ const EN: Textes = {
       REMP: 'Symmetric filling and localised action',
       VID: 'Symmetric discharge and localised action',
       VID_EXC: 'Large eccentric discharge',
+      VID_EXC_1: 'Eccentric discharge, flow channel r_c = k_1 r',
+      VID_EXC_2: 'Eccentric discharge, flow channel r_c = k_2 r',
+      VID_EXC_3: 'Eccentric discharge, flow channel r_c = k_3 r',
       FOND_REMP: 'Bottom on filling',
       FOND_VID: 'Bottom on discharge',
     },
@@ -482,6 +506,10 @@ const EN: Textes = {
     P7: {
       question: 'The discharge of a circular intermediate or shallow silo of class 2 refers to a uniform increase whose form is not given. Which form should be used?',
       choix: 'The uniform increase of 5.2.3 with C_pe, only if the shape is held at top and bottom; otherwise the localised action of 5.2.2.2 to 5.2.2.4. To be confirmed by the user.',
+    },
+    P8: {
+      question: 'Reading of 5.92 to 5.96 for the class 3 large eccentric filling: is the eₜ/r ratio a factor, which friction angle applies, and how is z_s related to depth z?',
+      choix: 'eₜ/r is a factor; phi_r is the angle of repose, consistent with 5.96; z_s = z + h_o,e. Case V8 uses it. To be confirmed by the user.',
     },
   },
 
@@ -592,6 +620,8 @@ const EN: Textes = {
     ligneExclusifs: 'exclusive cases',
     mention: 'characteristic values, partial factors not applied',
     exclusivite: 'REMP, VID and VID_EXC are mutually exclusive.',
+    exclusiviteCanaux:
+      'REMP, VID, VID_EXC and VID_EXC_1 to VID_EXC_3 are mutually exclusive: in class 3 the channels replace VID_EXC.',
     entetesProfils: [
       'case',
       'z [m]',
@@ -696,6 +726,8 @@ const ACCENTS: readonly (readonly [RegExp, string])[] = [
   [/\bverifiee\b/gi, 'vérifiée'],
   [/\belancement\b/gi, 'élancement'],
   [/\belancee(s)?\b/gi, 'élancé$1'],
+  [/\bsimplifiee(s)?\b/gi, 'simplifiée$1'],
+  [/\breservee(s)?\b/gi, 'réservée$1'],
 ];
 
 /** Apostrophe des elisions fautives : « l equation », « n a pas », « qu au ». */
@@ -822,8 +854,16 @@ const EXACTES: Record<string, string> = {
     'Large eccentric discharge treated for circular silos only (5.2.4).',
   'Vidange excentree en classe 3 : methode de 5.2.4.3 non traitee. Les cas symetriques restent rendus.':
     'Eccentric discharge of class 3: method of 5.2.4.3 not covered. Symmetric cases are still given.',
+  'Methode simplifiee de 5.2.4.2 reservee a la classe 2 (5.2.4.1(5)) : en classe 3, voir les cas VID_EXC_1 a VID_EXC_3 (5.2.4.3).':
+    'Simplified method of 5.2.4.2 reserved for class 2 (5.2.4.1(5)): in class 3, see cases VID_EXC_1 to VID_EXC_3 (5.2.4.3).',
   "Écoulement en cheminée interne garanti par l'utilisateur : vidange non applicable (5.1(8)).":
     'Internal pipe flow guaranteed by the user: discharge not applicable (5.1(8)).',
+
+  // Remplissage excentre de classe 3.
+  'Grand excentrement de remplissage déclenché (5.3.3) : force verticale additionnelle Δn_zSk sur toute la circonférence (5.92 à 5.96, point ouvert P8).':
+    'Large eccentric filling triggered (5.3.3): additional vertical force Δn_zSk around the full circumference (5.92 to 5.96, open point P8).',
+  'Grand excentrement de remplissage : méthode de 5.3.3 traitée pour les silos circulaires seulement.':
+    'Large eccentric filling: method of 5.3.3 treated for circular silos only.',
 
   // Messages d'erreur du noyau.
   'La hauteur de paroi verticale hc doit etre un nombre strictement positif (m).':
@@ -924,6 +964,40 @@ const REGLES: readonly RegleDePhrase[] = [
     'Eccentric discharge not triggered: $1',
   ],
 
+  // Canaux d'ecoulement de classe 3 (5.2.4.3).
+  [
+    /^Canal d'écoulement de 5\.2\.4\.3, rayon r_c = (.+) m \(k = (.+), indice (\d)\) : écoulement sur \|theta\| <= (.+)°, contrainte élevée à 2 p_hf sur un arc de (.+)° de chaque côté du canal \(P4 : étendue à confirmer\), matériau immobile au-delà\. K supérieur \(P1\), mu inférieur et phi_i supérieur \(5\.2\.4\.1\(4\)\)\.$/,
+    'Flow channel of 5.2.4.3, radius r_c = $1 m (k = $2, index $3): flow over |θ| <= $4°, high stress at 2 p_hf over an arc of $5° on each side of the channel (P4: extent to be confirmed), stationary material beyond. Higher K (P1), lower μ and higher φ_i (5.2.4.1(4)).',
+  ],
+  [
+    /^La methode du canal d ecoulement ne s applique qu aux silos circulaires \(EN 1991-4, 5\.2\.4\.3\)\.$/,
+    'The flow channel method applies to circular silos only (EN 1991-4, 5.2.4.3).',
+  ],
+  [
+    /^La methode du canal d ecoulement de 5\.2\.4\.3 est reservee a la classe 3 \(5\.2\.4\.1\(5\)\)\.$/,
+    'The flow channel method of 5.2.4.3 is reserved for class 3 (5.2.4.1(5)).',
+  ],
+  [
+    /^Canal (\d) \(k = (.+)\) sans contact avec la paroi : e_c \+ r_c = (.+) m <= r = (.+) m \(EN 1991-4, 5\.2\.4\.3\)\.$/,
+    'Channel $1 (k = $2) without wall contact: e_c + r_c = $3 m <= r = $4 m (EN 1991-4, 5.2.4.3).',
+  ],
+  [
+    /^Canal (\d) \(k = (.+)\) : cos theta_c = (.+) n'est pas dans \[-1 ; 1\], geometrie hors perimetre \(EN 1991-4, 5\.2\.4\.3\)\.$/,
+    'Channel $1 (k = $2): cos θ_c = $3 is not within [-1; 1], geometry out of scope (EN 1991-4, 5.2.4.3).',
+  ],
+  [
+    /^Canal (\d) \(k = (.+)\) : cos psi = (.+) n'est pas dans \[-1 ; 1\], geometrie hors perimetre \(EN 1991-4, 5\.2\.4\.3\)\.$/,
+    'Channel $1 (k = $2): cos ψ = $3 is not within [-1; 1], geometry out of scope (EN 1991-4, 5.2.4.3).',
+  ],
+  [
+    /^Canal (\d) \(k = (.+)\) : les deux expressions de psi ne concordent pas \(sin psi = (.+), attendu (.+)\) : EN 1991-4, 5\.61\.$/,
+    'Channel $1 (k = $2): the two expressions of ψ do not agree (sin ψ = $3, expected $4): EN 1991-4, 5.61.',
+  ],
+  [
+    /^Le cas (VID_EXC_\d) n'a pas de canal d'ecoulement calcule\.$/,
+    'Case $1 has no calculated flow channel.',
+  ],
+
   // Messages d'erreur generiques du noyau.
   [
     /^(Le|La|L) (.+) doit etre un nombre strictement positif \((.+)\)\.$/,
@@ -955,5 +1029,6 @@ export function phrase(texte: string): string {
   if (langueCourante() === 'en') return traduire(texte);
   let sortie = texte.replace(ELISION, "$1$2'").replace(/\b(cas non) tranche\b/gi, '$1 tranché');
   for (const [motif, remplacement] of ACCENTS) sortie = sortie.replace(motif, remplacement);
+  sortie = sortie.replace(/\ba (VID|FOND)(?=[ _])/g, 'à $1');
   return sansZeros(sortie).replace(/\ba (la|le|les|l')\b/g, 'à $1');
 }

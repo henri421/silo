@@ -30,11 +30,15 @@ import { blocsSynthese } from './vue';
 
 const NORME = 'EN 1991-4:2006';
 
-/** Cas de paroi verticale, dans l'ordre des fichiers de profils et de bandes. */
-const CAS_PAROI: readonly IdCas[] = ['REMP', 'VID', 'VID_EXC'];
+/** Cas de paroi verticale du resultat, dans son ordre : REMP, VID, VID_EXC, puis les canaux de classe 3. */
+function idsParoi(r: ResultatSilo): IdCas[] {
+  return r.cas.filter((c) => !c.id.startsWith('FOND_')).map((c) => c.id);
+}
 
-/** Cas de fond, dans l'ordre du fichier de tremie. */
-const CAS_FOND: readonly IdCas[] = ['FOND_REMP', 'FOND_VID'];
+/** Cas de fond du resultat, dans son ordre. */
+function idsFond(r: ResultatSilo): IdCas[] {
+  return r.cas.filter((c) => c.id.startsWith('FOND_')).map((c) => c.id);
+}
 
 /**
  * Les colonnes des fichiers de valeurs, dans l'ordre de SPEC §8.2. Ce sont des
@@ -143,7 +147,10 @@ function entete(r: ResultatSilo): string[][] {
     ],
     [t.combinaisons, ...t.roles],
     [t.ligneMention, t.mention],
-    [t.ligneExclusifs, t.exclusivite],
+    [
+      t.ligneExclusifs,
+      r.cas.some((c) => c.id === 'VID_EXC_1') ? t.exclusiviteCanaux : t.exclusivite,
+    ],
     [],
   ];
 }
@@ -159,7 +166,7 @@ function ligneArret(cas: CasDeCharge): string[] {
  */
 export function csvProfils(r: ResultatSilo): string {
   const lignes: string[][] = [...entete(r), [...ENTETES.profils]];
-  for (const id of CAS_PAROI) {
+  for (const id of idsParoi(r)) {
     const cas = casDe(r, id);
     if (cas === undefined) continue;
     if (cas.statut !== 'calcule' || cas.profil.length === 0) {
@@ -192,7 +199,7 @@ export function csvProfils(r: ResultatSilo): string {
 export function csvBandes(r: ResultatSilo): string {
   const t = textes().csv;
   const lignes: string[][] = [...entete(r), [...ENTETES.bandes]];
-  for (const id of CAS_PAROI) {
+  for (const id of idsParoi(r)) {
     const cas = casDe(r, id);
     if (cas === undefined) continue;
     if (cas.statut !== 'calcule') {
@@ -241,7 +248,7 @@ export function csvBandes(r: ResultatSilo): string {
  */
 export function csvTremie(r: ResultatSilo): string {
   const lignes: string[][] = [...entete(r), [...ENTETES.tremie]];
-  for (const id of CAS_FOND) {
+  for (const id of idsFond(r)) {
     const cas = casDe(r, id);
     if (cas === undefined) continue;
     if (cas.statut !== 'calcule' || cas.fond.length === 0) {
@@ -324,22 +331,23 @@ export function csvLocalisee(r: ResultatSilo): string {
     lignes.push(['majoration-uniforme', t.majoration]);
   }
 
-  const exc = casDe(r, 'VID_EXC');
-  if (
-    r.donnees.silo.forme === 'circulaire' &&
-    exc !== undefined &&
-    exc.statut === 'calcule' &&
-    exc.excentree !== null
-  ) {
-    lignes.push([...t.zoneEntetes]);
-    for (const zone of exc.excentree.zones) {
-      // Angles en degres, sans decimales inutiles : le fichier se lit a la main.
-      lignes.push([
-        exc.id,
-        zone.nom,
-        nombreAffiche(zone.thetaMin),
-        nombreAffiche(zone.thetaMax),
-      ]);
+  if (r.donnees.silo.forme === 'circulaire') {
+    const porteurs = r.cas.filter(
+      (cas) => cas.statut === 'calcule' && cas.excentree !== null && cas.excentree.zones.length > 0
+    );
+    if (porteurs.length > 0) lignes.push([...t.zoneEntetes]);
+    for (const cas of porteurs) {
+      const zones = cas.excentree;
+      if (zones === null) continue;
+      for (const zone of zones.zones) {
+        // Angles en degres, sans decimales inutiles : le fichier se lit a la main.
+        lignes.push([
+          cas.id,
+          zone.nom,
+          nombreAffiche(zone.thetaMin),
+          nombreAffiche(zone.thetaMax),
+        ]);
+      }
     }
   }
 
