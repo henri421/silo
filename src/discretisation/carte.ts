@@ -33,6 +33,7 @@ import type { ProfilSilos } from '../norms/profil';
 import { etatParoi } from '../parois/symetrique';
 import { valeursLocalisees } from '../parois/localisee';
 import { pressionsEnTheta, valeursExcentrees, zonesExcentrees } from '../parois/excentree';
+import { valeursCanal, zonesCanal } from '../parois/canal';
 
 /** Tolerance des comparaisons de grille et de bornes (m, degres). */
 const TOLERANCE = 1e-9;
@@ -281,6 +282,49 @@ function carteExcentree(r: ResultatSilo, p: ProfilSilos, pas: number): CarteCas 
   };
 }
 
+/**
+ * Carte d'un cas de canal d'ecoulement de classe 3 (VID_EXC_1 a VID_EXC_3) :
+ * les trois zones du canal (5.2.4.3, figure 5.5c) et ses valeurs, par
+ * `valeursCanal` et `pressionsEnTheta`. Les bords theta_c et 2 theta_c du
+ * canal sont ajoutes a la grille en theta. Ni bande ni position z_p.
+ */
+function carteCanal(r: ResultatSilo, p: ProfilSilos, id: IdCas, pas: number): CarteCas {
+  const d = r.donnees;
+  const cl = r.classement;
+  const hc = d.silo.hc;
+  const canal = casDe(r, id)?.canal ?? null;
+  if (canal === null) {
+    throw new Error(`Le cas ${id} n'a pas de canal d'ecoulement calcule.`);
+  }
+  const zones = zonesCanal(canal);
+
+  const zs = grilleZ(hc, d.discretisation.dz);
+  const bords = [zones.theta_c, 2 * zones.theta_c, 360 - 2 * zones.theta_c, 360 - zones.theta_c];
+  const thetas = grilleTheta(pas, bords);
+
+  const points: PointCarte[] = [];
+  for (const z of zs) {
+    const valeurs = valeursCanal(z, d, cl, p, canal);
+    for (const theta of thetas) {
+      const { p_h, p_w } = pressionsEnTheta(valeurs, zones, theta);
+      points.push({ z, Z: d.silo.Z_transition + hc - z, theta, p_h, p_w });
+    }
+  }
+
+  return {
+    cas: id,
+    statut: 'calcule',
+    motif: motifRepere(),
+    z_p: null,
+    z_pChoisi: false,
+    s: null,
+    demiAngle: null,
+    zs,
+    thetas,
+    points,
+  };
+}
+
 /** Cas de charge du resultat, par identifiant. */
 function casDe(r: ResultatSilo, id: IdCas): CasDeCharge | undefined {
   return r.cas.find((cas) => cas.id === id);
@@ -349,6 +393,10 @@ export function cartePressions(
       return carteVide(id, 'hors-perimetre', def.motif);
     }
     return carteLocalisee(r, p, id, def, pas, o);
+  }
+
+  if (id === 'VID_EXC_1' || id === 'VID_EXC_2' || id === 'VID_EXC_3') {
+    return carteCanal(r, p, id, pas);
   }
 
   return carteExcentree(r, p, pas);

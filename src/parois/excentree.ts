@@ -34,6 +34,13 @@ function nombreFr(valeur: number, decimales: number): string {
 }
 
 /**
+ * Motif exact des cas de classe 3 : la methode simplifiee de 5.2.4.2 est
+ * reservee a la classe 2 (5.2.4.1(5)) et renvoie aux canaux de 5.2.4.3.
+ */
+export const MOTIF_CLASSE3_EXCENTREE =
+  'Methode simplifiee de 5.2.4.2 reservee a la classe 2 (5.2.4.1(5)) : en classe 3, voir les cas VID_EXC_1 a VID_EXC_3 (5.2.4.3).';
+
+/**
  * Conditions de declenchement de la vidange a grand excentrement (5.2.4.1(2),
  * 5.3.4). Traitee pour les silos circulaires seulement ; un silo rectangulaire
  * rend `declenche: false` avec son motif.
@@ -126,9 +133,7 @@ export function zonesExcentrees(d: DonneesSilo, cl: Classement, p: ProfilSilos):
     throw new Error(`Vidange excentree non declenchee : ${det.motif}`);
   }
   if (cl.procedures === 3) {
-    throw new Error(
-      'Methode simplifiee de 5.2.4.2 reservee a la classe 2 (5.2.4.1(5)) : en classe 3, voir les cas VID_EXC_1 a VID_EXC_3 (5.2.4.3).',
-    );
+    throw new Error(MOTIF_CLASSE3_EXCENTREE);
   }
 
   const theta_c = p.valeurs.theta_c.valeur;
