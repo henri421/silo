@@ -520,10 +520,10 @@ Tests d'acceptation, **à ne jamais modifier** : `tests/discretisation/carte.tes
 
 ## Lot 11 : classe 3, canal d'écoulement et remplissage excentré
 
-- [ ] `src/parois/canal.ts` : canal d'écoulement de 5.2.4.3 (SPEC §5.5).
-- [ ] `src/parois/remplissage-excentre.ts` : force verticale additionnelle de 5.3.3 (SPEC §5.5 bis, P8).
-- [ ] Cas `VID_EXC_1` à `VID_EXC_3` dans le calcul, les exports, la carte et l'interface.
-- [ ] Tests : V7, V8, cas de la classe 3.
+- [x] `src/parois/canal.ts` : canal d'écoulement de 5.2.4.3 (SPEC §5.5).
+- [x] `src/parois/remplissage-excentre.ts` : force verticale additionnelle de 5.3.3 (SPEC §5.5 bis, P8).
+- [x] Cas `VID_EXC_1` à `VID_EXC_3` dans le calcul, les exports, la carte et l'interface.
+- [x] Tests : V7, V8, cas de la classe 3.
 
 ### Consignes d'exécution du lot 11 (séance `claude-ds`)
 

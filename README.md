@@ -24,6 +24,7 @@ L'outil couvre le périmètre v1 décrit dans [`SPEC.md`](SPEC.md). La version f
 - Lot 8 : exports du calcul, avec les cinq fichiers CSV et leur bloc d'en-tête, le JSON versionné, la note de calcul HTML imprimable, et les dessins téléchargeables en SVG autonome et en PNG.
 - Lot 9 : version anglaise de l'interface et des exports, application installable et fonctionnement hors ligne par le manifeste et le service worker communs aux deux pages.
 - Lot 10 : carte p(z, θ) des parois verticales d'un silo circulaire pour les modèles en coque, avec le développé de la paroi en SVG et l'export `silo-carte.csv`. La zone localisée est centrée sur θ = 0 ; en classe 3, sa profondeur z_p est choisie par l'utilisateur et le motif le rappelle.
+- Lot 11 : classe 3 complète, avec les trois canaux d'écoulement de 5.2.4.3 (cas VID_EXC_1 à VID_EXC_3), leurs zones en θ, leurs valeurs et leurs cartes, et le grand excentrement de remplissage de 5.3.3, qui ajoute la force verticale Δn_zSk au remplissage (point ouvert P8).
 
 ### Fichiers exportés
 
@@ -39,12 +40,12 @@ L'outil couvre le périmètre v1 décrit dans [`SPEC.md`](SPEC.md). La version f
 
 ## Points ouverts
 
-Les lectures de la norme non tranchées par son texte sont listées en [`SPEC.md` §9](SPEC.md) et affichées dans l'interface et dans la note quand elles interviennent. Deux attendent encore la confirmation de l'utilisateur : P4, étendue de la zone portée à deux fois la pression de paroi en vidange excentrée, et P7, forme de la majoration uniforme à la vidange d'un silo circulaire intermédiaire ou peu élancé de classe 2.
+Les lectures de la norme non tranchées par son texte sont listées en [`SPEC.md` §9](SPEC.md) et affichées dans l'interface et dans la note quand elles interviennent. Trois attendent encore la confirmation de l'utilisateur : P4, étendue de la zone portée à deux fois la pression de paroi en vidange excentrée ; P7, forme de la majoration uniforme à la vidange d'un silo circulaire intermédiaire ou peu élancé de classe 2 ; et P8, lecture de 5.92 à 5.96 pour le grand excentrement de remplissage de classe 3.
 
 ## Choix de modélisation déclarés
 
 * Les pressions normales sont calculées avec la combinaison « pression normale maximale » (K supérieur, μ inférieur) et le frottement avec la combinaison « frottement maximal » (K et μ supérieurs). Les associer dans un même cas de charge est un choix enveloppe.
-* Les cas de remplissage, de vidange et de vidange excentrée sont exclusifs l'un de l'autre.
+* Les cas de remplissage, de vidange et de vidange excentrée sont exclusifs l'un de l'autre ; en classe 3, les canaux VID_EXC_1 à VID_EXC_3 remplacent VID_EXC.
 * Une classe 1 est calculée avec les procédures de la classe 2 (2.5(3)).
 * Les lectures de la norme non tranchées par son texte sont listées en [`SPEC.md` §9](SPEC.md) ; chacune est affichée dans l'interface et la note quand elle intervient (voir « Points ouverts »).
 
