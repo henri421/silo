@@ -215,14 +215,38 @@ C'est un **cas de charge séparé**, jamais cumulé avec le symétrique et le lo
 | Zone | p_h | p_w |
 |-|-|-|
 | Écoulement, `\|θ\| ≤ θ_c` | 0 | 0 |
-| Contrainte locale élevée, `θ_c < \|θ\| ≤ 2 θ_c` (figure 5.5c, à confirmer : voir P4) | 2 p_hf | 2 p_wf |
+| Contrainte locale élevée, `θ_c < \|θ\| ≤ 2 θ_c` (figure 5.5c, voir P4) | 2 p_hf | 2 p_wf |
 | Matériau immobile, ailleurs | p_hf | p_wf |
 
 Propriétés : μ inférieur et φ_i supérieur (5.2.4.1(4)) ; pour K, voir P1.
 
-**Classe 3, méthode de 5.2.4.3.** Hors périmètre en v1. Le noyau lève une erreur nommant 5.2.4.3 et rend quand même les cas symétriques, clairement séparés.
+**Classe 3, méthode du canal d'écoulement (5.2.4.3).** La méthode simplifiée de 5.2.4.2 est réservée à la classe 2 (5.2.4.1(5)). En classe 3, le cas `VID_EXC` est déclaré non applicable avec ce motif, et trois cas `VID_EXC_1`, `VID_EXC_2`, `VID_EXC_3` le remplacent, un par rayon de canal (5.2.4.3.1(3)). Elle vaut aussi pour un silo peu élancé ou intermédiaire (5.3.4). Mêmes propriétés que la classe 2 : combinaison X.
 
-Le grand excentrement de remplissage d'un silo peu élancé ou intermédiaire de classe 3 (5.3.3) est hors périmètre en v1, avec une erreur explicite.
+* Rayon du canal : `r_c = k_i r`, `r = d_c/2`, avec `k_1 = 0,25`, `k_2 = 0,4`, `k_3 = 0,6` (éq. 5.52 à 5.54, valeurs recommandées, profil normatif).
+* Position : `G = r_c/r`, `η = μ / tan φ_i` (μ inférieur, φ_i supérieur), `e_c = r [η (1 − G) + (1 − η) √(1 − G)]` (5.55 à 5.57).
+* Contact avec la paroi, angles en radians : `cos θ_c = (r² + e_c² − r_c²) / (2 r e_c)` (5.58) ; ψ défini par `sin ψ = (r / r_c) sin θ_c` (5.61). Pour lever l'ambiguïté de l'arc sinus, ψ se calcule par `cos ψ = (r² − e_c² − r_c²) / (2 e_c r_c)`, qui donne le même angle (géométrie de la figure 5.5b) ; le noyau vérifie que les deux concordent.
+* Périmètres et aire : `U_wc = 2 θ_c r`, `U_sc = 2 r_c (π − ψ)`, `A_c = (π − ψ) r_c² + θ_c r² − r r_c sin(ψ − θ_c)` (5.59, 5.60, 5.62).
+* Canal : `z_oc = A_c / [K (U_wc μ + U_sc tan φ_i)]`, `p_hco = γ K z_oc`, `p_hce = p_hco (1 − e^(−z/z_oc))`, `p_wce = μ p_hce` (5.63 à 5.66).
+* Matériau immobile : `p_hse = p_hf`, `p_wse = p_wf` (5.67, 5.68), avec la pression de remplissage du silo (Janssen pour un silo élancé, Janssen modifié sinon, comme en classe 2) en combinaison X.
+* Zone voisine : `p_hae = 2 p_hf − p_hce`, `p_wae = μ p_hae` (5.69, 5.70).
+* Zones en θ, mesuré depuis la direction de l'orifice : canal pour `|θ| ≤ θ_c`, contrainte élevée pour `θ_c < |θ| ≤ 2 θ_c` (figure 5.5c, P4), matériau immobile ailleurs. θ_c dépend ici de k.
+* Si le canal ne touche pas la paroi (`e_c + r_c ≤ r`) ou si `|cos θ_c| > 1`, le cas est hors périmètre avec ce motif.
+* Hors périmètre : la trémie compacte à pente variable de 5.2.4.3.1(5) et un canal de géométrie imposée par le mode de vidange (5.2.4.3.1(2)) ; l'outil applique toujours les trois rayons de (3).
+
+### 5.5 bis Grand excentrement de remplissage, silo circulaire peu élancé ou intermédiaire de classe 3 (5.3.3)
+
+* **Déclenchement** : silo circulaire, classe 3, `hc/dc < 2,0`, et `e_t > 0,25 d_c` (`e_t` vaut `e_f` s'il n'est pas saisi).
+* **Effet** : une force verticale de compression additionnelle `n_zSk` par unité de longueur de circonférence, ajoutée sur toute la circonférence à celle du remplissage symétrique (5.3.3(2), (3) et (6)). Elle s'ajoute dans le cas `REMP` ; elle ne change ni p_h ni p_w.
+* **Propriétés** : K et μ supérieurs (5.3.3(4)), soit la combinaison C2 ; γ = γ_u.
+* **Valeur** (5.92 à 5.96), voir le point ouvert P8 :
+
+  ```
+  p_ho = γ r / (2 μ)        h_o,e = r tan φ_r [1 − (e_t/r)²] / 3        B = r / (2 μ K) − h_o,e
+  Z = z_s / B               Δn_zSk = 0,04 p_ho z_s tan φ_r (e_t / r) (6 + 7 Z − Z²)
+  ```
+
+  `z_s` est la profondeur sous le point de contact le plus haut du matériau avec la paroi, soit `z_s = z + h_o,e`, z étant mesuré depuis la surface équivalente.
+* Hors déclenchement, le motif dit quelle condition manque.
 
 ### 5.6 Résultat par niveau
 
@@ -304,10 +328,11 @@ Chaque cas porte un identifiant stable, un libellé, la combinaison de propriét
 |-|-|
 | `REMP` | Remplissage symétrique et action localisée (ou majoration uniforme) |
 | `VID` | Vidange symétrique et action localisée (ou majoration uniforme) |
-| `VID_EXC` | Vidange à grand excentrement (circulaire), cas séparé |
+| `VID_EXC` | Vidange à grand excentrement (circulaire), cas séparé ; méthode de 5.2.4.2, classe 2 |
+| `VID_EXC_1`, `VID_EXC_2`, `VID_EXC_3` | Classe 3 seulement : canal d'écoulement de rayon `k_1 r`, `k_2 r`, `k_3 r` (5.2.4.3), trois cas séparés |
 | `FOND_REMP`, `FOND_VID` | Fond plat ou trémie, remplissage et vidange |
 
-Les cas `REMP` et `VID` sont **exclusifs** l'un de l'autre, et `VID_EXC` l'est des deux. Les exports le rappellent en tête, parce que c'est exactement ce que l'utilisateur doit reproduire dans son logiciel (groupe de charges exclusives).
+Les cas `REMP` et `VID` sont **exclusifs** l'un de l'autre, et chaque cas de vidange excentrée l'est de tous les autres. Les exports le rappellent en tête, parce que c'est exactement ce que l'utilisateur doit reproduire dans son logiciel (groupe de charges exclusives).
 
 Le frottement de paroi est rendu avec la combinaison C2, à côté de la pression normale calculée en C1. Associer les deux dans le même cas de charge est un choix enveloppe, déclaré dans le README et la note.
 
@@ -350,10 +375,11 @@ Chacun est codé selon le choix déclaré ici, affiché dans l'interface et la n
 | P1 | La clause 5.2.4.1(4) fixe μ inférieur et φ_i supérieur pour la vidange excentrée, mais pas K. | K supérieur (cohérent avec C1 pour p_h). Le cas V2 l'utilise. |
 | P2 | Pour `p_vft` de la trémie à la vidange, le tableau 3.1 donne K supérieur et μ_h inférieur. Il ne précise pas μ pour la paroi verticale. | μ inférieur pour la paroi verticale. Le cas V4 l'utilise. |
 | P3 | Paroi mince boulonnée de classe 2 : 5.2.1.4(4) demande une majoration « dans une proportion uniforme » sans en donner la valeur. | Non traité : statut hors périmètre, avec la clause. |
-| P4 | Étendue de la zone à `2 p_hf` en vidange excentrée : lue comme un arc θ_c de chaque côté de la zone d'écoulement (figure 5.5c). | À confirmer par l'utilisateur sur la figure avant le lot 5. Si la lecture est infirmée, le cas de validation V2 sera complété. |
+| P4 | Étendue de la zone à `2 p_hf` en vidange excentrée : lue comme un arc θ_c de chaque côté de la zone d'écoulement (figure 5.5c). | Arc θ_c de chaque côté. Lecture confortée par la figure 5.5c de 5.2.4.3, transmise par l'utilisateur le 2026-11-11 ; reste à confirmer explicitement pour la méthode simplifiée de classe 2. |
 | P5 | Capacité pour le tableau 2.1 : γ_u ou γ_l, volume de trémie compris ou non. | γ_u, trémie comprise (la classe la plus haute). |
 | P6 | Silo à trémie avec `hc/dc ≤ 0,4` : 5.1(2) ne le range pas clairement parmi les silos peu élancés. | Non traité : erreur explicite qui cite P6 et 5.1(2), à confirmer par l'utilisateur. |
 | P7 | Vidange d'un silo circulaire intermédiaire ou peu élancé de classe 2 : 5.3.2.3 renvoie à une majoration uniforme sans que la spécification en donne la forme. | Lue comme la majoration uniforme de 5.2.3 avec C_pe, seulement si `formeMaintenueEnTeteEtEnPied` est vrai ; sinon l'action localisée de 5.2.2.2 à 5.2.2.4. Le cas V5 l'utilise. À confirmer par l'utilisateur. |
+| P8 | Lecture de 5.92 à 5.96 (5.3.3) : (a) dans 5.92, `(e_t / r)` est un facteur ; (b) la légende appelle φ_r « angle de frottement interne » alors que le symbole désigne l'angle de talus ; (c) le lien entre z_s et la profondeur z de l'outil. | (a) facteur ; (b) angle de talus φ_r, cohérent avec 5.96 qui décrit la forme du tas ; (c) `z_s = z + h_o,e`, h_o,e de 5.96. Le cas V8 l'utilise. À confirmer par l'utilisateur. |
 
 ## 10. Hors périmètre en v1
 
@@ -363,7 +389,7 @@ Chacun lève une erreur explicite qui nomme la clause :
 * effets thermiques (5.6) ;
 * silos rectangulaires à tirants (5.7.2) et redistribution des parois souples (5.7.1(2)) ;
 * paroi ondulée D4 (D.2) ;
-* vidange excentrée de classe 3 (5.2.4.3) et grand excentrement de remplissage de classe 3 (5.3.3) ;
+* trémie compacte à pente variable en vidange excentrée de classe 3 (5.2.4.3.1(5)) ;
 * voie simplifiée de la classe 1 (lot ultérieur) ;
 * méthode alternative des trémies (annexe G) et expression d'Enstad ;
 * explosions de poussières (annexe H) ;
@@ -376,4 +402,4 @@ Chaque erreur nomme la grandeur, son unité et la clause. Exemples :
 * `Le diametre interieur d doit etre un nombre strictement positif (m).`
 * `hc/dc = 0,35 avec fond plat : magasin de stockage, hors perimetre (EN 1991-4, 5.4).`
 * `phi_wh = 41,2 deg depasse phi_i = 39,2 deg : contact paroi impossible (EN 1991-4, note 1 sous 6.23).`
-* `Vidange excentree en classe 3 : methode de 5.2.4.3 non traitee. Les cas symetriques restent rendus.`
+* `Methode simplifiee de 5.2.4.2 reservee a la classe 2 (5.2.4.1(5)) : en classe 3, voir les cas VID_EXC_1 a VID_EXC_3 (5.2.4.3).`
