@@ -19,6 +19,7 @@ import type {
   DeclenchementExcentree,
   DonneesSilo,
   ValeursExcentrees,
+  ValeursParoi,
   ZonesExcentrees,
 } from '../model/types';
 import type { ProfilSilos } from '../norms/profil';
@@ -126,7 +127,7 @@ export function zonesExcentrees(d: DonneesSilo, cl: Classement, p: ProfilSilos):
   }
   if (cl.procedures === 3) {
     throw new Error(
-      'Vidange excentree en classe 3 : methode de 5.2.4.3 non traitee. Les cas symetriques restent rendus.',
+      'Methode simplifiee de 5.2.4.2 reservee a la classe 2 (5.2.4.1(5)) : en classe 3, voir les cas VID_EXC_1 a VID_EXC_3 (5.2.4.3).',
     );
   }
 
@@ -146,6 +147,27 @@ export function zonesExcentrees(d: DonneesSilo, cl: Classement, p: ProfilSilos):
       '(P4 : étendue à confirmer), matériau immobile au-delà. ' +
       'K supérieur (P1), mu inférieur et phi_i supérieur (5.2.4.1(4)).',
   };
+}
+
+/**
+ * Valeurs symetriques du remplissage a la profondeur z en combinaison X :
+ * Janssen pour un silo elance, Janssen modifie sinon. La combinaison X
+ * applique mu inferieur, phi_i superieur (5.2.4.1(4)) et K superieur (P1).
+ *
+ * Fonction auxiliaire partagee par la vidange excentree de classe 2 et par les
+ * canaux d'ecoulement de classe 3. Elle ne verifie ni le declenchement ni la
+ * classe : c'est l'affaire de ses appelants.
+ */
+export function valeursSymetriquesExcentree(
+  z: number,
+  d: DonneesSilo,
+  cl: Classement,
+): ValeursParoi {
+  const v = valeursCaracteristiques(d.materiau, d.parois);
+  const cx = combinaison('X', v, d.materiau);
+  return cl.elancement === 'elance'
+    ? janssen(z, cl.geometrie, cx)
+    : janssenModifie(z, cl.geometrie, cx, cl.h_o, d.materiau.phi_r);
 }
 
 /**
@@ -170,12 +192,7 @@ export function valeursExcentrees(
     );
   }
 
-  const v = valeursCaracteristiques(d.materiau, d.parois);
-  const cx = combinaison('X', v, d.materiau);
-  const base =
-    cl.elancement === 'elance'
-      ? janssen(z, cl.geometrie, cx)
-      : janssenModifie(z, cl.geometrie, cx, cl.h_o, d.materiau.phi_r);
+  const base = valeursSymetriquesExcentree(z, d, cl);
 
   const p_hse = base.p_h;
   const p_wse = base.p_w;
