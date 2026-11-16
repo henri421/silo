@@ -410,8 +410,13 @@ function dateDuJour(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** Cartouche de la note : projet fixe, element de la page, date du jour. */
+/**
+ * Cartouche de la note : celui du projet quand la page travaille dans une
+ * feuille de projet (audit I15), sinon projet fixe et element de la page.
+ */
 function cartoucheNote(): { projet: string; element: string; date: string } {
+  const projet = barre?.cartouche() ?? null;
+  if (projet !== null) return { ...projet, date: dateDuJour() };
   return {
     projet: 'Silo',
     element: document.querySelector('header h1')?.textContent?.trim() || 'Silo',
