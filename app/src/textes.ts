@@ -19,6 +19,7 @@
  */
 
 import { langueCourante, traducteur, type RegleDePhrase } from 'aedificium-ui';
+import type { CleCoef } from './annexe';
 
 const FR = {
   messages: {
@@ -237,6 +238,28 @@ const FR = {
       'REMP, VID et VID_EXC sont des cas exclusifs les uns des autres : ils ne se cumulent pas dans le modèle aux éléments finis.',
       'Choix enveloppe de SPEC §7 : la pression normale p_h suit la combinaison C1 et le frottement p_w la combinaison C2 dans le même cas de charge.',
     ],
+    coefficients: 'Coefficients',
+    libellesCoefs: {
+      capaciteClasse1: 'capacité de la classe 1 (t)',
+      capaciteClasse3: 'capacité au-delà de laquelle la classe 3 s’applique (t)',
+      capaciteExcentrement: 'capacité au-delà de laquelle l’excentrement mène à la classe 3 (t)',
+      excentrementClasse3: 'excentrement relatif déclenchant la classe 3',
+      C_h_elance: 'C_h d’un silo élancé',
+      C_w_elance: 'C_w d’un silo élancé',
+      C_h_pente: 'pente de C_h, silo intermédiaire',
+      C_w_pente: 'pente de C_w, silo intermédiaire',
+      b_tremie: 'coefficient b de la trémie',
+      C_b: 'C_b en classe 2 ou 3',
+      C_b_majore: 'C_b d’un matériau cohésif ou à engrènement',
+      theta_c: 'angle de la zone d’écoulement (°)',
+      excentrementGrand: 'excentrement relatif de la vidange à grand excentrement',
+      elancementExcentrementRemplissage: 'élancement déclenchant e_f à grand excentrement',
+      minceurParoi: 'rapport d_c/t au-delà duquel la paroi est mince',
+      excentrementPeuElance: 'excentrement relatif d’un silo peu élancé',
+      k1_canal: 'rayon relatif du canal, k_1',
+      k2_canal: 'rayon relatif du canal, k_2',
+      k3_canal: 'rayon relatif du canal, k_3',
+    } satisfies Record<CleCoef, string>,
     legendes: {
       elevationRemp: 'Élévation, remplissage (REMP)',
       elevationVid: 'Élévation, vidange (VID)',
@@ -572,6 +595,28 @@ const EN: Textes = {
       'REMP, VID and VID_EXC are mutually exclusive cases: they are not combined in the finite element model.',
       'Envelope choice of SPEC 7: the normal pressure p_h follows combination C1 and the wall friction p_w follows combination C2 in the same load case.',
     ],
+    coefficients: 'Coefficients',
+    libellesCoefs: {
+      capaciteClasse1: 'capacity of class 1 (t)',
+      capaciteClasse3: 'capacity above which class 3 applies (t)',
+      capaciteExcentrement: 'capacity above which eccentricity leads to class 3 (t)',
+      excentrementClasse3: 'relative eccentricity triggering class 3',
+      C_h_elance: 'C_h of a slender silo',
+      C_w_elance: 'C_w of a slender silo',
+      C_h_pente: 'slope of C_h, intermediate silo',
+      C_w_pente: 'slope of C_w, intermediate silo',
+      b_tremie: 'hopper coefficient b',
+      C_b: 'C_b in class 2 or 3',
+      C_b_majore: 'C_b of a cohesive or interlocking material',
+      theta_c: 'angle of the flow zone (deg)',
+      excentrementGrand: 'relative eccentricity of discharge with large eccentricity',
+      elancementExcentrementRemplissage: 'slenderness triggering e_f with large eccentricity',
+      minceurParoi: 'ratio d_c/t above which the wall is thin',
+      excentrementPeuElance: 'relative eccentricity of a low-slenderness silo',
+      k1_canal: 'relative radius of the channel, k_1',
+      k2_canal: 'relative radius of the channel, k_2',
+      k3_canal: 'relative radius of the channel, k_3',
+    } satisfies Record<CleCoef, string>,
     legendes: {
       elevationRemp: 'Elevation, filling (REMP)',
       elevationVid: 'Elevation, discharge (VID)',

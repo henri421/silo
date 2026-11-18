@@ -232,6 +232,15 @@ legend {
   color: var(--texte-faible);
 }
 
+/* Titre d'un bloc sans legende (annexe nationale) : meme aspect que `legend`. */
+.titre-bloc {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--texte-faible);
+}
+
 label {
   display: flex;
   align-items: baseline;

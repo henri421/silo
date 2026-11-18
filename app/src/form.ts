@@ -13,7 +13,7 @@
  * poids volumique en kN/m3.
  */
 
-import { lireNombre } from 'aedificium-ui';
+import { lireAnnexe, lireNombre, type AnnexeNationale } from 'aedificium-ui';
 import type {
   Assemblage,
   CategorieParoi,
@@ -27,13 +27,19 @@ import type {
   TypeFond,
 } from '../../src/index';
 import { materiauParId } from '../../src/index';
+import { COEFS, coefsDeLAnnexe, type CleCoef, type Coefs } from './annexe';
 import { textes } from './textes';
+
+/** Nom du champ d'un coefficient de l'annexe : `coef_` suivi de la cle du profil. */
+type ChampCoef = `coef_${CleCoef}`;
 
 /**
  * Les cles des champs du formulaire, dans l'ordre des blocs de la page.
  * Chaque cle porte exactement un element `data-champ` dans `app/index.html`.
+ * Les coefficients de l'annexe (`CHAMPS_COEF`) suivent les cles de base.
  */
-export const CHAMPS = [
+const CHAMPS_BASE = [
+  'annexe',
   'forme',
   'd',
   'a',
@@ -73,7 +79,12 @@ export const CHAMPS = [
   'points',
 ] as const;
 
-export type CleChamp = (typeof CHAMPS)[number];
+/** Un champ par coefficient de l'annexe, dans l'ordre de `COEFS`. */
+export const CHAMPS_COEF: readonly ChampCoef[] = COEFS.map((k) => `coef_${k}` as ChampCoef);
+
+export type CleChamp = (typeof CHAMPS_BASE)[number] | ChampCoef;
+
+export const CHAMPS: readonly CleChamp[] = [...CHAMPS_BASE, ...CHAMPS_COEF];
 
 export type ChoixMateriau = 'sable' | 'defaut' | 'saisi';
 
@@ -125,6 +136,10 @@ export interface ModeleSaisie {
   dz: number | null;
   /** Nombre de points des profils continus. */
   points: number | null;
+  /** Annexe nationale choisie : valeurs recommandees ou Luxembourg. */
+  annexe: AnnexeNationale;
+  /** Coefficients de l'annexe, prerempli par l'annexe et modifiables. */
+  coefs: Coefs;
 }
 
 export type Lecture = { ok: true; modele: ModeleSaisie } | { ok: false; message: string };
@@ -200,11 +215,23 @@ export function modeleParDefaut(): ModeleSaisie {
     methode_localisee: 'action-localisee',
     dz: 1,
     points: 101,
+    annexe: 'recommande',
+    coefs: coefsDeLAnnexe('recommande'),
   };
 }
 
 /** Refus de saisie, porte par `modeleDepuisChamps` comme valeur de retour. */
 class ErreurDeSaisie extends Error {}
+
+/**
+ * Un coefficient de l'annexe : absent du fichier (ancien fichier), il vaut la
+ * valeur par defaut ; present, il est lu et exige.
+ */
+function coefficient(valeurs: Record<string, string>, cle: CleCoef, defaut: number): number {
+  if (valeurs[`coef_${cle}`] === undefined) return defaut;
+  const lu = nombre(valeurs, `coef_${cle}`, true);
+  return lu ?? defaut;
+}
 
 /** Un nombre saisi : vide ou illisible vaut null, sauf s'il est exige. */
 function nombre(valeurs: Record<string, string>, cle: CleChamp, requis: boolean): number | null {
@@ -237,6 +264,12 @@ function classeImposee(valeurs: Record<string, string>): Classe | null {
   if (texte === '') return null;
   if (texte === '1' || texte === '2' || texte === '3') return Number(texte) as Classe;
   throw new ErreurDeSaisie(textes().formulaire.classe);
+}
+
+/** Les coefficients lus dans les champs ; un fichier sans eux donne les valeurs recommandees. */
+function lireCoefs(valeurs: Record<string, string>): Coefs {
+  const defauts = coefsDeLAnnexe('recommande');
+  return Object.fromEntries(COEFS.map((k) => [k, coefficient(valeurs, k, defauts[k])])) as Coefs;
 }
 
 /**
@@ -292,6 +325,8 @@ export function modeleDepuisChamps(valeurs: Record<string, string>): Lecture {
       methode_localisee: choix(valeurs, 'methode_localisee', METHODES),
       dz: nombre(valeurs, 'dz', true),
       points: nombre(valeurs, 'points', true),
+      annexe: lireAnnexe(valeurs.annexe),
+      coefs: lireCoefs(valeurs),
     };
     return { ok: true, modele };
   } catch (e) {
@@ -373,7 +408,14 @@ export function champsDepuisModele(m: ModeleSaisie): Record<string, string> {
     methode_localisee: m.methode_localisee,
     dz: texteNombre(m.dz),
     points: texteNombre(m.points),
+    annexe: m.annexe,
+    ...champsDesCoefs(m.coefs),
   };
+}
+
+/** Les champs des coefficients de l'annexe, `coef_<cle>` : virgule decimale, comme les autres nombres. */
+export function champsDesCoefs(coefs: Coefs): Record<ChampCoef, string> {
+  return Object.fromEntries(COEFS.map((k) => [`coef_${k}`, texteNombre(coefs[k])])) as Record<ChampCoef, string>;
 }
 
 /**

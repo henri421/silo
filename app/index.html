@@ -150,6 +150,33 @@
             </label>
           </fieldset>
 
+          <fieldset class="annexe" aria-labelledby="titre-annexe">
+            <p class="titre-bloc" id="titre-annexe">Annexe nationale et coefficients</p>
+            <label><span>Annexe nationale</span>
+              <select data-champ="annexe"></select>
+            </label>
+            <p class="avertissement" data-role="bandeau-annexe" hidden></p>
+            <label><span>C<sub>1</sub>, capacité de la classe 1 (t), tableau 2.1</span><input type="text" inputmode="decimal" data-champ="coef_capaciteClasse1" /></label>
+            <label><span>C<sub>3</sub>, capacité au-delà de laquelle la classe 3 s’applique (t), tableau 2.1</span><input type="text" inputmode="decimal" data-champ="coef_capaciteClasse3" /></label>
+            <label><span>C<sub>e</sub>, capacité au-delà de laquelle l’excentrement mène à la classe 3 (t), tableau 2.1</span><input type="text" inputmode="decimal" data-champ="coef_capaciteExcentrement" /></label>
+            <label><span>e/d<sub>c</sub>, excentrement relatif déclenchant la classe 3 (-), tableau 2.1</span><input type="text" inputmode="decimal" data-champ="coef_excentrementClasse3" /></label>
+            <label><span>C<sub>h</sub>, silo élancé (-), éq. 5.21</span><input type="text" inputmode="decimal" data-champ="coef_C_h_elance" /></label>
+            <label><span>C<sub>w</sub>, silo élancé (-), éq. 5.22</span><input type="text" inputmode="decimal" data-champ="coef_C_w_elance" /></label>
+            <label><span>C<sub>h</sub>, pente, silo intermédiaire (-), éq. 5.85</span><input type="text" inputmode="decimal" data-champ="coef_C_h_pente" /></label>
+            <label><span>C<sub>w</sub>, pente, silo intermédiaire (-), éq. 5.86</span><input type="text" inputmode="decimal" data-champ="coef_C_w_pente" /></label>
+            <label><span>b, coefficient de la trémie (-), éq. 6.17</span><input type="text" inputmode="decimal" data-champ="coef_b_tremie" /></label>
+            <label><span>C<sub>b</sub>, classe 2 ou 3 (-), 6.1.2(4)</span><input type="text" inputmode="decimal" data-champ="coef_C_b" /></label>
+            <label><span>C<sub>b</sub> majoré, matériau cohésif ou à engrènement (-), 6.1.2(5) et (6)</span><input type="text" inputmode="decimal" data-champ="coef_C_b_majore" /></label>
+            <label><span>θ<sub>c</sub>, angle de la zone d’écoulement (°), 5.2.4.2</span><input type="text" inputmode="decimal" data-champ="coef_theta_c" /></label>
+            <label><span>e/d<sub>c</sub>, vidange à grand excentrement (-), 5.2.4.1(2)</span><input type="text" inputmode="decimal" data-champ="coef_excentrementGrand" /></label>
+            <label><span>h<sub>c</sub>/d<sub>c</sub>, élancement déclenchant e<sub>f</sub> (-), 5.2.4.1(2)</span><input type="text" inputmode="decimal" data-champ="coef_elancementExcentrementRemplissage" /></label>
+            <label><span>d<sub>c</sub>/t, rapport au-delà duquel la paroi est mince (-), 5.2.1.4(1)</span><input type="text" inputmode="decimal" data-champ="coef_minceurParoi" /></label>
+            <label><span>e<sub>o</sub>/d<sub>c</sub>, silo peu élancé (-), 5.3.2.2(4)</span><input type="text" inputmode="decimal" data-champ="coef_excentrementPeuElance" /></label>
+            <label><span>k<sub>1</sub>, rayon relatif du canal (-), 5.52</span><input type="text" inputmode="decimal" data-champ="coef_k1_canal" /></label>
+            <label><span>k<sub>2</sub>, rayon relatif du canal (-), 5.53</span><input type="text" inputmode="decimal" data-champ="coef_k2_canal" /></label>
+            <label><span>k<sub>3</sub>, rayon relatif du canal (-), 5.54</span><input type="text" inputmode="decimal" data-champ="coef_k3_canal" /></label>
+          </fieldset>
+
           <fieldset>
             <legend>Discrétisation</legend>
             <label><span>Hauteur des bandes &Delta;z (m)</span><input type="text" inputmode="decimal" data-champ="dz" /></label>

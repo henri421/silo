@@ -12,30 +12,36 @@
  */
 
 import {
+  avertissementAnnexeLu,
   brancherFeuilles,
   definirLangue,
   echapper,
   langueDuDocument,
+  lireAnnexe,
   lireNombre,
   noteDeCalculHtml,
   notationHtml,
+  optionsAnnexe,
   ouvrirOuTelecharger,
   svgAutonome,
   telecharger,
+  type AnnexeNationale,
   type BarreFeuilles,
   type Json,
 } from 'aedificium-ui';
 import {
   calculer,
   cartePressions,
-  en1991_4Recommande,
   type CarteCas,
   type IdCas,
   type OptionsCarte,
+  type ProfilSilos,
   type ResultatSilo,
 } from '../../src/index';
+import { coefsDeLAnnexe, profilDeCalcul, profilDeLAnnexe } from './annexe';
 import {
   champsDepuisModele,
+  champsDesCoefs,
   champsDuMateriau,
   donneesDepuisModele,
   modeleDepuisChamps,
@@ -74,7 +80,13 @@ import './style.css';
 
 definirLangue(langueDuDocument(document));
 
-const PROFIL = en1991_4Recommande();
+/**
+ * Profil de calcul courant : celui de l'annexe choisie, coefficients saisis
+ * compris (`profilDeCalcul`). Il est mis a jour a chaque saisie valide, avant le calcul.
+ */
+let PROFIL: ProfilSilos = profilDeLAnnexe('recommande');
+/** Annexe de la saisie courante, pour la note et le bandeau. */
+let annexeCourante: AnnexeNationale = 'recommande';
 
 /** Identifiants de tous les cas du resultat, dans son ordre. */
 function idsCas(r: ResultatSilo): IdCas[] {
@@ -329,9 +341,18 @@ if (formulaire !== null) {
     erreur: exige<HTMLElement>('[data-role="erreur"]'),
   };
 
+  // Bandeau de l'annexe luxembourgeoise : ecrit par `rafraichir`, cache sinon.
+  const bandeauAnnexe = exige<HTMLElement>('[data-role="bandeau-annexe"]');
+
   rafraichir = (): void => {
     barre?.signaler();
     const valeurs = valeursDesChamps();
+
+    // Le bandeau de l'annexe suit le choix brut, meme quand une saisie est refusee.
+    const avertissement = lireAnnexe(valeurs.annexe) === 'lu' ? avertissementAnnexeLu() : '';
+    bandeauAnnexe.textContent = avertissement;
+    bandeauAnnexe.hidden = avertissement === '';
+
     const lecture = modeleDepuisChamps(valeurs);
 
     // Les groupes suivent la saisie brute, meme quand un nombre est encore
@@ -346,6 +367,8 @@ if (formulaire !== null) {
     ajusterGroupes(modele.forme, modele.fond);
     let r: ResultatSilo;
     try {
+      PROFIL = profilDeCalcul(modele.annexe, modele.coefs);
+      annexeCourante = modele.annexe;
       r = calculer(donneesDepuisModele(modele), PROFIL);
     } catch (e) {
       afficherErreur(messageDErreur(e));
@@ -355,7 +378,16 @@ if (formulaire !== null) {
     peindre(r);
   };
 
+  const choixAnnexe = exige<HTMLSelectElement>('[data-champ="annexe"]');
+  choixAnnexe.innerHTML = optionsAnnexe('recommande');
   ecrireModele(modeleParDefaut());
+  // Changer d'annexe repremplit les coefficients ; chacun reste modifiable ensuite.
+  choixAnnexe.addEventListener('change', () => {
+    const coefs = champsDesCoefs(coefsDeLAnnexe(lireAnnexe(choixAnnexe.value)));
+    for (const [cle, valeur] of Object.entries(coefs)) {
+      exige<HTMLInputElement>(`[data-champ="${cle}"]`).value = valeur;
+    }
+  });
   // Les valeurs du materiau restent visibles : choisir un materiau de la
   // bibliotheque les remplit, modifier l'une d'elles passe en materiau saisi.
   const choixMateriau = exige<HTMLSelectElement>('[data-champ="materiau"]');
@@ -391,8 +423,10 @@ barre = brancherFeuilles({
   lire: () => valeursDesChamps() as Json,
   charger: (d) => {
     if (formulaire === null) return;
-    if (d === null) ecrireModele(modeleParDefaut());
-    else {
+    // Valeurs par defaut d'abord : un fichier ancien, sans annexe ni coefficients,
+    // se relit avec les valeurs recommandees.
+    ecrireModele(modeleParDefaut());
+    if (d !== null) {
       const v = d as Record<string, string>;
       for (const el of champs()) {
         const valeur = v[el.getAttribute('data-champ') ?? ''];
@@ -483,7 +517,7 @@ document.addEventListener('click', (evenement) => {
   } else if (action === 'exporter-note') {
     ouvrirOuTelecharger(
       'silo-note.html',
-      identifiantsDeCas(noteDeCalculHtml(noteDuCalcul(r, cartoucheNote()), STYLES_DESSIN))
+      identifiantsDeCas(noteDeCalculHtml(noteDuCalcul(r, cartoucheNote(), PROFIL, annexeCourante), STYLES_DESSIN))
     );
   } else if (action === 'exporter-dessin') {
     const nom = cible.dataset.dessin as NomDessin | undefined;

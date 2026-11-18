@@ -7,12 +7,28 @@
  * refait ici.
  *
  * La note s'ouvre sur les hypotheses : norme et profil normatif, mention des
- * valeurs caracteristiques, exclusivite des cas de vidange et choix enveloppe
- * de SPEC §7 (p_h en C1 et p_w en C2 dans le meme cas).
+ * valeurs caracteristiques, coefficients de l'annexe nationale avec leur source,
+ * exclusivite des cas de vidange et choix enveloppe de SPEC §7 (p_h en C1 et
+ * p_w en C2 dans le meme cas).
  */
 
-import type { ElementNote, NoteDeCalcul } from 'aedificium-ui';
-import type { CasDeCharge, ResultatSilo } from '../../src/index';
+import {
+  avertissementAnnexeLu,
+  langueCourante,
+  libelleAnnexe,
+  nombreAffiche,
+  traduireSource,
+  type AnnexeNationale,
+  type ElementNote,
+  type NoteDeCalcul,
+} from 'aedificium-ui';
+import {
+  en1991_4Recommande,
+  type CasDeCharge,
+  type ProfilSilos,
+  type ResultatSilo,
+} from '../../src/index';
+import { COEFS, SYMBOLES } from './annexe';
 import {
   dessinElevation,
   dessinPlan,
@@ -39,6 +55,35 @@ function blocDuCas(c: CasDeCharge): ElementNote {
     bloc: {
       titre: `${c.id}, ${t.cas.libelles[c.id]}`,
       lignes: [{ symbole: '', libelle: t.note.statut, valeur: etatDuCas(c) }],
+      note: null,
+    },
+  };
+}
+
+/**
+ * Source d'un coefficient telle qu'elle s'affiche : traduite par aedificium-ui en
+ * anglais, la clause « éq. » y devient « Eq. ». Intacte en francais.
+ */
+function sourceAffichee(source: string): string {
+  const traduite = traduireSource(source);
+  return langueCourante() === 'en' ? traduite.replace(/éq\. /g, 'Eq. ').replace(/ et \(/g, ' and (') : traduite;
+}
+
+/**
+ * Bloc des coefficients de l'annexe : symbole, libelle suivi de sa source, et
+ * valeur de chacun. La note dit ainsi quelle annexe a servi, sans rien recalculer.
+ */
+function blocCoefficients(profil: ProfilSilos, annexe: AnnexeNationale): ElementNote {
+  const t = textes();
+  return {
+    type: 'bloc',
+    bloc: {
+      titre: `${t.note.coefficients} : ${libelleAnnexe(annexe)}`,
+      lignes: COEFS.map((k) => ({
+        symbole: SYMBOLES[k],
+        libelle: `${t.note.libellesCoefs[k]} (${sourceAffichee(profil.valeurs[k].source)})`,
+        valeur: nombreAffiche(profil.valeurs[k].valeur, 4),
+      })),
       note: null,
     },
   };
@@ -79,13 +124,18 @@ function figures(r: ResultatSilo): ElementNote[] {
 
 /**
  * Note du calcul courant. Le cartouche porte le projet, l'element et la date
- * fournis par la page ; la norme et l'outil sont fixes.
+ * fournis par la page ; l'outil est fixe. `profil` et `annexe` sont ceux qui ont
+ * servi au calcul. Avec l'annexe luxembourgeoise, la norme du cartouche le dit et
+ * l'avertissement de l'annexe ouvre la note (lot E).
  */
 export function noteDuCalcul(
   r: ResultatSilo,
-  cartouche: { projet: string; element: string; date: string }
+  cartouche: { projet: string; element: string; date: string },
+  profil: ProfilSilos = en1991_4Recommande(),
+  annexe: AnnexeNationale = 'recommande'
 ): NoteDeCalcul {
   const t = textes();
+  const lu = annexe === 'lu';
   const [norme, ...items] = t.note.hypotheses(phrase(r.profil));
   return {
     cartouche: {
@@ -93,13 +143,15 @@ export function noteDuCalcul(
       projet: cartouche.projet,
       element: cartouche.element,
       date: cartouche.date,
-      norme: 'EN 1991-4:2006',
+      norme: lu ? 'EN 1991-4:2006, ILNAS-EN 1991-4/AN-LU:2020' : 'EN 1991-4:2006',
       outil: 'silo',
     },
+    avertissements: lu ? [avertissementAnnexeLu()].filter((a) => a !== '') : [],
     sections: {
       hypotheses: [
         { type: 'texte', texte: norme },
         { type: 'texte', texte: `${mention()}.` },
+        blocCoefficients(profil, annexe),
         { type: 'liste', items },
       ],
       charges: [
