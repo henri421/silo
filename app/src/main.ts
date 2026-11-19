@@ -19,7 +19,7 @@ import {
   langueDuDocument,
   lireAnnexe,
   lireNombre,
-  noteDeCalculHtml,
+  noteDeCalculHtml, telechargerNotePdf,
   notationHtml,
   optionsAnnexe,
   ouvrirOuTelecharger,
@@ -514,11 +514,12 @@ document.addEventListener('click', (evenement) => {
   } else if (action === 'exporter-synthese') telechargerCsv('synthese', csvSynthese(r));
   else if (action === 'exporter-json') {
     telecharger('silo-resultat.json', jsonResultat(r), 'application/json;charset=utf-8');
-  } else if (action === 'exporter-note') {
-    ouvrirOuTelecharger(
-      'silo-note.html',
-      identifiantsDeCas(noteDeCalculHtml(noteDuCalcul(r, cartoucheNote(), PROFIL, annexeCourante), STYLES_DESSIN))
-    );
+  } else if (action === 'exporter-note' || action === 'exporter-note-pdf') {
+    const pdf = action === 'exporter-note-pdf';
+    const noteCalc = noteDuCalcul(r, cartoucheNote(), PROFIL, annexeCourante);
+    // PDF construit au clic ; en cas d'echec, la note HTML prend le relais.
+    if (pdf) void telechargerNotePdf('silo-note.pdf', noteCalc, STYLES_DESSIN).catch(() => ouvrirOuTelecharger('silo-note.html', identifiantsDeCas(noteDeCalculHtml(noteCalc, STYLES_DESSIN))));
+    else ouvrirOuTelecharger('silo-note.html', identifiantsDeCas(noteDeCalculHtml(noteCalc, STYLES_DESSIN)));
   } else if (action === 'exporter-dessin') {
     const nom = cible.dataset.dessin as NomDessin | undefined;
     if (nom === undefined) return;
